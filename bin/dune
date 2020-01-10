@@ -1,0 +1,39 @@
+(executables
+ (names main_codemap)
+ (libraries 
+;    bigarray
+;    threads          ;; needed for json-wheel (Condition?)
+;    json-wheel       ;; Json_io, Json_type
+;    ocamlgraph
+;
+    commons commons_core
+;    pfff-commons-graph
+;
+;    pfff-h_files-format
+;    pfff-config 
+;    pfff-h_program-lang
+;    pfff-graph_code
+;
+;    pfff-lang_python pfff-lang_python-analyze
+;    pfff-lang_js pfff-lang_js-analyze
+    pfff-lang_cpp 
+;    pfff-lang_c pfff-lang_c-analyze
+;    pfff-lang_ml pfff-lang_ml-analyze
+;    pfff-lang_java pfff-lang_java-analyze
+;    pfff-lang_php pfff-lang_php-analyze-foundation pfff-lang_php-analyze-checker
+;    pfff-lang_lisp pfff-lang_lisp-analyze
+;    pfff-lang_GENERIC    
+
+     codemap
+
+ )
+ ; for ocamldebug
+ (modes byte)
+)
+
+
+(install
+ (package codemap)
+ (section bin)
+ (files (main_codemap.exe as codemap) )
+)

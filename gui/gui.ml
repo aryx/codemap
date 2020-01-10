@@ -305,6 +305,7 @@ let entry_with_completion ~text ~completion =
  * how to avoid that.
  *)
 let entry_with_completion_eff ~text ~model_col ?minimum_key_length () = 
+  ignore(text); (* BUG? *)
   let entry = GEdit.entry ~text:"" () in
   let (model, col) = model_col in
   let c = GEdit.entry_completion ~model ~entry ?minimum_key_length () in
@@ -324,6 +325,7 @@ let freeze_thaw f l =
 let clist_connect ~callback:f (widget : string GList.clist) = 
   begin
     widget#connect#select_row ~callback:(fun ~row ~column ~event -> 
+      ignore(event);
       let s = widget#cell_text row 0 in
       
       (match widget#row_is_visible row with
@@ -340,6 +342,7 @@ let clist_connect ~callback:f (widget : string GList.clist) =
 
 
     widget#connect#unselect_row ~callback:(fun ~row ~column ~event ->
+      ignore (row, column, event);
       f None
     ) |> ignore;
   end
@@ -388,7 +391,7 @@ let view_column ~title ~renderer ()  =
 let view_expand_level (view: GTree.view) depth_limit = 
   view#collapse_all();
   let store = view#model in
-  store#foreach (fun path iter -> 
+  store#foreach (fun path _iter -> 
     let depth = GTree.Path.get_depth path in
     if depth <= depth_limit
     then view#expand_row ~all:false path;

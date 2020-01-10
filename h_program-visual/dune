@@ -1,0 +1,10 @@
+(library
+ (name h_program_visual)
+ (wrapped false)
+ (libraries
+
+   commons pfff-h_visualization
+   pfff-h_program-lang
+   h_version_control
+ )
+)

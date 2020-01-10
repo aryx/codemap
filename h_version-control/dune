@@ -1,0 +1,10 @@
+(library
+ (name h_version_control)
+ (wrapped false)
+ (libraries
+
+   commons commons_core
+   pfff-config
+
+ )
+)

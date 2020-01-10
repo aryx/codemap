@@ -1,0 +1,9 @@
+(library
+ (name gui)
+ (wrapped false)
+ (libraries
+   lablgtk2
+
+   commons
+ )
+)

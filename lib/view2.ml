@@ -295,7 +295,7 @@ let mk_gui ~screen_size ~legend test_mode w =
         ) |> ignore;
 
         fc#add_item "_Help on Pfff" ~callback:(fun () -> 
-            G.dialog_text "Read\nthe\nsource\n\ndude" "Help"
+            G.dialog_text "Read\nthe\nsource\n\ndude" "Help" |> ignore;
         ) |> ignore;
         fc#add_separator () |> ignore;
         fc#add_item "About" ~callback:(fun () -> 
@@ -397,14 +397,14 @@ let mk_gui ~screen_size ~legend test_mode w =
       tb#insert_widget (G.mk (GButton.button ~stock:`GO_BACK) (fun b -> 
         b#connect#clicked ~callback:(fun () -> 
           !Controller._go_back w;
-        )
+        ) |> ignore;
       ));
 
       tb#insert_widget (G.mk (GButton.button ~stock:`GO_UP) (fun b -> 
         b#connect#clicked ~callback:(fun () -> 
           let current_root = w.dw.current_root in
           !Controller._go_dirs_or_file w [Common2.dirname current_root];
-        )
+        ) |> ignore;
       ));
 
       tb#insert_widget (G.mk (GButton.button ~stock:`GOTO_TOP) (fun b -> 
@@ -413,7 +413,7 @@ let mk_gui ~screen_size ~legend test_mode w =
           (* put 2 in the stack because _go_back will popup one *)
           w.dw_stack := [top; top];
           !Controller._go_back w;
-        )
+        ) |> ignore;
       ));
     ));
 
