@@ -1,0 +1,10 @@
+(* use: "ocamlc -o thread_bug -thread unix.cma threads.cma thread_bug.ml" *)
+
+let rec f x = 1 + (if x = 0 then 0 else f (x-1))
+
+let _ = Thread.create f 200
+
+(* After a few seconds, sometimes a minute, thread exits and a
+   double free corruption is detected *)
+
+let _ = while true do () done

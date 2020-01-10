@@ -1,0 +1,5 @@
+cairo2/: used by codemap/codegraph, core graphics library.
+cairo2-gtk/: gtk/cairo interaction, to draw on a gtk surface
+cairo2-pango/: variable-sized fonts used by codemap
+lablgtk2/:   used by codemap/codegraph, mostly for interactive menus and basic
+ UI chrome.
