@@ -2,18 +2,21 @@
  (name codemap)
  (wrapped false)
  (libraries
+    ; stdlib deps
     threads
     lablgtk2
     cairo2
     cairo2-gtk
-
+    
+    ; pfff deps
     commons 
     pfff-h_visualization gui
-    pfff-graph_code  pfff-h_program-lang
+    pfff-h_program-lang pfff-graph_code  
 
     pfff-lang_python pfff-lang_python-analyze
     pfff-lang_js pfff-lang_js-analyze
-    pfff-lang_php pfff-lang_php-analyze-checker pfff-lang_php-analyze-visual
+    pfff-lang_php pfff-lang_php-analyze-foundation 
+      pfff-lang_php-analyze-checker pfff-lang_php-analyze-visual
 
     pfff-lang_java pfff-lang_java-analyze
     pfff-lang_cpp pfff-lang_cpp-analyze
@@ -29,7 +32,9 @@
     pfff-lang_rust pfff-lang_rust-analyze
 
     pfff-lang_html pfff-lang_html-analyze
+    pfff-lang_text
 
+    ; local deps
     h_program_visual
  )
 )

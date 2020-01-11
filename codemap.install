@@ -1,8 +1,0 @@
-lib: [
-  "_build/install/default/lib/codemap/META"
-  "_build/install/default/lib/codemap/dune-package"
-  "_build/install/default/lib/codemap/opam"
-]
-doc: [
-  "_build/install/default/doc/codemap/README.md"
-]

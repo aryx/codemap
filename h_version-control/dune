@@ -3,6 +3,7 @@
  (wrapped false)
  (libraries
 
+   ; pfff deps
    commons commons_core
    pfff-config
 

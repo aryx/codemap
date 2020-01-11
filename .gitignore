@@ -4,3 +4,4 @@ _build
 /project.el
 /skip_list.txt
 /top.ml
+/codemap.install

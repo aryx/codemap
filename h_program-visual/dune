@@ -3,8 +3,11 @@
  (wrapped false)
  (libraries
 
+   ; pfff deps
    commons pfff-h_visualization
    pfff-h_program-lang
+
+   ; local deps
    h_version_control
  )
 )
