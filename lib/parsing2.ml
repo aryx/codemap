@@ -55,6 +55,7 @@ type ast =
   (* system *)
   | Cpp of Parse_cpp.toplevels_and_tokens
   | Rust of Parse_rust.program_and_tokens
+  | Go of Parse_go.program_and_tokens
 
   (* mainstream *)
   | Java of Parse_java.program_and_tokens
@@ -330,6 +331,18 @@ let tokens_with_categ_of_file file hentities =
           | _ -> raise Impossible));
         highlight_visit = Highlight_java.visit_toplevel;
         info_of_tok = Token_helpers_java.info_of_tok;
+        }
+        file prefs hentities
+
+  | FT.PL (FT.Go) ->
+      tokens_with_categ_of_file_helper 
+        { parse = (parse_cache 
+         (fun file -> Go (Parse_go.parse file |> fst))
+          (function 
+          | Go (ast, toks) -> [Common2.some ast, (toks)] 
+          | _ -> raise Impossible));
+        highlight_visit = Highlight_go.visit_program;
+        info_of_tok = Token_helpers_go.info_of_tok;
         }
         file prefs hentities
 

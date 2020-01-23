@@ -21,6 +21,7 @@
     pfff-lang_java pfff-lang_java-analyze
     pfff-lang_cpp pfff-lang_cpp-analyze
     pfff-lang_csharp pfff-lang_csharp-analyze
+    pfff-lang_go pfff-lang_go-analyze
 
     pfff-lang_ml pfff-lang_ml-analyze
     pfff-lang_nw pfff-lang_nw-analyze
