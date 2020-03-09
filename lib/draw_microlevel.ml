@@ -96,6 +96,7 @@ let use_fancy_highlighting file =
     | FT.PL (FT.Skip)
     | FT.PL (FT.Web (FT.TypeScript))
     | FT.PL (FT.Go)
+    | FT.PL (FT.Ruby)
     ) -> true
   | (FT.Text "txt") when Common2.basename file =$= "info.txt" -> true
   | _ -> false

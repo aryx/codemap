@@ -9,6 +9,7 @@
     cairo2-gtk
     
     ; pfff deps
+    dyp
     commons 
     pfff-h_visualization gui
     pfff-h_program-lang pfff-graph_code  
@@ -17,6 +18,7 @@
     pfff-lang_js pfff-lang_js-analyze
     pfff-lang_php pfff-lang_php-analyze-foundation 
       pfff-lang_php-analyze-checker pfff-lang_php-analyze-visual
+    pfff-lang_ruby pfff-lang_ruby-analyze
 
     pfff-lang_java pfff-lang_java-analyze
     pfff-lang_cpp pfff-lang_cpp-analyze

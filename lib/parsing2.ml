@@ -63,6 +63,7 @@ type ast =
 
   (* scripting *)
   | Python of Parse_python.program_and_tokens
+  | Ruby of Parse_ruby.program_and_tokens
 
   (* documentation *)
   | Noweb of Parse_nw.program_and_tokens
@@ -287,6 +288,22 @@ let tokens_with_categ_of_file file hentities =
         highlight_visit = (fun ~tag_hook prefs (ast, toks) -> 
           Highlight_python.visit_program ~tag_hook prefs (ast, toks));
         info_of_tok = Token_helpers_python.info_of_tok;
+        }
+        file prefs hentities
+  | FT.PL (FT.Ruby) ->
+      tokens_with_categ_of_file_helper 
+        { parse = (parse_cache (fun file -> 
+           Common.save_excursion Flag_parsing.error_recovery true (fun()->
+             Ruby (Parse_ruby.parse file |> fst))
+         )
+         (function 
+         | Ruby (astopt, toks) -> 
+             [astopt, toks] 
+         | _ -> raise Impossible
+         ));
+        highlight_visit = (fun ~tag_hook prefs (ast, toks) -> 
+          Highlight_ruby.visit_program ~tag_hook prefs (ast, toks));
+        info_of_tok = Token_helpers_ruby.info_of_tok;
         }
         file prefs hentities
 
