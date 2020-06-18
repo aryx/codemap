@@ -12,6 +12,9 @@
    commons commons_core commons_ocollection
    pfff-config
    pfff-commons-graph
+   dyp
+   ppx_deriving
+   uucp uutf
 
    ; codemap lib deps
    pfff-h_visualization gui
