@@ -1,0 +1,7 @@
+To install codemap, you must first install recent versions of:
+ - OCaml (at least 4.02.3)
+   see http://caml.inria.fr/download.en.html
+ - GTK (at least gtk 2.10) and Cairo
+ - pfff (see codemap.opam)
+
+

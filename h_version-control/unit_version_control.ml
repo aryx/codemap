@@ -39,7 +39,7 @@ let unittest =
 (*****************************************************************************)
 
     "find root" >:: (fun () ->
-      let pfff_home = Config_pfff.path in
+      let pfff_home = (* Config_pfff.path *) raise Todo in
       try
         assert_equal
           (Git.find_root_from_absolute_path pfff_home)

@@ -16,8 +16,7 @@
 
     pfff-lang_python pfff-lang_python-analyze
     pfff-lang_js pfff-lang_js-analyze
-    pfff-lang_php pfff-lang_php-analyze-foundation 
-      pfff-lang_php-analyze-checker pfff-lang_php-analyze-visual
+    pfff-lang_php pfff-lang_php-analyze pfff-lang_php-visual pfff-lang_php-checker 
     pfff-lang_ruby pfff-lang_ruby-analyze
 
     pfff-lang_java pfff-lang_java-analyze
