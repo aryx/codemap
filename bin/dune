@@ -2,10 +2,7 @@
  (names main_codemap)
  (libraries 
    ; stdlib deps
-   bigarray
-   threads          ;; needed for json-wheel (Condition?)
-   json-wheel       ;; Json_io, Json_type
-
+   str bigarray
    ocamlgraph
 
    ; pfff deps
