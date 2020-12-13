@@ -2,6 +2,7 @@
  (name h_version_control)
  (wrapped false)
  (libraries
+   ounit2
 
    ; pfff deps
    commons commons_core

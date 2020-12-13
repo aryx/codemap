@@ -38,10 +38,12 @@ module Flag = Flag_visual
 
 (* This type is needed if we want to use a single hashtbl to memoize
  * all the parsed file.
+ * Now that a few language highlighters rely on the generic AST and
+ * highlight_AST.ml, should we also memoized the (named) generic AST?
  *)
 type ast = 
   (* functional *)
-  | ML  of Parse_ml.program_and_tokens
+  | ML  of (Ast_ml.program, Parser_ml.token) Parse_info.parsing_result
   | Hs  of Parse_hs.program_and_tokens
   | Lisp of Parse_lisp.program_and_tokens
   | Erlang of Parse_erlang.program_and_tokens
@@ -49,21 +51,21 @@ type ast =
 
   (* web *)
   | Html of Parse_html.program_and_tokens
-  | Js  of Parse_js.program_and_tokens
-  | Php of Parse_php.program_with_comments
+  | Js  of (Ast_js.program, Parser_js.token) Parse_info.parsing_result
+  | Php of (Cst_php.program, Parser_php.token) Parse_info.parsing_result
 
   (* system *)
   | Cpp of Parse_cpp.toplevels_and_tokens
   | Rust of Parse_rust.program_and_tokens
-  | Go of Parse_go.program_and_tokens
+  | Go of (Ast_go.program, Parser_go.token) Parse_info.parsing_result
 
   (* mainstream *)
-  | Java of Parse_java.program_and_tokens
+  | Java of (Ast_java.program, Parser_java.token) Parse_info.parsing_result
   | Csharp of Parse_csharp.program_and_tokens
 
   (* scripting *)
-  | Python of Parse_python.program_and_tokens
-  | Ruby of Parse_ruby.program_and_tokens
+  | Python of (AST_python.program, Parser_python.token) Parse_info.parsing_result
+  | Ruby of (Ast_ruby.program, Parser_ruby.token) Parse_info.parsing_result
 
   (* documentation *)
   | Noweb of Parse_nw.program_and_tokens
@@ -204,12 +206,12 @@ let tokens_with_categ_of_file file hentities =
       tokens_with_categ_of_file_helper 
         { parse = (parse_cache (fun file ->
           Common.save_excursion Flag_parsing.error_recovery true (fun () ->
-            let ((ast, toks), _stat) = Parse_php.parse file in
             (* todo: use database_light if given? we could so that
              * variables are better annotated.
              * note that database_light will be passed in
              * rewrite_categ_using_entities() at least.
              *)
+(*
             let find_entity = None in
             (* work by side effect on ast2 too *)
             (try 
@@ -218,9 +220,12 @@ let tokens_with_categ_of_file file hentities =
               ast
              with Cst_php.TodoNamespace _ | Common.Impossible -> ()
             );
-            Php ((ast, toks))
+*)
+            Php (Parse_php.parse file)
           ))
-         (function Php (ast, toks) -> [ast, toks] | _ -> raise Impossible));
+         (function  
+          | Php {PI. ast; tokens; _} -> [ast, tokens] 
+          | _ -> raise Impossible));
          highlight_visit = (fun ~tag_hook prefs (ast, toks) ->
           Highlight_php.visit_program ~tag:tag_hook prefs hentities 
             (ast, toks)
@@ -234,12 +239,10 @@ let tokens_with_categ_of_file file hentities =
       tokens_with_categ_of_file_helper 
         { parse = (parse_cache (fun file -> 
            Common.save_excursion Flag_parsing.error_recovery true (fun()->
-             ML (Parse_ml.parse file |> fst))
-         )
+             ML (Parse_ml.parse file)
+         ))
          (function 
-         | ML (astopt, toks) -> 
-             let ast = astopt ||| [] in
-             [ast, toks] 
+         | ML {PI. ast; tokens; _} -> [ast, tokens] 
          | _ -> raise Impossible));
         highlight_visit = (fun ~tag_hook prefs (ast, toks) -> 
           Highlight_ml.visit_program ~tag_hook prefs (ast, toks));
@@ -254,8 +257,7 @@ let tokens_with_categ_of_file file hentities =
              Skip (Parse_skip.parse file |> fst))
          )
          (function 
-         | Skip (astopt, toks) -> 
-             [astopt, toks] 
+         | Skip (astopt, toks) -> [astopt, toks] 
          | _ -> raise Impossible));
         highlight_visit = (fun ~tag_hook prefs (ast, toks) -> 
           Highlight_skip.visit_program ~tag_hook prefs (ast, toks));
@@ -278,11 +280,10 @@ let tokens_with_categ_of_file file hentities =
       tokens_with_categ_of_file_helper 
         { parse = (parse_cache (fun file -> 
            Common.save_excursion Flag_parsing.error_recovery true (fun()->
-             Python (Parse_python.parse file |> fst))
+             Python (Parse_python.parse file))
          )
          (function 
-         | Python (astopt, toks) -> 
-             [astopt, toks] 
+         | Python {PI. ast; tokens; _} -> [Some ast, tokens] 
          | _ -> raise Impossible
          ));
         highlight_visit = (fun ~tag_hook prefs (ast, toks) -> 
@@ -294,11 +295,10 @@ let tokens_with_categ_of_file file hentities =
       tokens_with_categ_of_file_helper 
         { parse = (parse_cache (fun file -> 
            Common.save_excursion Flag_parsing.error_recovery true (fun()->
-             Ruby (Parse_ruby.parse file |> fst))
+             Ruby (Parse_ruby.parse file))
          )
          (function 
-         | Ruby (astopt, toks) -> 
-             [astopt, toks] 
+         | Ruby {PI. ast; tokens; _} -> [Some ast, tokens] 
          | _ -> raise Impossible
          ));
         highlight_visit = (fun ~tag_hook prefs (ast, toks) -> 
@@ -342,9 +342,9 @@ let tokens_with_categ_of_file file hentities =
   | FT.PL (FT.Java) ->
       tokens_with_categ_of_file_helper 
         { parse = (parse_cache 
-         (fun file -> Java (Parse_java.parse file |> fst))
+         (fun file -> Java (Parse_java.parse file))
           (function 
-          | Java (ast, toks) -> [Common2.some ast, (toks)] 
+          | Java {PI. ast; tokens; _} -> [ast, tokens] 
           | _ -> raise Impossible));
         highlight_visit = Highlight_java.visit_toplevel;
         info_of_tok = Token_helpers_java.info_of_tok;
@@ -354,9 +354,9 @@ let tokens_with_categ_of_file file hentities =
   | FT.PL (FT.Go) ->
       tokens_with_categ_of_file_helper 
         { parse = (parse_cache 
-         (fun file -> Go (Parse_go.parse file |> fst))
+         (fun file -> Go (Parse_go.parse file))
           (function 
-          | Go (ast, toks) -> [Common2.some ast, (toks)] 
+          | Go {PI. ast; tokens; _} -> [ast, tokens] 
           | _ -> raise Impossible));
         highlight_visit = Highlight_go.visit_program;
         info_of_tok = Token_helpers_go.info_of_tok;
@@ -408,12 +408,10 @@ let tokens_with_categ_of_file file hentities =
         { parse = (parse_cache
           (fun file -> 
             Common.save_excursion Flag_parsing.error_recovery true (fun () ->
-              Js (Parse_js.parse file |> fst))
+              Js (Parse_js.parse file))
           )
          (function 
-         | Js (astopt, toks) -> 
-             let ast = astopt ||| [] in
-             [ast, toks] 
+         | Js {PI. ast; tokens; _} -> [ast, tokens] 
          | _ -> raise Impossible
          ));
         highlight_visit = Highlight_js.visit_program;
