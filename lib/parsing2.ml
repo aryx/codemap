@@ -245,7 +245,7 @@ let tokens_with_categ_of_file file hentities =
          | ML {PI. ast; tokens; _} -> [ast, tokens] 
          | _ -> raise Impossible));
         highlight_visit = (fun ~tag_hook prefs (ast, toks) -> 
-          Highlight_ml.visit_program ~tag_hook prefs (ast, toks));
+          Highlight_ml.visit_program ~tag_hook prefs file (ast, toks));
         info_of_tok = Token_helpers_ml.info_of_tok;
         }
         file prefs hentities
