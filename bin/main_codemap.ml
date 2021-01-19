@@ -201,6 +201,10 @@ let filters = [
     match File_type.file_type_of_file file with
     | FT.PL (FT.Web (FT.Js)) -> true  | _ -> false
   );
+  "config", (fun file ->
+    match File_type.file_type_of_file file with
+    | FT.PL (FT.Web (FT.Yaml | FT.Json)) -> true  | _ -> false
+  );
 
   "cpp", (let x = ref false in (fun file ->
     Common2.once x (fun () -> 
