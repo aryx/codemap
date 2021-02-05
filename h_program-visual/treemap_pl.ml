@@ -158,12 +158,14 @@ let color_of_webpl_type kind =
 
   | PL.Css -> "yellow"
   | PL.Js | PL.Coffee | PL.TypeScript | PL.TSX -> "SpringGreen"
-  | PL.Html | PL.Xml | PL.Json | PL.Yaml -> "sienna"
+  | PL.Html | PL.Xml -> "sienna"
 
 (*  | PL.Pic _ -> "RosyBrown" *)
   | PL.Sql -> "SteelBlue"
 
-
+(* TODO Config
+  | PL.Json | PL.Yaml -> "sienna"
+*)
 
 (*****************************************************************************)
 (* Anamorphic rectangles *)
@@ -181,7 +183,7 @@ let anamorphic_diviser_of_file ~root file =
 
   | PL (Web Html) -> 85.
 
-  | PL (Web Json) -> 40.
+  | Config Json -> 40.
 
   | PL (Web Xml) -> 70.
 

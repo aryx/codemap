@@ -1,3 +1,26 @@
+opam-version: "2.0"
+name: "codemap"
+version: "0.1.0"
+synopsis: "Stuff"
+description: """
+More stuff
+"""
+
+maintainer: "Yoann Padioleau <pad@r2c.dev>"
+authors: [ "Yoann Padioleau <pad@r2c.dev>" ]
+license: "LGPL-2.1"
+homepage: "https://semgrep.dev"
+dev-repo: "git+https://github.com/aryx/codemap"
+bug-reports: "https://github.com/aryx/codemap/issues"
+
+# These are build dependencies.
+# Development-only dependencies are in 'dev/dev.opam'.
+#
 depends: [
-  "pfff" { = "0.39.5" }
+  "dune" {>= "2.7.0" }
+  "lablgtk"
+  "cairo2-gtk"
 ]
+
+build: [make]
+

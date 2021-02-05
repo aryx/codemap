@@ -43,7 +43,7 @@ module Flag = Flag_visual
  *)
 type ast = 
   (* functional *)
-  | ML  of (Ast_ml.program, Parser_ml.token) Parse_info.parsing_result
+(*  | ML  of (Ast_ml.program, Parser_ml.token) Parse_info.parsing_result *)
   | Hs  of Parse_hs.program_and_tokens
   | Lisp of Parse_lisp.program_and_tokens
   | Erlang of Parse_erlang.program_and_tokens
@@ -51,7 +51,7 @@ type ast =
 
   (* web *)
   | Html of Parse_html.program_and_tokens
-  | Js  of (Ast_js.program, Parser_js.token) Parse_info.parsing_result
+(*  | Js  of (Ast_js.program, Parser_js.token) Parse_info.parsing_result *)
   | Php of (Cst_php.program, Parser_php.token) Parse_info.parsing_result
 
   (* system *)
@@ -234,6 +234,7 @@ let tokens_with_categ_of_file file hentities =
         }
         file prefs hentities
 
+(* TODO
   (* works also for Fsharp; at least the tokenizer *)
   | FT.PL (FT.ML _) ->
       tokens_with_categ_of_file_helper 
@@ -249,6 +250,7 @@ let tokens_with_categ_of_file file hentities =
         info_of_tok = Token_helpers_ml.info_of_tok;
         }
         file prefs hentities
+*)
 
   | FT.PL (FT.Skip) ->
       tokens_with_categ_of_file_helper 
@@ -403,6 +405,7 @@ let tokens_with_categ_of_file file hentities =
         }
         file prefs hentities
 
+(* TODO	
   | FT.PL (FT.Web (FT.Js | FT.Coffee | FT.TypeScript)) ->
       tokens_with_categ_of_file_helper 
         { parse = (parse_cache
@@ -422,6 +425,7 @@ let tokens_with_categ_of_file file hentities =
         info_of_tok = Token_helpers_js.info_of_tok;
         }
         file prefs hentities
+*)
 
   | FT.PL (FT.Web (FT.Html)) ->
       tokens_with_categ_of_file_helper 

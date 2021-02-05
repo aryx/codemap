@@ -159,7 +159,7 @@ let filters = [
   (* pad-specific: ocaml related files *)
   "pfff", (fun file ->
     match FT.file_type_of_file file with
-    | FT.PL (FT.ML _ | FT.Makefile | FT.Prolog _) -> 
+    | FT.PL (FT.ML _ | FT.Prolog _) | FT.Config FT.Makefile -> 
         not ( 
                 (* file =~ ".*commons/" || *)
                 (* file =~ ".*external/" || *)
@@ -168,18 +168,18 @@ let filters = [
   );
   "xix", (fun file ->
     match FT.file_type_of_file file with
-    | FT.PL ((FT.ML _) | FT.Makefile | (FT.C _ | FT.Asm)) -> true
+    | FT.PL ((FT.ML _) | (FT.C _ | FT.Asm)) | FT.Config FT.Makefile -> true
     | _ -> false
   );
 
   "ocaml", (fun file ->
     match File_type.file_type_of_file file with
-    | FT.PL (FT.ML _) | FT.PL (FT.Makefile)  -> true
+    | FT.PL (FT.ML _) | FT.Config (FT.Makefile)  -> true
     | _ -> false
   );
   "mli", (fun file ->
     match File_type.file_type_of_file file with
-    | FT.PL (FT.ML "mli") | FT.PL (FT.Makefile)   -> 
+    | FT.PL (FT.ML "mli") | FT.Config (FT.Makefile)   -> 
       not (file =~ ".*/commons/")
     | _ -> false
   );
@@ -203,7 +203,7 @@ let filters = [
   );
   "config", (fun file ->
     match File_type.file_type_of_file file with
-    | FT.PL (FT.Web (FT.Yaml | FT.Json)) -> true  | _ -> false
+    | FT.Config (FT.Yaml | FT.Json) -> true  | _ -> false
   );
 
   "cpp", (let x = ref false in (fun file ->
