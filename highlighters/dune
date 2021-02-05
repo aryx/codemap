@@ -1,0 +1,15 @@
+(library
+ (public_name pfff-highlighters)
+ (name pfff_highlighters)
+ (wrapped false)
+ (libraries
+
+   commons commons_core
+   pfff-config pfff-h_program-lang
+   pfff-lang_GENERIC_base pfff-lang_GENERIC ; now in semgrep actually
+   pfff-graph_code
+   pfff-lang_ml
+   pfff-lang_js
+ )
+ (preprocess (pps ppx_deriving.show))
+)

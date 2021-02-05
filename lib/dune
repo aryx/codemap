@@ -36,6 +36,9 @@
     pfff-lang_html pfff-lang_html-analyze
     pfff-lang_text
 
+    ; now actually in codemap
+    pfff-highlighters
+
     ; local deps
     h_program_visual
  )
