@@ -141,9 +141,15 @@ let windows_params screen_size =
     (* on Apple Thunderbolt 27' display *)
     | 2 ->
         2560, 1580, 2350, 100 (* was 2200 and 280 *)
-    (* on LG 38' display with split codemap/efuns *)
+    (* on Dell 40' *)
     | 3 ->
-        2510, 1540, 0, 0
+       (* on LG 38' display with split codemap/efuns *)
+       (* 2510, 1540, 0, 0 *)
+       (* TODO: would like to put more, like 3400x2000 but does not work
+        * and it instead maximize the window (gnome/mutter bug?)
+        *)
+       2700, 1600, 0, 0
+       
     | 4 ->
         16000, 9000, 15900, 100
     | 5 ->
