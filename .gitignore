@@ -5,3 +5,14 @@ _build
 /skip_list.txt
 /top.ml
 /codemap.install
+
+# syncweb
+/lib/Visual.aux
+/lib/Visual.bbl
+/lib/Visual.blg
+/lib/Visual.brf
+/lib/Visual.log
+/lib/Visual.out
+/lib/Visual.tex
+/lib/Visual.toc
+Visual-*.pdf
