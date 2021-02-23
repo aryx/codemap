@@ -85,7 +85,7 @@ let visit_program ~tag_hook _prefs (ast, toks) =
 
     | T.T_NULL ii -> tag ii H.Null
     | T.T_FALSE (ii) | T.T_TRUE ii -> tag ii Boolean
-    | T.T_NUMBER (_, ii) -> tag ii Number
+    | T.T_INT (_, ii) | T.T_FLOAT (_, ii) -> tag ii Number
 
     (* still? both strings and regular identifiers can be used to represent
      * entities such as classes so have to look for both? *)

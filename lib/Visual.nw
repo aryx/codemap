@@ -353,21 +353,22 @@ Dependencies diagram and Tabular.
 \section{Main}
 
 <<main flags>>=
-(* on Macos lion, X11 resizes the window to a smaller size so
- * no point in starting with a big screen_size :(
+(* on macOS lion, X11 resizes the window to a smaller size so
+ * there is no point in starting with a big screen_size :(
  *)
 let screen_size = ref 1
-let legend = ref true
+let legend = ref false
 
 (* you can also put this in your ~/gtkrc-2.0
- * gtk-icon-theme-name = "Tango"
- * gtk-theme-name = "Murrine-Gray"
- * gtk-font-name = "DejaVu Sans 16"
+ *  gtk-icon-theme-name = "Tango"
+ *  gtk-theme-name = "Murrine-Gray"
+ *  gtk-font-name = "DejaVu Sans 16"
+ * or not put anything and use the default Gtk theme.
  *)
 
 (* if not specified, codemap will try to use files in the current directory *)
-let db_file    = ref (None: Common.filename option)
 let graph_file = ref (None: Common.filename option)
+let db_file    = ref (None: Common.filename option)
 let layer_file = ref (None: Common.filename option)
 let layer_dir  = ref (None: Common.dirname option)
 
@@ -382,7 +383,6 @@ let main_action xs =
 
   (* this used to be done by linking with gtkInit.cmo, but better like this *)
   let _locale = GtkMain.Main.init () in
-  pr2 (spf "Using Cairo version: %s" Cairo.compile_time_version_string);
 
   let root = Common2.common_prefix_of_files_or_dirs xs in
   pr2 (spf "Using root = %s" root);
@@ -394,14 +394,14 @@ let main_action xs =
     | Some file, _, _ -> 
         [Layer_code.load_layer file]
     | None, Some dir, _ | None, None, [dir] ->
-        layers_in_dir dir +> List.map Layer_code.load_layer
+        layers_in_dir dir |> List.map Layer_code.load_layer
     | _ -> []
   in
   let layers_with_index = 
     Layer_code.build_index_of_layers ~root 
       (match !layer_file, layers with 
       | Some _, [layer] -> [layer, true]
-      | _ -> layers +> List.map (fun x -> x, false)
+      | _ -> layers |> List.map (fun x -> x, false)
       )
   in
 
@@ -414,12 +414,12 @@ let main_action xs =
           Filename.concat dir Database_code.default_db_name ^ ".json";
       ] in
       (try 
-        Some (candidates +> List.find (fun file -> Sys.file_exists file))
+        Some (candidates |> List.find (fun file -> Sys.file_exists file))
       with Not_found -> None
       )
       | _ -> None
   in
-  db_file +> Common.do_option (fun db -> 
+  db_file |> Common.do_option (fun db -> 
     pr2 (spf "Using pfff light db: %s" db)
   );
   let graph_file = 
@@ -430,12 +430,12 @@ let main_action xs =
           Filename.concat dir Graph_code.default_filename;
       ] in
       (try 
-        Some (candidates +> List.find (fun file -> Sys.file_exists file))
+        Some (candidates |> List.find (fun file -> Sys.file_exists file))
       with Not_found -> None
       )
     | _ -> None
   in
-  graph_file +> Common.do_option (fun db -> 
+  graph_file |> Common.do_option (fun db -> 
     pr2 (spf "Using graphcode: %s" db)
   );
   let skip_file = !skip_file ||| Filename.concat root "skip_list.txt" in
@@ -462,13 +462,13 @@ let main_action xs =
      * runtime, so let's do the heavy computation in another process
      * and here just have the thread waiting for it to be done.
      * This thread used to cause some Bus error on MacOS but now that
-     * we use invoke and do the job in another process things seems better :)
+     * we use invoke and do the job in another process things seem better :)
      *)
     let job () = build_model root db_file graph_file in
     let res = Parallel.invoke job () () in
     Async.async_set res async_model;
   ) ()
-  +> ignore;
+  |> ignore;
  
   let w = { Model.
     dw;
@@ -518,18 +518,15 @@ type model = {
 (* this is currently called in the background *)
 let build_model2 root dbfile_opt graphfile_opt =   
 
-  let db_opt = dbfile_opt +> Common.map_opt Database_code.load_database in
-  (* todo: and skip_list?
-   * less: opti by factorizing the 'find' with treemap_generator?
-  *)
+  let db_opt = dbfile_opt |> Common.map_opt Database_code.load_database in
   let files = 
-    Common.files_of_dir_or_files_no_vcs_nofilter [root] +> List.filter !filter
+    Common.files_of_dir_or_files_no_vcs_nofilter [root] |> List.filter !filter
   in
   let hentities = Model_database_code.hentities root db_opt in
   let all_entities = Model_database_code.all_entities ~root files db_opt in
   let big_grep_idx = Completion2.build_completion_defs_index all_entities in
 
-  let g_opt = graphfile_opt +> Common.map_opt Graph_code.load in
+  let g_opt = graphfile_opt |> Common.map_opt Graph_code.load in
   let hfile_deps_of_node, hentities_of_file =
     match g_opt with
     | None -> Hashtbl.create 0, Hashtbl.create 0
@@ -674,10 +671,10 @@ let readable_to_absolute_filename_under_root ~root filename =
   in
 
   let root_and_parents =
-    Common2.inits_of_absolute_dir root_dir +> List.rev
+    Common2.inits_of_absolute_dir root_dir |> List.rev
   in
   try 
-    root_and_parents +> Common2.return_when (fun dir ->
+    root_and_parents |> Common2.return_when (fun dir ->
       let path = Filename.concat dir filename in
       if Sys.file_exists path
       then Some path
@@ -729,14 +726,14 @@ hentities : (string (* short name *), Database_code.entity) Hashtbl.t;
 let hentities root db_opt = 
   let hentities = Hashtbl.create 1001 in
 
-  db_opt +> Common.do_option (fun db ->
+  db_opt |> Common.do_option (fun db ->
 
     let actual_root = actual_root_of_db ~root db in
 
       (* todo sanity check that db talks about files
        * in dirs_or_files ? Ensure same readable path.
        *)
-      db.Db.entities +> Array.iter (fun e ->
+      db.Db.entities |> Array.iter (fun e ->
         Hashtbl.add hentities
           e.Db.e_name
           {e with Db.e_file = 
@@ -766,16 +763,19 @@ let init_drawing   ?(width = 600) ?(height = 600) func layers paths root =
   let paths = List.map Common2.relative_to_absolute paths in
   let current_root = Common2.common_prefix_of_files_or_dirs paths in
   let treemap = 
-    Common.profile_code "Visual.building the treemap" (fun () -> func paths) in
+    Common.profile_code "Visual.building the treemap" (fun () -> 
+      func paths
+    ) 
+  in
   let readable_file_to_rect =
-    treemap +> Common.map_filter (fun rect ->
+    treemap |> Common.map_filter (fun rect ->
       if not rect.T.tr_is_node
       then 
         let file  = rect.T.tr_label in
         let readable = Common.readable ~root file in
         Some (readable, rect)
       else None
-    ) +> Common.hash_of_list
+    ) |> Common.hash_of_list
   in
   {
     treemap;
@@ -838,6 +838,13 @@ val mk_gui :
 let mk_gui ~screen_size ~legend test_mode w =
   let width, height, minimap_hpos, minimap_vpos = 
     Style.windows_params screen_size in
+  (* bugfix: can not set xy_ratio here because it's too late. We already
+   * computed the treemap with the old xy_ratio and changing xy_ratio now
+   * leads to the right part of the treemap to not be visible
+   * todo: why??
+  Treemap.xy_ratio := (float_of_int width) /. (float_of_int height);
+  pr2 (spf "using %f for xy_ratio" !Treemap.xy_ratio);
+   *)
 
   let win = GWindow.window 
     ~title:(Controller.title_of_path w.dw.current_root)
@@ -850,7 +857,7 @@ let mk_gui ~screen_size ~legend test_mode w =
 
   let statusbar = GMisc.statusbar () in
   let ctx = statusbar#new_context "main" in
-  Controller._statusbar_addtext := (fun s -> ctx#push s +> ignore);
+  Controller._statusbar_addtext := (fun s -> ctx#push s |> ignore);
 
   let accel_group = GtkData.AccelGroup.create () in
   win#misc#set_name "main window";
@@ -877,29 +884,13 @@ let mk_gui ~screen_size ~legend test_mode w =
     (*-------------------------------------------------------------------*)
     hbox#pack (G.mk (GMenu.menu_bar) (fun m -> 
       let factory = new GMenu.factory m in
-(*
-      factory#add_submenu "_File" +> (fun menu -> 
-        let fc = new GMenu.factory menu ~accel_group in
-        (* todo? open Db ? *)
-        fc#add_item "_Open stuff from db" ~key:K._O ~callback:(fun () -> 
-          ();
-        ) +> ignore;
-        fc#add_separator () +> ignore;
 
-      factory#add_submenu "_Edit" +> (fun menu -> 
-        GToolbox.build_menu menu ~entries:[
-          `S;
-        ];
-      ) +> ignore;
-*)
-
-      factory#add_submenu "_Move" +> (fun menu -> 
+      factory#add_submenu "_Move" |> (fun menu -> 
         let fc = new GMenu.factory menu ~accel_group in
 
-        (* todo? open Db ? *)
         fc#add_item "_Go back" ~key:K._B ~callback:(fun () -> 
           !Controller._go_back w;
-        ) +> ignore;
+        ) |> ignore;
 
         fc#add_item "_Go to example" ~key:K._E ~callback:(fun () -> 
           let model = Async.async_get w.model in
@@ -918,46 +909,45 @@ let mk_gui ~screen_size ~legend test_mode w =
                   !Controller._go_dirs_or_file w [final_file];
               )
           | _ -> failwith "no entity currently selected or no db"
-        ) +> ignore;
-        fc#add_item "_Quit" ~key:K._Q ~callback:quit +> ignore;
+        ) |> ignore;
+        fc#add_item "_Quit" ~key:K._Q ~callback:quit |> ignore;
       );
 
-      factory#add_submenu "_Search" +> (fun menu -> 
+      factory#add_submenu "_Search" |> (fun menu -> 
         let fc = new GMenu.factory menu ~accel_group in
 
-        (* todo? open Db ? *)
         fc#add_item "_Git grep" ~key:K._G ~callback:(fun () -> 
 
           let res = Ui_search.dialog_search_def w.model in
-          res +> Common.do_option (fun s ->
+          res |> Common.do_option (fun s ->
             let root = w.root_orig in
             let matching_files = Ui_search.run_grep_query ~root s in
-            let files = matching_files +> List.map fst +> Common2.uniq in
+            let files = matching_files |> List.map fst |> Common2.uniq in
             let current_grep_query = 
               Some (Common.hash_of_list matching_files)
             in
             !Controller._go_dirs_or_file ~current_grep_query w files
           );
-        ) +> ignore;
+        ) |> ignore;
 
         fc#add_item "_Tbgs query" ~key:K._T ~callback:(fun () -> 
 
           let res = Ui_search.dialog_search_def w.model in
-          res +> Common.do_option (fun s ->
+          res |> Common.do_option (fun s ->
             let root = w.dw.current_root in
             let matching_files = Ui_search.run_tbgs_query ~root s in
-            let files = matching_files +> List.map fst +> Common2.uniq in
+            let files = matching_files |> List.map fst |> Common2.uniq in
             let current_grep_query = 
               Some (Common.hash_of_list matching_files)
             in
             !Controller._go_dirs_or_file ~current_grep_query w files
           );
-        ) +> ignore;
+        ) |> ignore;
 
       );
-      factory#add_submenu "_Layers" +> (fun menu -> 
+      factory#add_submenu "_Layers" |> (fun menu -> 
         let layers = 
-          w.dw.layers.Layer_code.layers +> List.map (fun (layer, active) ->
+          w.dw.layers.Layer_code.layers |> List.map (fun (layer, active) ->
             (layer.Layer_code.title, active, (fun b -> 
               if b then
                 Ui_layers.choose_layer ~root:w.root_orig
@@ -976,43 +966,41 @@ let mk_gui ~screen_size ~legend test_mode w =
         GToolbox.build_menu menu ~entries
       );
 
-      factory#add_submenu "_Misc" +> (fun menu -> 
+      factory#add_submenu "_Misc" |> (fun menu -> 
         let fc = new GMenu.factory menu ~accel_group in
-
-        (* todo? open Db ? *)
 
         fc#add_item "_Refresh" ~key:K._R ~callback:(fun () -> 
           let current_root = w.dw.current_root in
           let _old_dw = Common2.pop2 w.dw_stack in
           !Controller._go_dirs_or_file w [current_root];
-        ) +> ignore;
+        ) |> ignore;
 
         fc#add_item "Reset entity" ~callback:(fun () ->
           w.current_node_selected <- None;
           let cr_overlay = Cairo.create w.dw.overlay in
           CairoH.clear cr_overlay;
           !Controller._refresh_da();
-        ) +> ignore;
+        ) |> ignore;
       );
 
-      factory#add_submenu "_Help" +> (fun menu -> 
+      factory#add_submenu "_Help" |> (fun menu -> 
         let fc = new GMenu.factory menu ~accel_group in
 
         fc#add_item "_Interface" ~key:K._H ~callback:(fun () -> 
             G.dialog_text Help.interface_doc "Help"
-        ) +> ignore;
+        ) |> ignore;
 
         fc#add_item "_Legend" ~key:K._L ~callback:(fun () -> 
           raise Todo
-        ) +> ignore;
+        ) |> ignore;
 
         fc#add_item "_Help on Pfff" ~callback:(fun () -> 
-            G.dialog_text "Read\nthe\nsource\n\ndude" "Help"
-        ) +> ignore;
-        fc#add_separator () +> ignore;
+            G.dialog_text "Read\nthe\nsource\n\ndude" "Help" |> ignore;
+        ) |> ignore;
+        fc#add_separator () |> ignore;
         fc#add_item "About" ~callback:(fun () -> 
             G.dialog_text "Brought to you by pad\nwith love" "About"
-        ) +> ignore;
+        ) |> ignore;
       );
     ));
 
@@ -1021,24 +1009,6 @@ let mk_gui ~screen_size ~legend test_mode w =
     (*-------------------------------------------------------------------*)
     hbox#pack ~padding:10 (G.mk (GButton.toolbar) (fun tb ->
 
-(*
-      tb#insert_widget (G.mk (GButton.button ~stock:`OPEN) (fun b -> 
-        b#connect#clicked ~callback:(fun () -> 
-          pr2 "OPEN";
-        );
-      ));
-      tb#insert_widget (G.mk (GButton.button ~stock:`SAVE) (fun b -> 
-        b#connect#clicked ~callback:(fun () -> 
-          pr2 "SAVE";
-        );
-      ));
-      tb#insert_space ();
-      tb#insert_button ~text:"SAVE THIS" ~callback:(fun () -> 
-        pr2 "SAVE THIS";
-      ) () +> ignore;
-      tb#insert_space ();
-
-*)
       let idx = (fun () -> 
         let model = Async.async_get w.model in
         model.Model2.big_grep_idx 
@@ -1057,7 +1027,7 @@ let mk_gui ~screen_size ~legend test_mode w =
           let readable_paths = 
             (* hack to handle multidirs *)
             match e.Db.e_kind with
-            | Database_code.MultiDirs ->
+            | Entity_code.MultiDirs ->
                 (* hack: coupling: with mk_multi_dirs_entity *)
                 Common.split "|" e.Db.e_file
             | _ ->
@@ -1065,15 +1035,15 @@ let mk_gui ~screen_size ~legend test_mode w =
           in
 
           let final_paths = 
-            readable_paths +> List.map 
+            readable_paths |> List.map 
               (Model_database_code.readable_to_absolute_filename_under_root 
                  ~root:w.dw.current_root)
           in
 
           pr2 (spf "e= %s, final_paths= %s" str(Common.join "|" final_paths));
           w.current_entity <- Some e;
-          Async.async_get_opt w.model +> Common.do_option (fun model ->
-            model.g +> Common.do_option (fun g ->
+          Async.async_get_opt w.model |> Common.do_option (fun model ->
+            model.g |> Common.do_option (fun g ->
               w.current_node_selected <- 
                 Model_graph_code.node_of_entity e g
             )
@@ -1105,8 +1075,8 @@ let mk_gui ~screen_size ~legend test_mode w =
                 match re_opt with
                 | None -> []
                 | Some re ->
-                    rects +> List.filter (fun r -> 
-                      let label = r.T.tr_label +> String.lowercase in
+                    rects |> List.filter (fun r -> 
+                      let label = r.T.tr_label |> String.lowercase_ascii in
                       label ==~ re
                     )
               in
@@ -1127,14 +1097,14 @@ let mk_gui ~screen_size ~legend test_mode w =
       tb#insert_widget (G.mk (GButton.button ~stock:`GO_BACK) (fun b -> 
         b#connect#clicked ~callback:(fun () -> 
           !Controller._go_back w;
-        )
+        ) |> ignore;
       ));
 
       tb#insert_widget (G.mk (GButton.button ~stock:`GO_UP) (fun b -> 
         b#connect#clicked ~callback:(fun () -> 
           let current_root = w.dw.current_root in
           !Controller._go_dirs_or_file w [Common2.dirname current_root];
-        )
+        ) |> ignore;
       ));
 
       tb#insert_widget (G.mk (GButton.button ~stock:`GOTO_TOP) (fun b -> 
@@ -1143,7 +1113,7 @@ let mk_gui ~screen_size ~legend test_mode w =
           (* put 2 in the stack because _go_back will popup one *)
           w.dw_stack := [top; top];
           !Controller._go_back w;
-        )
+        ) |> ignore;
       ));
     ));
 
@@ -1179,16 +1149,16 @@ let mk_gui ~screen_size ~legend test_mode w =
      * and an event changes w.dw (e.g. a resize of the window)
      * then the expose event will still expose the old drawing.
      *)
-    da#event#connect#expose ~callback:(expose da w) +> ignore;
-    da#event#connect#configure ~callback:(configure w) +> ignore;
-    da3#event#connect#expose ~callback:(expose_legend da3 w) +> ignore;
+    da#event#connect#expose ~callback:(expose da w) |> ignore;
+    da#event#connect#configure ~callback:(configure w) |> ignore;
+    da3#event#connect#expose ~callback:(expose_legend da3 w) |> ignore;
 
     da#event#connect#button_press 
-      (View_mainmap.button_action w) +> ignore;
+      (View_mainmap.button_action w) |> ignore;
     da#event#connect#button_release 
-      (View_mainmap.button_action w) +> ignore;
+      (View_mainmap.button_action w) |> ignore;
     da#event#connect#motion_notify  
-      (View_overlays.motion_notify w) +> ignore; 
+      (View_overlays.motion_notify w) |> ignore; 
 
     Controller._refresh_da := (fun () ->
       GtkBase.Widget.queue_draw da#as_widget;
@@ -1214,7 +1184,7 @@ let mk_gui ~screen_size ~legend test_mode w =
   (* End *)
   (*-------------------------------------------------------------------*)
 
-  (* Controller._before_quit_all_func +> Common.push2 Model.close_model; *)
+  (* Controller._before_quit_all_func |> Common.push2 Model.close_model; *)
 
   GtkSignal.user_handler := (fun exn -> 
     pr2 "fucking callback";
@@ -1227,7 +1197,7 @@ let mk_gui ~screen_size ~legend test_mode w =
   );
 
   (* TODO: should do that on 'da', not 'w' 
-  w#event#connect#key_press ~callback:(key_pressed (da,da2) dw) +> ignore;
+  w#event#connect#key_press ~callback:(key_pressed (da,da2) dw) |> ignore;
   *)
 
 (*
@@ -1242,16 +1212,16 @@ let mk_gui ~screen_size ~legend test_mode w =
   );
 *)
 
-  win#event#connect#delete    ~callback:(fun _  -> quit(); true) +> ignore;
-  win#connect#destroy         ~callback:(fun () -> quit(); ) +> ignore;
+  win#event#connect#delete    ~callback:(fun _  -> quit(); true) |> ignore;
+  win#connect#destroy         ~callback:(fun () -> quit(); ) |> ignore;
   win#show ();
 
   (* test *)
-  test_mode +> Common.do_option (fun _s -> 
+  test_mode |> Common.do_option (fun _s -> 
     (* View_test.do_command s model *)
     ()
   );
-  (* Gui.gmain_idle_add ~prio: 1000 (idle dw) +> ignore; *)
+  (* Gui.gmain_idle_add ~prio: 1000 (idle dw) |> ignore; *)
   GtkThread.main ();
   ()
 @
@@ -1275,11 +1245,10 @@ let mk_gui ~screen_size ~legend test_mode w =
 let device_to_user_area dw = 
   with_map dw (fun cr ->
 
-    let device_point = { Cairo. x = 0.0; y = 0.0 } in
-    let user_point1 = Cairo.device_to_user cr device_point in
-    let device_point = { Cairo.x = float_of_int dw.width; 
-                         Cairo.y = float_of_int dw.height; } in
-    let user_point2 = Cairo.device_to_user cr device_point in
+    let user_point1 = Cairo.device_to_user cr 
+      0. 0. in
+    let user_point2 = Cairo.device_to_user cr 
+      (float_of_int dw.width) (float_of_int dw.height) in
     
     { F.p = CairoH.cairo_point_to_point user_point1;
       F.q = CairoH.cairo_point_to_point user_point2;
@@ -1290,7 +1259,7 @@ let device_to_user_area dw =
 
 <<draw_treemap_rectangle sig>>=
 val draw_treemap_rectangle :
-  cr:Cairo.t -> 
+  cr:Cairo.context -> 
   ?color:Simple_color.emacs_color option -> 
   ?alpha:float -> 
   Treemap.treemap_rectangle -> 
@@ -1302,11 +1271,11 @@ let draw_treemap_rectangle2 ~cr ?(color=None) ?(alpha=1.) rect =
   let r = rect.T.tr_rect in
 
   (let (r,g,b) = 
-    let (r,g,b) = rect.T.tr_color +> Color.rgb_of_color +> Color.rgbf_of_rgb in
+    let (r,g,b) = rect.T.tr_color |> Color.rgb_of_color |> Color.rgbf_of_rgb in
     match color with
     | None -> (r,g,b)
     | Some c -> 
-        let (r2,g2,b2) = c +> Color.rgbf_of_string in
+        let (r2,g2,b2) = c |> Color.rgbf_of_string in
         (r2 + r / 20., g2 + g / 20., b2 + b / 20.)
   in
   Cairo.set_source_rgba cr r g b (alpha);
@@ -1330,7 +1299,7 @@ let draw_treemap_rectangle ~cr ?color ?alpha a =
 
 <<draw_treemap_rectangle_label_maybe sig>>=
 val draw_treemap_rectangle_label_maybe :
-  cr:Cairo.t -> 
+  cr:Cairo.context -> 
   zoom:float -> 
   color:Simple_color.emacs_color option -> 
   Treemap.treemap_rectangle -> 
@@ -1383,8 +1352,7 @@ let rec draw_treemap_rectangle_label_maybe2 ~cr ~zoom ?(color=None) rect =
     | Some c -> c
   in
 
-  Cairo.select_font_face cr "serif"
-    Cairo.FONT_SLANT_NORMAL Cairo.FONT_WEIGHT_BOLD;
+  Cairo.select_font_face cr "serif" ~weight:Cairo.Bold;
 
   let font_size, minus_alpha = 
     if not !Flag.boost_label_size
@@ -1446,7 +1414,7 @@ and try_draw_label ~font_size_orig ~color ~alpha ~cr ~rect txt =
     not rect.T.tr_is_node
   in
 
-  (let (r,g,b) = color +> Color.rgbf_of_string in
+  (let (r,g,b) = color |> Color.rgbf_of_string in
    Cairo.set_source_rgba cr r g b alpha;
   );
 
@@ -1468,8 +1436,8 @@ and try_draw_label ~font_size_orig ~color ~alpha ~cr ~rect txt =
        Common.memoized _hmemo_text_extent (font_size, font_size_real) (fun ()->
          (* peh because it exercises the spectrum of high letters *)
          let extent = CairoH.text_extents cr "peh" in
-         let tw = extent.Cairo.text_width in
-         let th = extent.Cairo.text_height in
+         let tw = extent.Cairo.width in
+         let th = extent.Cairo.height in
          th, tw
        )
      in
@@ -1534,18 +1502,18 @@ and try_draw_label ~font_size_orig ~color ~alpha ~cr ~rect txt =
          Cairo.move_to cr x y;
    
            
-         Cairo.rotate cr ~angle:angle;
+         Cairo.rotate cr angle;
          CairoH.show_text cr txt;
-         Cairo.rotate cr ~angle:(-. angle);
+         Cairo.rotate cr (-. angle);
          
          if rect.T.tr_depth <= 2 then begin
            (let (r,g,b) = Color.rgbf_of_string "red" in
             Cairo.set_source_rgba cr r g b alpha;
            );
            Cairo.move_to cr x y;
-           Cairo.rotate cr ~angle:angle;
+           Cairo.rotate cr angle;
            CairoH.show_text cr (String.sub txt 0 1);
-           Cairo.rotate cr ~angle:(-. angle);
+           Cairo.rotate cr (-. angle);
          end;
 
 
@@ -1574,7 +1542,7 @@ and try_draw_label ~font_size_orig ~color ~alpha ~cr ~rect txt =
      | n -> 
          if n >= 12
          then ()
-         else aux ~step:(Pervasives.(+) n 1) ~font_size
+         else aux ~step:(n +.. 1) ~font_size
     end
   in
   aux ~font_size:font_size_orig ~step:1 
@@ -1596,15 +1564,15 @@ This is kind of interfile "aspect"
 let draw_legend ~cr =
 
   let archis = Archi_code.source_archi_list in
-  let grouped_archis = archis +> Common.group_by_mapped_key (fun archi ->
+  let grouped_archis = archis |> Common.group_by_mapped_key (fun archi ->
     (* I tend to favor the darker variant of the color in treemap_pl.ml hence
      * the 3 below
      *)
     Treemap_pl.color_of_source_archi archi ^ "3"
   )
   in
-  let grouped_archis = grouped_archis +> List.map (fun (color, kinds) ->
-    color, kinds +> List.map Archi_code.s_of_source_archi +> Common.join ", "
+  let grouped_archis = grouped_archis |> List.map (fun (color, kinds) ->
+    color, kinds |> List.map Archi_code.s_of_source_archi |> Common.join ", "
   ) in
   draw_legend_of_color_string_pairs ~cr grouped_archis
 
@@ -1613,7 +1581,7 @@ let draw_legend ~cr =
 <<expose_legend>>=
 let expose_legend da w _ev = 
   let dw = w.dw in
-  let cr = Cairo_lablgtk.create da#misc#window in
+  let cr = Cairo_gtk.create da#misc#window in
 
   (* todo: make the architecture a layer so no need for special case *)
   (if not (Layer_code.has_active_layers dw.layers)
@@ -1640,7 +1608,7 @@ let expose_legend da w _ev =
 <<draw_treemap_rectangle_content_maybe sig>>=
 (* will render (maybe) the file content of treemap_rectangle.tr_label *)
 val draw_treemap_rectangle_content_maybe:
-  Cairo.t ->
+  Cairo.context ->
   Figures.rectangle ->
   Model2.context ->
   Treemap.treemap_rectangle -> 
@@ -1799,7 +1767,7 @@ let draw_content2 cr layout context tr =
     try Hashtbl.find_all context.grep_query file
     with Not_found -> []
   in
-  matching_grep_lines +> List.iter (fun line ->
+  matching_grep_lines |> List.iter (fun line ->
     let (Line iline) = line in
     Hashtbl.add hmatching_lines (iline+..1) "purple"
   );
@@ -1808,15 +1776,15 @@ let draw_content2 cr layout context tr =
   let glyphs_opt = 
     glyphs_of_file ~font_size ~font_size_real context.model2 file in
 
-  glyphs_opt +> Common.do_option (fun glyphs ->
-    glyphs +> Array.iteri (fun line_0_indexed _glyph ->
+  glyphs_opt |> Common.do_option (fun glyphs ->
+    glyphs |> Array.iteri (fun line_0_indexed _glyph ->
       let lc = line_to_line_in_column (Line line_0_indexed) layout in
       let x, y = line_in_column_to_bottom_pos lc r layout in
       Cairo.move_to cr x y;
       
-      glyphs.(line_0_indexed) +> List.iter (fun glyph ->
-        let pos = Cairo.get_current_point cr in
-        glyph.pos <- pos;
+      glyphs.(line_0_indexed) |> List.iter (fun glyph ->
+        let (x, y) = Cairo.Path.get_current_point cr in
+        glyph.pos <- {Figures.x; y };
         Cairo.set_font_size cr glyph.M.font_size;
         let (r,g,b) = Color.rgbf_of_string glyph.color in
         Cairo.set_source_rgba cr r g b 1.;
@@ -1885,7 +1853,7 @@ let draw_treemap_rectangle_content_maybe2 cr clipping context tr  =
        (* Common.nblines_with_wc was really slow. Forking sucks.
         * alt: we could store the nblines of a file in the db.
         *)
-        let nblines = Common2.nblines_eff file +> float_of_int in
+        let nblines = Common2.nblines_eff file |> float_of_int in
         
        (* Assume our code follow certain conventions. Could infer from file. 
         * We should put 80, but a font is higher than large, so I readjusted.
@@ -1904,13 +1872,12 @@ let draw_treemap_rectangle_content_maybe2 cr clipping context tr  =
           split_nb_columns;
           width_per_column = w / split_nb_columns;
           height_per_line = font_size;
-          nblines_per_column = (nblines / split_nb_columns) +> ceil;
+          nblines_per_column = (nblines / split_nb_columns) |> ceil;
         } 
         in
         draw_column_bars cr layout r;
         
-        Cairo.select_font_face cr Style.font_text
-          Cairo.FONT_SLANT_NORMAL Cairo.FONT_WEIGHT_NORMAL;
+        Cairo.select_font_face cr Style.font_text ~weight:Cairo.Normal;
     
         let font_size_real = CairoH.user_to_device_font_size cr font_size in
        (*pr2 (spf "file: %s, font_size_real = %f" file font_size_real);*)
@@ -1948,7 +1915,7 @@ let paint_content_maybe_rect ~user_rect dw model rect =
    let microlevel_opt = 
      Draw_microlevel.draw_treemap_rectangle_content_maybe
        cr clipping context rect in
-   microlevel_opt +> Common.do_option (fun microlevel ->
+   microlevel_opt |> Common.do_option (fun microlevel ->
      Hashtbl.replace dw.microlevel rect microlevel
    );
   (* have to redraw the label *)
@@ -1965,7 +1932,8 @@ let lazy_paint user_rect dw model () =
     | [] -> ()
     | x::xs ->
         Ctl.current_rects_to_draw := xs;
-        pr2 (spf "Drawing: %s" (x.T.tr_label));
+        if !debug
+        then pr2 (spf "Drawing: %s" (x.T.tr_label));
         paint_content_maybe_rect ~user_rect dw model x;
   done;
   !Ctl._refresh_da ();
@@ -1981,7 +1949,7 @@ let lazy_paint user_rect dw model () =
 let paint2 dw model = 
   pr2 (spf "paint");
   
-  !Ctl.paint_content_maybe_refresher +> Common.do_option GMain.Idle.remove;
+  !Ctl.paint_content_maybe_refresher |> Common.do_option GMain.Idle.remove;
   Ctl.current_rects_to_draw := [];
 
   let user_rect = device_to_user_area dw in
@@ -1993,13 +1961,13 @@ let paint2 dw model =
 
     (if not (Layer_code.has_active_layers dw.layers)
      (* phase 1, draw the rectangles *)
-     then rects +> List.iter (Draw_macrolevel.draw_treemap_rectangle ~cr)
-     else rects +> List.iter (Draw_macrolevel.draw_trect_using_layers 
+     then rects |> List.iter (Draw_macrolevel.draw_treemap_rectangle ~cr)
+     else rects |> List.iter (Draw_macrolevel.draw_trect_using_layers 
                                 ~cr dw.layers)
     );
 
     (* phase 2, draw the labels, if have enough space *)
-    rects +> List.iter (Draw_labels.draw_treemap_rectangle_label_maybe 
+    rects |> List.iter (Draw_labels.draw_treemap_rectangle_label_maybe 
                           ~cr ~zoom:1.0  ~color:None);
   );
 
@@ -2010,7 +1978,11 @@ let paint2 dw model =
   then begin
     Ctl.current_rects_to_draw := rects;
     Ctl.paint_content_maybe_refresher := 
-        Some (Gui.gmain_idle_add ~prio:3000 (lazy_paint user_rect dw model));
+        Some (Gui.gmain_idle_add ~prio:3000 (fun () ->
+          let res = lazy_paint user_rect dw model () in
+          Ctl.paint_content_maybe_refresher := None;
+          res
+        ));
   end
 
 let paint a b = 
@@ -2036,7 +2008,7 @@ val hfiles_and_top_entities :
 let hfiles_and_top_entities root db_opt =
   let hfiles = Hashtbl.create 1001 in
 
-  db_opt +> Common.do_option (fun db ->
+  db_opt |> Common.do_option (fun db ->
     let ksorted = 
       Db.build_top_k_sorted_entities_per_file ~k:5 db.Db.entities in
     let actual_root = actual_root_of_db ~root db in
@@ -2098,11 +2070,11 @@ let choose_layer ~root layer_title_opt w =
   pr2 "choose_layer()";
   let dw = w.dw in
 
-  let original_layers = dw.M.layers.L.layers +> List.map fst in
+  let original_layers = dw.M.layers.L.layers |> List.map fst in
   let layers_idx = 
     Layer_code.build_index_of_layers 
       ~root
-      (original_layers +> List.map (fun layer ->
+      (original_layers |> List.map (fun layer ->
         layer, 
         match layer_title_opt with
         | None -> false
@@ -2143,8 +2115,8 @@ let button_action w ev =
   let dw = w.dw in
 
   let x, y = GdkEvent.Button.x ev, GdkEvent.Button.y ev in
-  let pt = { Cairo. x = x; y = y } in
-  let user = with_map dw (fun cr -> Cairo.device_to_user cr pt) in
+  let user = with_map dw (fun cr -> 
+    Cairo.device_to_user cr x y |> CairoH.cairo_point_to_point ) in
   let r_opt = M.find_rectangle_at_user_point user dw in
 
   match GdkEvent.get_type ev with
@@ -2154,13 +2126,13 @@ let button_action w ev =
       pr2 (spf "button %d pressed" button);
       (match button with
       | 1 -> 
-        r_opt +> Common.do_option (fun (r, _, _r_englobing) ->
+        r_opt |> Common.do_option (fun (r, _, _r_englobing) ->
           let file = r.T.tr_label in
           pr2 (spf "clicking on %s" file);
         );
         true
       | 2 ->
-        r_opt +> Common.do_option (fun (r, _, _r_englobing) ->
+        r_opt |> Common.do_option (fun (r, _, _r_englobing) ->
           let file = r.T.tr_label in
           pr2 (spf "opening %s" file);
           let line = 
@@ -2171,7 +2143,7 @@ let button_action w ev =
         true
 
       | 3 ->
-        r_opt +> Common.do_option (fun (tr, _, _r_englobing) ->
+        r_opt |> Common.do_option (fun (tr, _, _r_englobing) ->
           (* actually file_or_dir *)
           let file = tr.T.tr_label in
 
@@ -2207,16 +2179,16 @@ let button_action w ev =
 
           let paths_of_readables xs = 
             xs 
-            +> List.sort Pervasives.compare
-            +> Common2.uniq
+            |> List.sort compare
+            |> Common2.uniq
             (* todo: tfidf to filter files like common2.ml *)
-            +> Common.exclude (fun readable -> 
+            |> Common.exclude (fun readable -> 
                 readable =~ "commons/common2.ml"
                 (*readable =~ "external/.*"  *)
             )
-            +> List.map (fun s -> Filename.concat model.root s)
+            |> List.map (fun s -> Filename.concat model.root s)
             (* less: print a warning when does not exist? *)
-            +> List.filter Sys.file_exists
+            |> List.filter Sys.file_exists
           in
           let readable = Common.readable ~root:model.root file in
           let readable =
@@ -2246,7 +2218,7 @@ let button_action w ev =
               let buf = Buffer.create 100 in
               let prx s = Buffer.add_string buf (s ^ "\n") in
               prx "short defs";
-              defs +> List.iter (fun (_line, short_node) ->
+              defs |> List.iter (fun (_line, short_node) ->
                   prx (" " ^ Graph_code.string_of_node short_node)
               );
               Gui.dialog_text ~text:(Buffer.contents buf) ~title:"Info file";
@@ -2262,8 +2234,8 @@ let button_action w ev =
                   let users = Graph_code.pred n (Graph_code.Use) g in
                   let str =
                     ([Graph_code.string_of_node n] @
-                    (users +> List.map Graph_code.string_of_node )
-                    ) +> Common.join "\n"
+                    (users |> List.map Graph_code.string_of_node )
+                    ) |> Common.join "\n"
                   in
                   Gui.dialog_text ~text:str ~title:"Info entity";
                 ));
@@ -2292,7 +2264,7 @@ let button_action w ev =
 
   | `TWO_BUTTON_PRESS ->
       pr2 ("double click");
-      r_opt +> Common.do_option (fun (_r, _, r_englobing) ->
+      r_opt |> Common.do_option (fun (_r, _, r_englobing) ->
         let path = r_englobing.T.tr_label in
         !Ctl._go_dirs_or_file w [path];
       );
@@ -2340,7 +2312,7 @@ let go_dirs_or_file ?(current_grep_query=None) w paths =
 
 <<find_rectangle_at_user_point sig>>=
 val find_rectangle_at_user_point :
-  Cairo.point -> drawing ->
+  Figures.point -> drawing ->
   (Treemap.treemap_rectangle * (* most precise *)
    Treemap.treemap_rectangle list * (* englobbing ones *)
    Treemap.treemap_rectangle (* top one *)
@@ -2359,7 +2331,6 @@ val find_rectangle_at_user_point :
  * and check if it's inside.
  *)
 let find_rectangle_at_user_point2 user dw =
-  let user = CairoH.cairo_point_to_point user in
 
   let rects = dw.treemap in
   if List.length rects = 1
@@ -2370,15 +2341,15 @@ let find_rectangle_at_user_point2 user dw =
     Some (x, [], x)
   else 
    let matching_rects = rects 
-    +> List.filter (fun r -> 
+    |> List.filter (fun r -> 
         F.point_is_in_rectangle user r.T.tr_rect && r.T.tr_depth > 1
     ) 
-    +> List.map (fun r -> r, r.T.tr_depth) 
+    |> List.map (fun r -> r, r.T.tr_depth) 
     (* opti: this should be far faster by using a quad tree to represent
      * the treemap
      *)
-    +> Common.sort_by_val_highfirst 
-    +> List.map fst
+    |> Common.sort_by_val_highfirst 
+    |> List.map fst
    in
    match matching_rects with
    | [] -> None
@@ -2401,6 +2372,10 @@ see multi dir search
 \subsection{Opening a file in an external editor}
 
 <<editor_connection.mli>>=
+
+val emacsclient_path: string ref
+val efunsclient_path: string ref
+
 val open_file_in_current_editor: file:string -> line:Model2.line -> unit
 @ 
 
@@ -2410,24 +2385,31 @@ let emacsclient_path_mac =
   "/home/pad/Dropbox/apps/Emacs.app/Contents/MacOS/bin/emacsclient"
 *)
 
-let emacsclient_path = "emacsclient"
+let emacsclient_path = ref "emacsclient"
+let efunsclient_path = ref "efunsclient"
 
 (* you need to have done a M-x server-start first *)
 let run_emacsclient ~file ~line =
-  Common.command2 (spf "%s -n %s" emacsclient_path file);
+  Common.command2 (spf "%s -n %s" !emacsclient_path file);
   Common.command2 (spf 
     "%s -e '(with-current-buffer (window-buffer (selected-window)) (goto-line %d))'"
-    emacsclient_path line);
+    !emacsclient_path line);
   ()
+
+(* you need to have done a M-x server_start first *)
+let run_efunsclient ~file ~line =
+  Common.command2 (spf "%s %s -line %d" !efunsclient_path file line)
+
 @
 
 
 <<open_file_in_current_editor()>>=
 let open_file_in_current_editor ~file ~line =
   let (Model2.Line line) = line in
-  (* emacs line numbers start at 1 *)
+  (* emacs/efuns line numbers start at 1 *)
   let line = line + 1 in
-  run_emacsclient ~file ~line
+  run_efunsclient ~file ~line;
+  run_emacsclient ~file ~line;
 @
 
 
@@ -2438,7 +2420,7 @@ let go_back w =
   (* reset also the motion notifier ? less needed because
    * the next motion will reset it
    *)
-  !Controller.paint_content_maybe_refresher +> Common.do_option (fun x ->
+  !Controller.paint_content_maybe_refresher |> Common.do_option (fun x ->
     GMain.Idle.remove x;
   );
   let old_dw = Common2.pop2 w.dw_stack in
@@ -2504,7 +2486,7 @@ let with_map dw f =
 <<zoom_pan_scale_map>>=
 let zoom_pan_scale_map cr dw =
   Cairo.scale cr 
-    (float_of_int dw.width / T.xy_ratio)
+    (float_of_int dw.width / !T.xy_ratio)
     (float_of_int dw.height)
   ;
   (* I first scale and then translate as the xtrans are in user coordinates *)
@@ -2549,7 +2531,7 @@ let dialog_search_def model =
         text
       )
   in
-  res +> Common.do_option (fun s -> 
+  res |> Common.do_option (fun s -> 
     pr2 ("selected: " ^ s);
   );
   res
@@ -2569,7 +2551,7 @@ let run_grep_query ~root s =
     spf "cd %s; git grep %s %s" root git_grep_options s
   in
   let xs = Common.cmd_to_list cmd in
-  let xs = xs +> List.map (fun s ->
+  let xs = xs |> List.map (fun s ->
     if s =~ "\\([^:]*\\):\\([0-9]+\\):.*"
     then
       let (filename, lineno) = Common.matched2 s in
@@ -2589,7 +2571,7 @@ let run_tbgs_query ~root s =
     spf "cd %s; tbgs --stripdir %s" root s
   in
   let xs = Common.cmd_to_list cmd in
-  let xs = xs +> List.map (fun s ->
+  let xs = xs |> List.map (fun s ->
     if s =~ "\\([^:]*\\):\\([0-9]+\\):.*"
     then
       let (filename, lineno) = Common.matched2 s in
@@ -2643,18 +2625,10 @@ val build_completion_defs_index :
 <<build_completion_defs_index>>=
 (* I was previously using a prefix-clustering optimisation but it
  * does not allow suffix search. Moreover it was still slow so
- * big_grep is just simpler and better.
+ * Big_grep is just simpler and better.
  *)
 
 let build_completion_defs_index all_entities = 
-  (* todo? compute stuff in background ?
-   *  Thread.create (fun () -> 
-   * while(true) do 
-   * Thread.delay 4.0;
-   * pr2 "thread1";
-   * done
-   * ) ();
-   *)
   BG.build_index all_entities
 @ 
 
@@ -2725,213 +2699,194 @@ let all_entities ~root files db_opt =
 open Common
 
 module G = Gui
-
+module E = Entity_code
 module Db = Database_code
 module BG = Big_grep
-
 module Flag = Flag_visual
-
-(* to optimize the completion by using a specialized fast ocaml-based model *)
-open Custom_list_generic
+module HC = Highlight_code
 
 (*****************************************************************************)
 (* Prelude *)
 (*****************************************************************************)
 (*
- * Gtk is quite "fragile". You change what looks to be an innoncent line
- * and then suddenly your performance goes down or you get some
- * gtk warnings at runtime. So take care when changing this file.
+ * Gtk (and lablgtk) is very fragile; if you change what looks like
+ * an innocent line, you might suddenly get performance regressions
+ * or new Gtk warnings at runtime. So take care when changing this file.
+ *
+ * todo:
+ *  - http://jeremymikkola.com/posts/2019_03_19_rules_for_autocomplete.html
  *)
 
 (*****************************************************************************)
-(* Helpers *)
-(*****************************************************************************)
-
-(*
-let is_prefix2 s1 s2 =
-  (String.length s1 <= String.length s2) && 
-  (String.sub s2 0 (String.length s1) = s1)
-let is_prefix a b = 
-  Common.profile_code "Completion.is_prefix" (fun () -> is_prefix2 a b)
-*)
-
-(*****************************************************************************)
-(*  *)
+(* Code indexing *)
 (*****************************************************************************)
 
 <<build_completion_defs_index>>
 
+(*****************************************************************************)
+(* Icons *)
+(*****************************************************************************)
+
+(* Many IDEs use icons to represent entities:
+ *  - https://docs.microsoft.com/en-us/visualstudio/ide/class-view-and-object-browser-icons?view=vs-2015
+ *  - http://help.eclipse.org/kepler/index.jsp?topic=/org.eclipse.jdt.doc.user/reference/ref-icons.htm
+ *  - https://www.jetbrains.com/help/idea/symbols.html
+ *  - https://github.com/patrys/vscode-code-outline/tree/master/resources/light
+ *    (just 8 icons, and not great one)
+ *  - https://atom.io/packages/structure-view
+ *    (very few icons too)
+ *
+ * I originally used icons to reprensent entities, first from Gtk Stock icons
+ * (ugly) and later from Eclipse, but in the end those icons were not
+ * super readable not universal, and were mostly for OO languages.
+ * Using the color scheme of info_of_entity_kind_and_usedef2 is simpler
+ * and better.
+ * If you want to bring back icons, look at the history of the file to
+ * get back the relevant code.
+ *)
+
+(*****************************************************************************)
+(* Colors *)
+(*****************************************************************************)
+
+let color_of_entity_kind kind =
+  (* less: could use count to even have color depending on count *)
+  let use = HC.SomeUse in
+  let props = HC.info_of_entity_kind_and_usedef2 kind (HC.Def2 use) in
+  let color = 
+    try props |> Common.find_some (function
+        | `FOREGROUND s -> Some s
+        | _ -> None
+      )
+    with Not_found -> 
+        failwith (spf "could not find a FOREGROUND color for entity %s"
+          (Entity_code.string_of_entity_kind kind))
+  in
+  color
 
 (*****************************************************************************)
 (* Model *)
 (*****************************************************************************)
 
-let icon_of_kind kind has_test =
-  match kind with
-  | Db.Function -> 
-      if has_test then `YES else `NO
-  
-  (* todo: do different symbols for unit tested class and methods ? 
-   * or add another column in completion popup
-   * todo? class vs interface ?
+let column_list = new GTree.column_list
+(* old:
+ *  let col_full = (column_list#add Gobject.Data.caml: t GTree.column)
+ * this works only with a custom list model :( but those models seem to not
+ * work anymore inside completion boxes :( so instead I use a col_id
+ * and a store_id_to_entity hash to get equivalent functionality.
+ *)
+let col_id   = column_list#add Gobject.Data.int
+let col_text = column_list#add Gobject.Data.string
+let col_file = column_list#add Gobject.Data.string
+let col_count = column_list#add Gobject.Data.string
+(* To colorize the foreground of col_text.
+ * less: could also colorize the background and could also colorize
+ * col_file (using dircolors.ml color coding)
+ *)
+let col_color_fg = column_list#add Gobject.Data.string
+let col_color_bg = column_list#add Gobject.Data.string
+
+
+let model_of_list_pair_string_with_icon2 xs =
+
+  (* old: I was using before a custom_list 
+   * (see custom_list_generic.ml in lablgtk2/examples)
+   * to be faster because GTree.tree_store used to be really slow.
+   * However, I am now unable to make it work with recent gtk/lablgtk2
+   * (I get some failure assertions regarding GtkModelFilter)
+   * so I reverted back to using the simpler tree_store which in 2019
+   * seems ok.
    *)
-  | Db.Class -> `CONNECT
-  | Db.Module -> `DISCONNECT
-  | Db.Package -> `DIRECTORY
-  | Db.Type -> `PROPERTIES
-  | Db.Constant -> `CONNECT
-  | Db.Global -> `MEDIA_RECORD
-  | Db.Method -> `CONVERT
-
-  | Db.File -> `FILE
-  | Db.Dir -> `DIRECTORY
-  | Db.MultiDirs -> `QUIT
-
-  (* todo *)
-  | Db.ClassConstant -> `CONNECT
-  | Db.Field -> `CONNECT
-  | Db.Macro -> `CONNECT
-  | Db.Exception -> `CONNECT
-  | Db.Constructor -> `CONNECT
-  | Db.Prototype -> `CONNECT
-  | Db.GlobalExtern -> `CONNECT
-
-  | (Db.TopStmts | Db.Other _ ) -> raise Todo
-
-
-module L=struct
-  type t = { 
-    mutable entity: Database_code.entity;
-    mutable text: string; 
-    mutable file: string; 
-    mutable count: string;
-    mutable kind: string;
-    mutable icon: GtkStock.id;
-  }
-
-  (** The columns in our custom model *)
-  let column_list = new GTree.column_list ;;
-  let col_full = (column_list#add Gobject.Data.caml: t GTree.column);;
-
-  let col_text = column_list#add Gobject.Data.string;;
-  let col_file = column_list#add Gobject.Data.string;;
-  let col_count = column_list#add Gobject.Data.string;;
-  let _col_kind = column_list#add Gobject.Data.string;;
-  let col_icon = column_list#add GtkStock.conv;;
-
-  let custom_value _ t ~column = 
-    match column with
-    | 0 -> (* col_full *) `CAML (Obj.repr t)
-
-    | 1 -> (* col_text *) `STRING (Some t.text)
-    | 2 -> (* col_file *) `STRING (Some t.file)
-    | 3 -> (* col_count *) `STRING (Some t.count)
-    | 4 -> (* col_kind *) `STRING (Some t.kind)
-
-    (* pad: big hack, they use STRING to present stockid in gtkStock.ml *) 
-    | 5 -> (* col_icon *) `STRING (Some (GtkStock.convert_id t.icon))
-    | _ -> assert false
-
-end
-
-module MODEL=MAKE(L)
-
-let model_of_list_pair_string_with_icon2 _query xs =
-
-  let custom_list = MODEL.custom_list () in
+  let model = GTree.tree_store column_list in
+  let store_id_to_entity = Hashtbl.create 101 in
 
   pr2 (spf "Size of model = %d" (List.length xs));
-  xs +> List.iter (fun e ->
-    let kind = e.Db.e_kind in
-    
-    let has_unit_test =
+  xs |> Common2.index_list_0 |> List.iter (fun (e, id) ->
+   
+    let _has_unit_test =
       List.length e.Db.e_good_examples_of_use >= 1
     in
     let name = e.Db.e_name in
+
     (* if the string is too long, we will not see the other properties *)
     let final_name = 
       try (String.sub name 0 30) ^ "..."
       with Invalid_argument _ -> name
     in
-    custom_list#insert {L. 
-      entity = e;                     
+    let color = color_of_entity_kind e.Db.e_kind in
 
-      (* had originally an ugly hack where we would artificially create
-       * a text2 field with always set to query. Indeed
-       * gtk seems to be confused if the column referenced
-       * by set_text_column contains a string that is not matching
-       * the current query. So here we were building this fake text entry.
-       * In fact as explained on the pygtk entry of entry_completion
-       * you don't have to use set_text_column if you provide
-       * your own set_match_func, which we do.
-       * Maybe we should just not use Entrycompletion at all and build
-       * our own popup.
-       *)
-      text = final_name;
+    let row = model#append () in
 
+    model#set ~row ~column:col_id id;
+    (* I had originally an ugly hack where I would artificially create
+     * a text2 field with always set to query. Indeed
+     * gtk seems to be confused if the column referenced
+     * by set_text_column contains a string that is not matching
+     * the current query. So here I was building this fake text entry.
+     * In fact as explained on the pygtk entry of entry_completion
+     * you don't have to use set_text_column if you provide
+     * your own set_match_func, which I do now.
+     * Maybe we should just not use Entrycompletion at all and build
+     * our own popup.
+     *)
+    model#set ~row ~column:col_text final_name;
+    model#set ~row ~column:col_count (i_to_s (e.Db.e_number_external_users));
+    model#set ~row ~column:col_file e.Db.e_file;
+    model#set ~row ~column:col_color_fg color;
+    model#set ~row ~column:col_color_bg "DarkSlateGray";
 
-      file = e.Db.e_file;
-      count = i_to_s (e.Db.e_number_external_users);
-      kind = Db.string_of_entity_kind kind;
-      icon = icon_of_kind kind has_unit_test;
-    };
+    Hashtbl.add store_id_to_entity id e;
   );
-  (custom_list :> GTree.model)
+  model, store_id_to_entity
 
 
-let model_of_list_pair_string_with_icon query a =
+let model_of_list_pair_string_with_icon a =
   Common.profile_code "Completion2.model_of_list" (fun () ->
-    model_of_list_pair_string_with_icon2 query a
+    model_of_list_pair_string_with_icon2 a
   )
 
 let model_col_of_prefix prefix_or_suffix idx =
   let xs = 
     BG.top_n_search 
       ~top_n:!Flag.top_n
-      ~query:prefix_or_suffix idx
+      ~query:prefix_or_suffix 
+      idx
   in
-  model_of_list_pair_string_with_icon prefix_or_suffix xs
+  model_of_list_pair_string_with_icon xs
 
 (*****************************************************************************)
 (* Main entry point *)
 (*****************************************************************************)
 
 let add_renderer (completion : GEdit.entry_completion) =
-
-  let renderer = 
-    GTree.cell_renderer_pixbuf [ `STOCK_SIZE `BUTTON ] in
+  
+  let renderer = GTree.cell_renderer_text [] in
   completion#pack (renderer :> GTree.cell_renderer);
   completion#add_attribute (renderer :> GTree.cell_renderer) 
-    "stock_id" L.col_icon;
+    "text" col_text;
+  completion#add_attribute (renderer :> GTree.cell_renderer) 
+    "foreground" col_color_fg;
+  completion#add_attribute (renderer :> GTree.cell_renderer) 
+    "background" col_color_bg;
+
+  let renderer = GTree.cell_renderer_text [`WIDTH 80] in
+  completion#pack (renderer :> GTree.cell_renderer);
+  completion#add_attribute (renderer :> GTree.cell_renderer) 
+    "text" col_count;
 
   let renderer = GTree.cell_renderer_text [] in
   completion#pack (renderer :> GTree.cell_renderer);
   completion#add_attribute (renderer :> GTree.cell_renderer) 
-    "text" L.col_text;
+    "text" col_file;
 
-  let renderer = GTree.cell_renderer_text [] in
-  completion#pack (renderer :> GTree.cell_renderer);
-  completion#add_attribute (renderer :> GTree.cell_renderer) 
-    "text" L.col_count;
-
-  let renderer = GTree.cell_renderer_text [] in
-  completion#pack (renderer :> GTree.cell_renderer);
-  completion#add_attribute (renderer :> GTree.cell_renderer) 
-    "text" L.col_file;
-
-  (* can omit this:
-   *    completion#set_text_column L.col_text2; 
-   * 
-   * but then must define a set_match_func otherwise will never
-   * see a popup
-   *)
   ()
+  
 
 let fake_entity = {Database_code.
      e_name = "foobar";
      e_fullname = "";
      e_file = "foo.php";
-     e_kind = Db.Function;
+     e_kind = E.Function;
      e_pos = { Common2.l = -1; c = -1 };
      e_number_external_users = 0;
      e_good_examples_of_use = [];
@@ -2940,53 +2895,58 @@ let fake_entity = {Database_code.
 
 let my_entry_completion_eff2 ~callback_selected ~callback_changed fn_idx = 
   
-  let entry = GEdit.entry ~width:500 () in
+  let entry = GEdit.entry ~width:1100 () in
   let completion = GEdit.entry_completion () in
   entry#set_completion completion;
 
   let xs = [ fake_entity ] in
-  let model_dumb = model_of_list_pair_string_with_icon "foo" xs in
-  let model = ref (model_dumb) in
+  let model_dumb, h_dumb = model_of_list_pair_string_with_icon xs in
+  let model = ref model_dumb in
+  let store_id_to_entity = ref h_dumb in
 
   add_renderer completion;
   completion#set_model (!model :> GTree.model);
 
-  (* we don't use the builtin gtk completion mechanism as we
-   * recompute the model each time using big_grep so where
-   * we just always return true. Moreover the builtin gtk
+  (* we don't use the builtin gtk completion mechanism because we
+   * recompute the model each time using big_grep so here
+   * we just always return true. Moreover, the builtin gtk
    * function would do a is_prefix check between the row
-   * and the current query which in our case would fail when
-   * we use the suffix-search ability of big_grep.
+   * and the current query which in our case would fail because
+   * we want the suffix-search ability of big_grep.
    *)
   completion#set_match_func (fun _key _row ->
     true
   );
   completion#set_minimum_key_length 2;
 
-  completion#connect#match_selected (fun model_filter row ->
-     (* note: the code below does not work; the row is relative to the
+  completion#connect#match_selected (fun _model_filter row ->
+     (* note: the code below used to not work; the row was relative to the
       * model_filter.
-      * let str = !model#get ~row ~column:col1 in
-      * let file = !model#get ~row ~column:col2 in
+      *  let str = !model#get ~row ~column:col1 in
+      *  let file = !model#get ~row ~column:col2 in
+      * update: I now get assetions failures when using model_filter so
+      *  I am now using back again !model.
+      * old: 
+      *  let model = model_filter#child_model in
+      *  let row = model_filter#convert_iter_to_child_iter row in
+      * does not work anymore
       *)
 
-      let str = 
-        model_filter#child_model#get 
-          ~row:(model_filter#convert_iter_to_child_iter row)
-          ~column:L.col_text
-      in
-      let file = 
-        model_filter#child_model#get 
-          ~row:(model_filter#convert_iter_to_child_iter row)
-          ~column:L.col_file
-      in
-      let t = 
-        model_filter#child_model#get 
-          ~row:(model_filter#convert_iter_to_child_iter row)
-          ~column:L.col_full
-      in
-      callback_selected entry str file t.L.entity
-  ) +> ignore;
+      let str =  !model#get ~row ~column:col_text in
+      let file = !model#get ~row ~column:col_file in
+
+      (* old: 
+       * let t =   model#get ~row ~column:col_full in
+       * unfortunately this does seem to work only with custom list
+       *)
+      let id = !model#get ~row ~column:col_id in
+      let entity = Hashtbl.find !store_id_to_entity id in
+
+      pr2 str;
+      pr2 file;
+      callback_selected entry str file entity
+
+  ) |> ignore;
 
   let current_timeout = ref None in
 
@@ -2994,16 +2954,20 @@ let my_entry_completion_eff2 ~callback_selected ~callback_changed fn_idx =
     let s = entry#text in
     pr2 s;
     if s <> "" then begin
-      !current_timeout +> Common.do_option (fun x ->
+      !current_timeout |> Common.do_option (fun x ->
         GMain.Timeout.remove x;
       );
       current_timeout :=
         Some 
           (G.gmain_timeout_add ~ms:250
            ~callback:(fun _ -> 
+            (* bugfix: reset it otherwise get Glib errors *)
+            current_timeout := None;
             pr2 "changing model";
             let idx = fn_idx () in
-            model := model_col_of_prefix s idx;
+            let (m,h) = model_col_of_prefix s idx in
+            model := m;
+            store_id_to_entity := h;
             completion#set_model (!model :> GTree.model);
 
             callback_changed s;
@@ -3011,14 +2975,13 @@ let my_entry_completion_eff2 ~callback_selected ~callback_changed fn_idx =
           ));
     end
     else callback_changed s
-  ) +> ignore;
+  ) |> ignore;
 
   (* return the entry so someone can hook another signal *)
   entry
  
 let my_entry_completion_eff ~callback_selected ~callback_changed x = 
   my_entry_completion_eff2 ~callback_selected ~callback_changed x
-
 
 @ 
 
@@ -3063,9 +3026,9 @@ Here low level graphics layers.
 <<fields drawing main view>>=
 (* device coordinates *)
 (* first cairo layer, for heavy computation e.g. the treemap and content*)
-mutable base: [ `Any ] Cairo.surface;
+mutable base: Cairo.Surface.t;
 (* second cairo layer, when move the mouse *)
-mutable overlay: [ `Any ] Cairo.surface;
+mutable overlay: Cairo.Surface.t;
 (* todo? third cairo layer? for animations and time related graphics such
  * as tooltips, glowing rectangles, etc?
  *)
@@ -3084,7 +3047,7 @@ let draw_englobing_rectangles_overlay ~dw (r, middle, r_englobing) =
   Draw_labels.draw_treemap_rectangle_label_maybe 
     ~cr:cr_overlay ~color:(Some "red") ~zoom:1.0 r_englobing;
 
-  middle +> Common.index_list_1 +> List.iter (fun (r, i) ->
+  middle |> Common.index_list_1 |> List.iter (fun (r, i) ->
     let color = 
       match i with
       | 1 -> "grey70"
@@ -3106,13 +3069,12 @@ let draw_englobing_rectangles_overlay ~dw (r, middle, r_englobing) =
 (* assumes cr_overlay has not been zoom_pan_scale *)
 let draw_label_overlay ~cr_overlay ~x ~y txt =
 
-  Cairo.select_font_face cr_overlay "serif" 
-    Cairo.FONT_SLANT_NORMAL Cairo.FONT_WEIGHT_NORMAL;
+  Cairo.select_font_face cr_overlay "serif" ~weight:Cairo.Normal;
   Cairo.set_font_size cr_overlay Style.font_size_filename_cursor;
       
   let extent = CairoH.text_extents cr_overlay txt in
-  let tw = extent.Cairo.text_width in
-  let th = extent.Cairo.text_height in
+  let tw = extent.Cairo.width in
+  let th = extent.Cairo.height in
 
   let refx = x - tw / 2. in
   let refy = y in
@@ -3135,7 +3097,7 @@ let draw_label_overlay ~cr_overlay ~x ~y txt =
 <<draw_searched_rectangles>>=
 let draw_searched_rectangles ~dw =
  with_overlay dw (fun cr_overlay ->
-  dw.current_searched_rectangles +> List.iter (fun r ->
+  dw.current_searched_rectangles |> List.iter (fun r ->
     CairoH.draw_rectangle_figure ~cr:cr_overlay ~color:"yellow" r.T.tr_rect
   );
   (* 
@@ -3169,11 +3131,11 @@ let motion_refresher ev w =
 
   (* some similarity with View_mainmap.button_action handler *)
   let x, y = GdkEvent.Motion.x ev, GdkEvent.Motion.y ev in
-  let pt = { Cairo. x = x; y = y } in
-  let user = View_mainmap.with_map dw (fun cr -> Cairo.device_to_user cr pt) in
+  let user = View_mainmap.with_map dw (fun cr -> 
+    Cairo.device_to_user cr x y |> CairoH.cairo_point_to_point) in
   let r_opt = M.find_rectangle_at_user_point user dw in
 
-  r_opt +> Common.do_option (fun (tr, middle, r_englobing) ->
+  r_opt |> Common.do_option (fun (tr, middle, r_englobing) ->
     (* coupling: similar code in right click handler in View_mainmap *)
     let line_opt = 
       M.find_line_in_rectangle_at_user_point user tr dw in
@@ -3221,21 +3183,21 @@ let motion_refresher ev w =
     );
 
     draw_englobing_rectangles_overlay ~dw (tr, middle, r_englobing);
-    Async.async_get_opt w.model +> Common.do_option (fun model ->
+    Async.async_get_opt w.model |> Common.do_option (fun model ->
       draw_deps_files tr dw model;
-      entity_opt +> Common.do_option (fun _n -> w.current_node <- None);
-      entity_def_opt+>Common.do_option (fun n -> draw_deps_entities n dw model);
-      entity_use_opt+>Common.do_option (fun n -> draw_deps_entities n dw model);
+      entity_opt |> Common.do_option (fun _n -> w.current_node <- None);
+      entity_def_opt|>Common.do_option (fun n -> draw_deps_entities n dw model);
+      entity_use_opt|>Common.do_option (fun n -> draw_deps_entities n dw model);
     );
   
     if w.settings.draw_searched_rectangles;
     then draw_searched_rectangles ~dw;
 
     !Controller.current_tooltip_refresher
-    +>Common.do_option GMain.Timeout.remove;
+      |> Common.do_option GMain.Timeout.remove;
     Controller.current_tooltip_refresher := 
       Some (Gui.gmain_timeout_add ~ms:1000 ~callback:(fun _ ->
-        Async.async_get_opt w.model +> Common.do_option (fun model ->
+        Async.async_get_opt w.model |> Common.do_option (fun model ->
           match entity_opt, model.g with
           | Some node, Some g ->
             draw_tooltip ~cr_overlay ~x ~y node g;
@@ -3243,6 +3205,7 @@ let motion_refresher ev w =
           | _ -> ()
           ;
         );
+        Controller.current_tooltip_refresher := None;
         (* do not run again *)
         false
       ));
@@ -3260,9 +3223,13 @@ let motion_notify w ev =
   (* The motion code now takes time, so it's better do run it when the user
    * has finished moving his mouse, hence the use of gmain_idle_add below.
    *)
-  !Controller.current_motion_refresher +> Common.do_option GMain.Idle.remove;
+  !Controller.current_motion_refresher |> Common.do_option GMain.Idle.remove;
   Controller.current_motion_refresher := 
-    Some (Gui.gmain_idle_add ~prio:200 (fun () -> motion_refresher ev w));
+    Some (Gui.gmain_idle_add ~prio:200 (fun () -> 
+      let res = motion_refresher ev w in
+      Controller.current_motion_refresher := None;
+      res
+    ));
   true
 @ 
 
@@ -3279,7 +3246,7 @@ let motion_notify w ev =
 \subsection{The [[configure]] event}
 
 <<configure>>=
-let configure2_bis w ev = 
+let configure2 w ev = 
   let dw = w.dw in
   let width = GdkEvent.Configure.width ev in
   let height = GdkEvent.Configure.height ev in
@@ -3290,16 +3257,6 @@ let configure2_bis w ev =
   View_mainmap.paint dw w.model;
   true
 
-(* ugly: for some unknown reason configure get called twice at
- * the beginning of the program
- *)
-let first_call = ref true
-let configure2 a b =
-  (* should probably do is_old_gtk() *)
-  if !first_call && CairoH.is_old_cairo () 
-  then begin first_call := false; true end
-  else 
-    configure2_bis a b
 
 let configure a b =
   Common.profile_code "View.configure" (fun () -> configure2 a b)
@@ -3321,11 +3278,11 @@ let configure a b =
 let assemble_layers cr_final dw =
   let surface_src = dw.base in
 
-  Cairo.set_operator cr_final Cairo.OPERATOR_OVER;
+  Cairo.set_operator cr_final Cairo.OVER;
   Cairo.set_source_surface cr_final surface_src 0. 0.;
   Cairo.paint cr_final;
 
-  Cairo.set_operator cr_final Cairo.OPERATOR_OVER;
+  Cairo.set_operator cr_final Cairo.OVER;
   Cairo.set_source_surface cr_final dw.overlay 0. 0.;
   Cairo.paint cr_final;
   ()
@@ -3339,7 +3296,7 @@ let assemble_layers cr_final dw =
 let expose2 da w _ev = 
   let dw = w.dw in
   let gwin = da#misc#window in
-  let cr = Cairo_lablgtk.create gwin in
+  let cr = Cairo_gtk.create gwin in
   assemble_layers cr dw;
   true
 
@@ -3386,13 +3343,12 @@ val use_arity_of_use_count:
 <<Facebook copyright>>
 open Common
 
+open Highlight_code
 module FT = File_type
 module PI = Parse_info
 module HC = Highlight_code
 module Db = Database_code
 module Flag = Flag_visual
-
-open Highlight_code
 
 (*****************************************************************************)
 (* Prelude *)
@@ -3408,29 +3364,37 @@ open Highlight_code
 
 (* This type is needed if we want to use a single hashtbl to memoize
  * all the parsed file.
+ * Now that a few language highlighters rely on the generic AST and
+ * highlight_AST.ml, should we also memoized the (named) generic AST?
  *)
 type ast = 
-  | ML  of Parse_ml.program_and_tokens
-  | Hs  of Parse_hs.program2
+  (* functional *)
+  | ML  of (Ast_ml.program, Parser_ml.token) Parse_info.parsing_result
+  | Hs  of Parse_hs.program_and_tokens
+  | Lisp of Parse_lisp.program_and_tokens
+  | Erlang of Parse_erlang.program_and_tokens
+  | Skip  of Parse_skip.program_and_tokens
 
-  | Html of Parse_html.program2
-  | Js  of Parse_js.program_and_tokens
-  | Php of Parse_php.program_with_comments
+  (* web *)
+  | Html of Parse_html.program_and_tokens
+  | Js  of (Ast_js.program, Parser_js.token) Parse_info.parsing_result
+  | Php of (Cst_php.program, Parser_php.token) Parse_info.parsing_result
 
-  | Opa of Parse_opa.program_with_tokens
+  (* system *)
+  | Cpp of Parse_cpp.toplevels_and_tokens
+  | Rust of Parse_rust.program_and_tokens
+  | Go of (Ast_go.program, Parser_go.token) Parse_info.parsing_result
 
-  | Cpp of Parse_cpp.program2
-
+  (* mainstream *)
+  | Java of (Ast_java.program, Parser_java.token) Parse_info.parsing_result
   | Csharp of Parse_csharp.program_and_tokens
-  | Java of Parse_java.program_and_tokens
 
-  | Lisp of Parse_lisp.program2
-  | Erlang of Parse_erlang.program2
+  (* scripting *)
+  | Python of (AST_python.program, Parser_python.token) Parse_info.parsing_result
+  | Ruby of (Ast_ruby.program, Parser_ruby.token) Parse_info.parsing_result
 
-  | Python of Parse_python.program2
-
-  | Noweb of Parse_nw.program2
-
+  (* documentation *)
+  | Noweb of Parse_nw.program_and_tokens
   (* less? | Org of Org_mode.org ? *)
 
 let _hmemo_file = Hashtbl.create 101
@@ -3453,7 +3417,7 @@ let parse_cache parse_in extract file =
         Hashtbl.replace _hmemo_file file (mtime, ast);
         ast
       end
-      else Hashtbl.find _hmemo_file file +> snd
+      else Hashtbl.find _hmemo_file file |> snd
     in
     extract ast
   )
@@ -3481,7 +3445,7 @@ let rewrite_categ_using_entities s categ file entities =
   | Some e_kind ->
 
     let entities = 
-      Hashtbl.find_all entities s +> List.filter (fun e ->
+      Hashtbl.find_all entities s |> List.filter (fun e ->
         (* we could have the full www dbcode but run the treemap on
          * a subdir in which case the root will not be the same.
          * It's a good approximation to just look at the basename.
@@ -3515,10 +3479,10 @@ let rewrite_categ_using_entities s categ file entities =
 (*****************************************************************************)
 type ('ast, 'token) for_helper = {
   parse: (Common.filename -> ('ast * 'token list) list);
-  highlight_visit:(tag_hook:(Parse_info.info -> HC.category -> unit) ->
+  highlight_visit:(tag_hook:(Parse_info.t -> HC.category -> unit) ->
                    Highlight_code.highlighter_preferences ->
                    'ast * 'token list -> unit);
-  info_of_tok:('token -> Parse_info.info);
+  info_of_tok:('token -> Parse_info.t);
 }
 
 let tokens_with_categ_of_file_helper 
@@ -3531,7 +3495,7 @@ let tokens_with_categ_of_file_helper
   (* todo: ast2 should not be a list, should just be (ast, toks)
    * but right now only a few parsers will satisfy this interface
    *)
-  ast2 +> List.map (fun (ast, toks) ->
+  ast2 |> List.map (fun (ast, toks) ->
 
     let h = Hashtbl.create 101 in
 
@@ -3540,24 +3504,24 @@ let tokens_with_categ_of_file_helper
       prefs (ast, toks);
 
     (* getting the text *)
-    toks +> Common.map_filter (fun tok -> 
+    toks |> Common.map_filter (fun tok -> 
       let info = info_of_tok tok in
       let s = PI.str_of_info info in
       if not (PI.is_origintok info)
       then None
       else 
-        let categ = Common2.hfind_option info h +> Common2.fmap (fun categ ->
+        let categ = Common2.hfind_option info h |> Common2.fmap (fun categ ->
           rewrite_categ_using_entities s categ file hentities
         ) in
         Some (s, categ,{ Common2.l = PI.line_of_info info; c = PI.col_of_info info; })
-    )) +> List.flatten
+    )) |> List.flatten
 
 (*****************************************************************************)
 (* Main entry point *)
 (*****************************************************************************)
 
 (* coupling: right now if you add a language here, you need to whitelist it
- * also in draw_microlevel.draw_contents2.
+ * also in Draw_microlevel.draw_contents2.
  *)
 let tokens_with_categ_of_file file hentities = 
   let ftype = FT.file_type_of_file file in
@@ -3567,24 +3531,27 @@ let tokens_with_categ_of_file file hentities =
   | FT.PL (FT.Web (FT.Php _)) ->
       tokens_with_categ_of_file_helper 
         { parse = (parse_cache (fun file ->
-          Common.save_excursion Flag_parsing_php.error_recovery true (fun () ->
-            let ((ast, toks), _stat) = Parse_php.parse file in
+          Common.save_excursion Flag_parsing.error_recovery true (fun () ->
             (* todo: use database_light if given? we could so that
              * variables are better annotated.
              * note that database_light will be passed in
              * rewrite_categ_using_entities() at least.
              *)
+(*
             let find_entity = None in
             (* work by side effect on ast2 too *)
             (try 
             Check_variables_php.check_and_annotate_program
               find_entity
               ast
-             with Ast_php.TodoNamespace _ | Common.Impossible -> ()
+             with Cst_php.TodoNamespace _ | Common.Impossible -> ()
             );
-            Php ((ast, toks))
+*)
+            Php (Parse_php.parse file)
           ))
-         (function Php (ast, toks) -> [ast, toks] | _ -> raise Impossible));
+         (function  
+          | Php {PI. ast; tokens; _} -> [ast, tokens] 
+          | _ -> raise Impossible));
          highlight_visit = (fun ~tag_hook prefs (ast, toks) ->
           Highlight_php.visit_program ~tag:tag_hook prefs hentities 
             (ast, toks)
@@ -3593,49 +3560,83 @@ let tokens_with_categ_of_file file hentities =
         }
         file prefs hentities
 
+  (* works also for Fsharp; at least the tokenizer *)
   | FT.PL (FT.ML _) ->
       tokens_with_categ_of_file_helper 
         { parse = (parse_cache (fun file -> 
-           Common.save_excursion Flag_parsing_ml.error_recovery true (fun()->
-             ML (Parse_ml.parse file +> fst))
-         )
+           Common.save_excursion Flag_parsing.error_recovery true (fun()->
+             ML (Parse_ml.parse file)
+         ))
          (function 
-         | ML (astopt, toks) -> 
-             let ast = astopt ||| [] in
-             [ast, toks] 
+         | ML {PI. ast; tokens; _} -> [ast, tokens] 
          | _ -> raise Impossible));
         highlight_visit = (fun ~tag_hook prefs (ast, toks) -> 
-          Highlight_ml.visit_program ~tag_hook prefs (ast, toks));
+          Highlight_ml.visit_program ~tag_hook prefs file (ast, toks));
         info_of_tok = Token_helpers_ml.info_of_tok;
+        }
+        file prefs hentities
+
+  | FT.PL (FT.Skip) ->
+      tokens_with_categ_of_file_helper 
+        { parse = (parse_cache (fun file -> 
+           Common.save_excursion Flag_parsing.error_recovery true (fun()->
+             Skip (Parse_skip.parse file |> fst))
+         )
+         (function 
+         | Skip (astopt, toks) -> [astopt, toks] 
+         | _ -> raise Impossible));
+        highlight_visit = (fun ~tag_hook prefs (ast, toks) -> 
+          Highlight_skip.visit_program ~tag_hook prefs (ast, toks));
+        info_of_tok = Token_helpers_skip.info_of_tok;
         }
         file prefs hentities
 
   | FT.PL (FT.Haskell _) ->
       tokens_with_categ_of_file_helper 
         { parse = (parse_cache 
-         (fun file -> Hs (Parse_hs.parse file +> fst))
-         (function Hs x -> x | _ -> raise Impossible));
+         (fun file -> Hs (Parse_hs.parse file |> fst))
+         (function Hs (ast, toks) -> [ast, toks] | _ -> raise Impossible));
         highlight_visit = (fun ~tag_hook prefs (ast, toks) -> 
-          Highlight_hs.visit_toplevel ~tag_hook prefs (ast, toks));
+          Highlight_hs.visit_program ~tag_hook prefs (ast, toks));
         info_of_tok = Parser_hs.info_of_tok;
         }
         file prefs hentities
 
   | FT.PL (FT.Python) ->
       tokens_with_categ_of_file_helper 
-        { parse = (parse_cache 
-         (fun file -> Python (Parse_python.parse file +> fst))
-         (function Python x -> x | _ -> raise Impossible));
+        { parse = (parse_cache (fun file -> 
+           Common.save_excursion Flag_parsing.error_recovery true (fun()->
+             Python (Parse_python.parse file))
+         )
+         (function 
+         | Python {PI. ast; tokens; _} -> [Some ast, tokens] 
+         | _ -> raise Impossible
+         ));
         highlight_visit = (fun ~tag_hook prefs (ast, toks) -> 
-          Highlight_python.visit_toplevel ~tag_hook prefs (ast, toks));
+          Highlight_python.visit_program ~tag_hook prefs (ast, toks));
         info_of_tok = Token_helpers_python.info_of_tok;
+        }
+        file prefs hentities
+  | FT.PL (FT.Ruby) ->
+      tokens_with_categ_of_file_helper 
+        { parse = (parse_cache (fun file -> 
+           Common.save_excursion Flag_parsing.error_recovery true (fun()->
+             Ruby (Parse_ruby.parse file))
+         )
+         (function 
+         | Ruby {PI. ast; tokens; _} -> [Some ast, tokens] 
+         | _ -> raise Impossible
+         ));
+        highlight_visit = (fun ~tag_hook prefs (ast, toks) -> 
+          Highlight_ruby.visit_program ~tag_hook prefs (ast, toks));
+        info_of_tok = Token_helpers_ruby.info_of_tok;
         }
         file prefs hentities
 
   | FT.PL (FT.Csharp) ->
       tokens_with_categ_of_file_helper 
         { parse = (parse_cache 
-         (fun file -> Csharp (Parse_csharp.parse file +> fst))
+         (fun file -> Csharp (Parse_csharp.parse file |> fst))
          (function Csharp (ast, toks) -> [ast, toks] | _ -> raise Impossible));
         highlight_visit = (fun ~tag_hook prefs (ast, toks) -> 
           Highlight_csharp.visit_program ~tag_hook prefs (ast, toks));
@@ -3643,24 +3644,23 @@ let tokens_with_categ_of_file file hentities =
         }
         file prefs hentities
 
-  | FT.PL (FT.Opa) ->
+  | FT.PL (FT.Rust) ->
       tokens_with_categ_of_file_helper 
         { parse = (parse_cache 
-         (fun file -> Opa (Parse_opa.parse_just_tokens file))
-         (function 
-         | Opa (ast, toks) -> [ast, toks] 
-         | _ -> raise Impossible));
-        highlight_visit = Highlight_opa.visit_toplevel;
-        info_of_tok = Token_helpers_opa.info_of_tok;
+         (fun file -> Rust (Parse_rust.parse file |> fst))
+         (function Rust (ast, toks) -> [ast, toks] | _ -> raise Impossible));
+        highlight_visit = (fun ~tag_hook prefs (ast, toks) -> 
+          Highlight_rust.visit_program ~tag_hook prefs (ast, toks));
+        info_of_tok = Token_helpers_rust.info_of_tok;
         }
         file prefs hentities
 
   | FT.PL (FT.Erlang) ->
       tokens_with_categ_of_file_helper 
         { parse = (parse_cache 
-         (fun file -> Erlang (Parse_erlang.parse file +> fst))
-         (function Erlang x -> x | _ -> raise Impossible));
-        highlight_visit = Highlight_erlang.visit_toplevel;
+         (fun file -> Erlang (Parse_erlang.parse file |> fst))
+         (function Erlang x -> [x] | _ -> raise Impossible));
+        highlight_visit = Highlight_erlang.visit_program;
         info_of_tok = Token_helpers_erlang.info_of_tok;
         }
         file prefs hentities
@@ -3668,20 +3668,34 @@ let tokens_with_categ_of_file file hentities =
   | FT.PL (FT.Java) ->
       tokens_with_categ_of_file_helper 
         { parse = (parse_cache 
-         (fun file -> Java (Parse_java.parse file +> fst))
+         (fun file -> Java (Parse_java.parse file))
           (function 
-          | Java (ast, toks) -> [Common2.some ast, (toks)] 
+          | Java {PI. ast; tokens; _} -> [ast, tokens] 
           | _ -> raise Impossible));
         highlight_visit = Highlight_java.visit_toplevel;
         info_of_tok = Token_helpers_java.info_of_tok;
         }
         file prefs hentities
 
+  | FT.PL (FT.Go) ->
+      tokens_with_categ_of_file_helper 
+        { parse = (parse_cache 
+         (fun file -> Go (Parse_go.parse file))
+          (function 
+          | Go {PI. ast; tokens; _} -> [ast, tokens] 
+          | _ -> raise Impossible));
+        highlight_visit = Highlight_go.visit_program;
+        info_of_tok = Token_helpers_go.info_of_tok;
+        }
+        file prefs hentities
+
   | FT.PL (FT.Lisp _) ->
       tokens_with_categ_of_file_helper 
         { parse = (parse_cache 
-         (fun file -> Lisp (Parse_lisp.parse file +> fst))
-         (function Lisp x -> x | _ -> raise Impossible));
+         (fun file -> Lisp (Parse_lisp.parse file |> fst))
+         (function
+         |  Lisp (ast, toks) -> [Common2.some ast, toks]
+         | _ -> raise Impossible));
         highlight_visit = Highlight_lisp.visit_toplevel;
         info_of_tok = Parser_lisp.info_of_tok;
         }
@@ -3690,9 +3704,9 @@ let tokens_with_categ_of_file file hentities =
   | FT.Text ("nw" | "tex" | "texi" | "web") ->
       tokens_with_categ_of_file_helper 
         { parse = (parse_cache 
-         (fun file -> Noweb (Parse_nw.parse file +> fst))
-         (function Noweb x -> x | _ -> raise Impossible));
-        highlight_visit = Highlight_nw.visit_toplevel;
+         (fun file -> Noweb (Parse_nw.parse file |> fst))
+         (function Noweb x -> [x] | _ -> raise Impossible));
+        highlight_visit = Highlight_nw.visit_program;
         info_of_tok = Token_helpers_nw.info_of_tok;
         }
         file prefs hentities
@@ -3701,30 +3715,29 @@ let tokens_with_categ_of_file file hentities =
       tokens_with_categ_of_file_helper 
         { parse = (parse_cache 
          (fun file -> 
+          Common.save_excursion Flag_parsing.error_recovery true (fun () ->
            let (ast2, _stat) = Parse_cpp.parse file in
            let ast = Parse_cpp.program_of_program2 ast2 in
            (* work by side effect on ast2 too *)
            Check_variables_cpp.check_and_annotate_program
              ast;
            Cpp ast2
-         )
+         ))
          (function Cpp x -> x | _ -> raise Impossible));
         highlight_visit = Highlight_cpp.visit_toplevel;
         info_of_tok = Token_helpers_cpp.info_of_tok;
         }
         file prefs hentities
 
-  | FT.PL (FT.Web (FT.Js)) ->
+  | FT.PL (FT.Web (FT.Js | FT.Coffee | FT.TypeScript)) ->
       tokens_with_categ_of_file_helper 
         { parse = (parse_cache
           (fun file -> 
-            Common.save_excursion Flag_parsing_js.error_recovery true (fun () ->
-              Js (Parse_js.parse file +> fst))
+            Common.save_excursion Flag_parsing.error_recovery true (fun () ->
+              Js (Parse_js.parse file))
           )
          (function 
-         | Js (astopt, toks) -> 
-             let ast = astopt ||| [] in
-             [ast, toks] 
+         | Js {PI. ast; tokens; _} -> [ast, tokens] 
          | _ -> raise Impossible
          ));
         highlight_visit = Highlight_js.visit_program;
@@ -3859,8 +3872,8 @@ let async_get_opt a =
 <<options>>=
   "-screen_size", Arg.Set_int screen_size,
   " <int> (1 = small, 2 = big)";
-  "-ss", Arg.Set_int screen_size,
-  " <int> alias for -screen_size";
+  "-legend", Arg.Set legend,
+  " display the legend";
   "-no_legend", Arg.Clear legend,
   " do not display the legend";
 
@@ -3877,24 +3890,24 @@ let async_get_opt a =
   " <layer_file>";
   "-with_layers", Arg.String (fun s -> layer_dir := Some s),
   " <dir_with_layers>";
-
   "-filter", Arg.String (fun s -> filter := List.assoc s filters;), 
    spf " filter certain files (available = %s)" 
-    (filters +> List.map fst +> Common.join ", ");
+    (filters |> List.map fst |> Common.join ", ");
   "-extra_filter", Arg.String (fun s -> Flag.extra_filter := Some s),
   " ";
   "-skip_list", Arg.String (fun s -> skip_file := Some s), 
   " <file> skip files or directories";
 
-  "-with_info", Arg.String (fun _s -> ()),
-  " obsolete\n"; (* for codemap_www in engshare/admin/scripts *)
-
   "-ft", Arg.Set_float Flag.threshold_draw_content_font_size_real,
   " <float> threshold to draw content";
+  "-nblines_file", Arg.Set_float Flag.threshold_draw_content_nblines,
+  " <float>";
   "-boost_lbl", Arg.Set Flag.boost_label_size,
   " boost size of labels";
-  "-no_boost_lbl", Arg.Clear Flag.boost_label_size,
-  " do not boost labels\n";
+  "-emacs_client", Arg.Set_string Editor_connection.emacsclient_path,
+  " <path>";
+  "-efuns_client", Arg.Set_string Editor_connection.efunsclient_path,
+  " <path>";
 
 (*-------------------------------------------------------------------------*)
 (* debugging helpers *)
@@ -3940,10 +3953,12 @@ let windows_params screen_size =
     match screen_size with
     | 1 ->
         1350, 800, 1100, 150
+    (* on Apple Thunderbolt 27' display *)
     | 2 ->
         2560, 1580, 2350, 100 (* was 2200 and 280 *)
+    (* on LG 38' display with split codemap/efuns *)
     | 3 ->
-        7000, 4000, 6900, 100
+        2510, 1540, 0, 0
     | 4 ->
         16000, 9000, 15900, 100
     | 5 ->
@@ -3960,81 +3975,81 @@ let windows_params screen_size =
 <<size_font_multiplier_of_categ()>>=
 let multiplier_use x = 
   match x with
-  | SH.HugeUse -> 3.3
-  | SH.LotsOfUse -> 2.7
-  | SH.MultiUse -> 2.1
-  | SH.SomeUse -> 1.7
-  | SH.UniqueUse -> 1.3
-  | SH.NoUse -> 0.9
+  | HC.HugeUse -> 3.3
+  | HC.LotsOfUse -> 2.7
+  | HC.MultiUse -> 2.1
+  | HC.SomeUse -> 1.7
+  | HC.UniqueUse -> 1.3
+  | HC.NoUse -> 0.9
 
 let size_font_multiplier_of_categ ~font_size_real categ =
-    match categ with
-
+  match categ with
+  | None -> 1.
+  | Some x ->
+    (match x with
     (* entities defs *)
 
-    | Some (SH.Class SH.Def2 use) -> 5. *. multiplier_use use
-    | Some (SH.Module SH.Def) -> 5.
-    | Some (SH.Function (SH.Def2 use)) -> 3.5 *. multiplier_use use
-    | Some (SH.TypeDef SH.Def) -> 5.
-    | Some (SH.Global (SH.Def2 use)) -> 3. *. multiplier_use use
-    | Some (SH.FunctionDecl use) -> 2.5 *. multiplier_use use
-    | Some (SH.Macro (SH.Def2 use)) -> 2. *. multiplier_use use
-    | Some (SH.Constant (SH.Def2 use)) -> 2. *. multiplier_use use
-    | Some (SH.Method (SH.Def2 use)) -> 3.5 *. multiplier_use use
-    | Some (SH.StaticMethod (SH.Def2 use)) -> 3.5 *. multiplier_use use
-    | Some (SH.Field (SH.Def2 use)) -> 1.7 *. multiplier_use use
-    | Some (SH.Constructor(SH.Def2 (use))) -> 1.2 *. multiplier_use use
+    | HC.Entity (E.Module, (HC.Def2 use))   -> 5. *. multiplier_use use
+    | HC.Entity (E.Type, (HC.Def2 use))     -> 5. *. multiplier_use use
+    | HC.Entity (E.Class, (HC.Def2 use))    -> 5. *. multiplier_use use
 
-    | Some (SH.GrammarRule) -> 2.5
+    | HC.Entity (E.Function, (HC.Def2 use)) -> 3.5 *. multiplier_use use
+    | HC.Entity (E.Method, (HC.Def2 use))   -> 3.5 *. multiplier_use use
+    | HC.Entity (E.Global, (HC.Def2 use))   -> 3. *. multiplier_use use
+
+    | HC.Entity (E.Constant, (HC.Def2 use)) -> 2. *. multiplier_use use
+    | HC.Entity (E.Exception, (HC.Def2 use))    -> 2. *. multiplier_use use
+    | HC.Entity (E.Macro, (HC.Def2 use))    -> 2. *. multiplier_use use
+    | HC.Entity (E.Field, (HC.Def2 use))    -> 1.7 *. multiplier_use use
+    | HC.Entity (E.Constructor, (HC.Def2 use)) -> 1.2 *. multiplier_use use
+
+    | HC.FunctionDecl use -> 2.5 *. multiplier_use use
+    | HC.StaticMethod (HC.Def2 use) -> 3.5 *. multiplier_use use
+    | HC.StructName (HC.Def) -> 3.
+
+    | HC.GrammarRule -> 2.5
         
     (* entities uses *)
-    | Some (SH.Global (SH.Use2 _)) when font_size_real > 7.
+    | HC.Entity (E.Global, (HC.Use2 _)) when font_size_real > 7.
           -> 1.5
-(*
-    | Some (SH.Method (SH.Use2 _)) when font_size_real > 7.
-          -> 1.2
-*)
+
+    (* | HC.Method (HC.Use2 _) when font_size_real > 7.  -> 1.2 *)
         
     (* "literate programming" *)
-    | Some (SH.CommentSection0) -> 5.
-    | Some (SH.CommentSection1) -> 3.
-    | Some (SH.CommentSection2) -> 2.0
-    | Some (SH.CommentSection3) -> 1.2
-    | Some (SH.CommentSection4) -> 1.1
-    | Some (SH.CommentEstet) -> 1.0
-    | Some (SH.CommentCopyright) -> 0.5
+    | HC.CommentSection0 -> 5.
+    | HC.CommentSection1 -> 3.
+    | HC.CommentSection2 -> 2.0
+    | HC.CommentSection3 -> 1.2
+    | HC.CommentSection4 -> 1.1
+    | HC.CommentEstet -> 1.0
+    | HC.CommentCopyright -> 0.5
 
-    | Some (SH.CommentSyncweb) -> 1.
+    | HC.CommentSyncweb -> 1.
 
-(*
-    | Some (SH.Comment) when font_size_real > 7.
-          -> 1.5
-*)
+ (* | HC.Comment when font_size_real > 7. -> 1.5 *)
 
     (* semantic visual feedback *)
 
-    | Some (SH.BadSmell) -> 2.5
+    | HC.BadSmell -> 2.5
 
     (* ocaml *)
-    | Some (SH.UseOfRef) -> 2.
+    | HC.UseOfRef -> 2.
 
     (* php, C, etc *)
-    | Some (SH.PointerCall) -> 3.
-    | Some (SH.ParameterRef) -> 2.
-    | Some (SH.CallByRef) -> 3.
+    | HC.PointerCall -> 5.
+    | HC.ParameterRef -> 2.
+    | HC.CallByRef -> 3.
 
     (* misc *)
-    | Some (SH.Local (SH.Def)) -> 1.2
+    | HC.Local (HC.Def) -> 1.2
         
     | _ -> 
         (* the cases above should have covered all the cases *)
-        categ +> Common.do_option (fun categ ->
-          if Database_code.is_entity_def_category categ
-          then failwith "You should update size_font_multiplier_of_categ";
-        );
-
+        if Database_code.is_entity_def_category x
+        then failwith "You should update size_font_multiplier_of_categ";
 
         1. 
+    )
 @
 
 
@@ -4105,7 +4120,7 @@ let test_visual_commitid id =
     (* not sure why git adds an extra empty line at the beginning but we
      * have to filter it
      *)
-    +> Common.exclude Common.null_string
+    |> Common.exclude Common.null_string
   in
   pr2_gen files;
   main_action files
@@ -4113,7 +4128,9 @@ let test_visual_commitid id =
 
 <<actions>>=
   "-test_loc", " ",
-  Common.mk_action_1_arg (test_loc);
+  Common.mk_action_n_arg (test_loc true);
+  "-test_loc2", " ",
+  Common.mk_action_n_arg (test_loc false);
   "-test_cairo", " ",
   Common.mk_action_0_arg (test_cairo);
   "-test_commitid", " <id>",
@@ -4160,7 +4177,7 @@ Hope you like it.
 
 <<new_pixmap sig>>=
 val new_surface: 
-  alpha:bool -> width:int -> height:int -> [ `Any ] Cairo.surface
+  alpha:bool -> width:int -> height:int -> Cairo.Surface.t
 @
 
 <<new_pixmap()>>=
@@ -4169,12 +4186,13 @@ let new_surface ~alpha ~width ~height =
   drawable#set_foreground `WHITE;
   drawable#rectangle ~x:0 ~y:0 ~width:1 ~height:1 ~filled:true ();
 
-  let cr = Cairo_lablgtk.create drawable#pixmap in
+
+  let cr = Cairo_gtk.create drawable#pixmap in
   let surface = Cairo.get_target cr in
-  Cairo.surface_create_similar surface
+  Cairo.Surface.create_similar surface
     (if alpha 
-    then Cairo.CONTENT_COLOR_ALPHA
-    else Cairo.CONTENT_COLOR
+    then Cairo.COLOR_ALPHA
+    else Cairo.COLOR
     ) width height
 
 
@@ -4183,81 +4201,72 @@ let new_surface ~alpha ~width ~height =
 <<cairo helpers functions sig>>=
 val fill_rectangle:
   ?alpha:float ->
-  cr:Cairo.t -> 
+  cr:Cairo.context -> 
   x:float -> y:float -> w:float -> h:float ->
   color:Simple_color.emacs_color -> 
   unit ->
   unit
 
 val draw_rectangle_figure:
-  cr:Cairo.t -> 
+  cr:Cairo.context -> 
   color:Simple_color.emacs_color -> 
   Figures.rectangle -> unit
 
 val draw_rectangle_bis:
-  cr:Cairo.t -> 
+  cr:Cairo.context -> 
   color:Simple_color.color -> 
   line_width:float ->
   Figures.rectangle -> unit
 
 
 val prepare_string : string -> string
-val origin : Cairo.point
+val origin : Figures.point
 
-val device_to_user_distance_x : Cairo.t -> float -> float
-val device_to_user_distance_y : Cairo.t -> float -> float
-val user_to_device_distance_x : Cairo.t -> float -> float
-val user_to_device_distance_y : Cairo.t -> float -> float
+val device_to_user_distance_x : Cairo.context -> float -> float
+val device_to_user_distance_y : Cairo.context -> float -> float
+val user_to_device_distance_x : Cairo.context -> float -> float
+val user_to_device_distance_y : Cairo.context -> float -> float
 
-val device_to_user_size : Cairo.t -> float -> float
-val user_to_device_font_size : Cairo.t -> float -> float
-val cairo_point_to_point : Cairo.point -> Figures.point
+val device_to_user_size : Cairo.context -> float -> float
+val user_to_device_font_size : Cairo.context -> float -> float
+val cairo_point_to_point : float * float -> Figures.point
 
-val show_text : Cairo.t -> string -> unit
-val text_extents : Cairo.t -> string -> Cairo.text_extents
-val set_font_size: Cairo.t -> float -> unit
+val show_text : Cairo.context -> string -> unit
+val text_extents : Cairo.context -> string -> Cairo.text_extents
+val set_font_size: Cairo.context -> float -> unit
 
-val clear : Cairo.t -> unit
+val clear : Cairo.context -> unit
 
 val surface_of_pixmap :
-  < pixmap : [> `drawable ] Gobject.obj; .. > -> [ `Any ] Cairo.surface
+  < pixmap : [> `drawable ] Gobject.obj; .. > -> Cairo.Surface.t
 
-val distance_points : Cairo.point -> Cairo.point -> float
+val distance_points : Figures.point -> Figures.point -> float
 
-val is_old_cairo : unit -> bool
 @
 
 <<cairo helpers functions>>=
-(* !does side effect on the (mutable) string! *)
 let prepare_string s = 
-  match s with
-  | _ when s ==~ re_space -> s ^ s (* double it *)
-  | _ when s ==~ re_tab -> 
-      Str.global_replace (Str.regexp "\t") "        " s
-  | _ ->
-    for i = 0 to String.length s -.. 1 do
-      let c = String.get s i in
-      if int_of_char c >= 128
-      then String.set s i 'Z'
-      else 
-        (* still useful now that have re_tab case above? *)
-        if c = '\t'
-        then String.set s i ' '
-      else ()
-    done;
-    s
+  let buf = Bytes.of_string s in
+(*  if s ==~ re_space then  s ^ s (* double it *) else  *)
+  for i = 0 to String.length s -.. 1 do
+    let c = String.get s i in
+    let final_c =
+      match c with
+      | _ when int_of_char c >= 128 -> 'Z'
+      | '\t'-> ' '
+      | _ -> c
+    in
+    Bytes.set buf i final_c
+  done;
+  Bytes.to_string buf
 
+(* TODO: fast enough with those of_string and to_string? *)
 let show_text2 cr s =
-  (* this 'if' is only for compatibility with old versions of cairo
-   * that returns some out_of_memory error when applied to empty strings
-   *)
-  if s = "" then () else 
   try 
-    let s' = prepare_string s in
-    Cairo.show_text cr s'
-  with _exn ->
-    let status = Cairo.status cr in
-    let s2 = Cairo.string_of_status status in
+    let s = prepare_string s in
+    Cairo.show_text cr s
+  with Cairo.Error status ->
+    let s2 = Cairo.status_to_string status in
     failwith ("Cairo pb: " ^ s2 ^ " s = " ^ s)
 
 let show_text a b = 
@@ -4288,44 +4297,39 @@ let set_font_size cr font_size =
 (* Distance conversion *)
 (*****************************************************************************)
 
-let origin = { Cairo. x = 0.; y = 0. }
+let origin = { Figures. x = 0.; y = 0. }
 
 let device_to_user_distance_x cr deltax = 
-  let pt = Cairo.device_to_user_distance cr { origin with Cairo.x = deltax } in
-  pt.Cairo.x
+  let (x, _) = Cairo.device_to_user_distance cr deltax 0. in
+  x
 let device_to_user_distance_y cr deltay = 
-  let pt = Cairo.device_to_user_distance cr { origin with Cairo.y = deltay } in
-  pt.Cairo.y
+  let (_, y) = Cairo.device_to_user_distance cr 0. deltay in
+  y
 
 let user_to_device_distance_x cr deltax = 
-  let pt = Cairo.user_to_device_distance cr { origin with Cairo.x = deltax } in
-  pt.Cairo.x
+  let (x, _) = Cairo.user_to_device_distance cr deltax 0. in
+  x
 let user_to_device_distance_y cr deltay = 
-  let pt = Cairo.user_to_device_distance cr { origin with Cairo.y = deltay } in
-  pt.Cairo.y
+  let (_, y) = Cairo.user_to_device_distance cr 0. deltay in
+  y
 
 (* TODO: this is buggy, as we can move the map which can led to
  * some device_to_user to translate to x = 0
  *)
 let device_to_user_size cr size = 
-  let device = { Cairo.x = size; Cairo.y = 0.; } in
-  let user = Cairo.device_to_user cr device in
-  user.Cairo.x
+  let (x, _) = Cairo.device_to_user cr size 0. in
+  x
 
-(* still needed ? can just call device_to_user_size ? *)
+(* less: just call device_to_user_size ? *)
 let user_to_device_font_size cr font_size = 
-  let user_dist = { Cairo.x = font_size; Cairo.y = font_size } in
-  let device_dist = Cairo.user_to_device_distance cr user_dist in
-  device_dist.Cairo.x
+  let (x, _) = Cairo.user_to_device_distance cr font_size font_size in
+  x
 
-let cairo_point_to_point p = 
-  { F.x = p.Cairo.x;
-    F.y = p.Cairo.y;
-  }
+let cairo_point_to_point (x, y) = { F.x; y }
 
 let distance_points p1 p2 =
-  abs_float (p2.Cairo.x - p1.Cairo.x) + 
-  abs_float (p2.Cairo.y - p1.Cairo.y)
+  abs_float (p2.Figures.x - p1.Figures.x) + 
+  abs_float (p2.Figures.y - p1.Figures.y)
 
 (*****************************************************************************)
 (* Surface *)
@@ -4334,13 +4338,13 @@ let distance_points p1 p2 =
 (* see http://cairographics.org/FAQ/#clear_a_surface *)
 let clear cr =
   Cairo.set_source_rgba cr 0. 0. 0.   0.;
-  Cairo.set_operator cr Cairo.OPERATOR_SOURCE;
+  Cairo.set_operator cr Cairo.SOURCE;
   Cairo.paint cr;
-  Cairo.set_operator cr Cairo.OPERATOR_OVER;
+  Cairo.set_operator cr Cairo.OVER;
   ()
 
 let surface_of_pixmap pm =
-  let cr = Cairo_lablgtk.create pm#pixmap in
+  let cr = Cairo_gtk.create pm#pixmap in
   Cairo.get_target cr
 
 (*****************************************************************************)
@@ -4348,7 +4352,7 @@ let surface_of_pixmap pm =
 (*****************************************************************************)
 
 let fill_rectangle ?(alpha=1.) ~cr ~x ~y ~w ~h ~color () = 
-  (let (r,g,b) = color +> Color.rgbf_of_string in
+  (let (r,g,b) = color |> Color.rgbf_of_string in
   Cairo.set_source_rgba cr r g b alpha;
   );
   
@@ -4360,7 +4364,7 @@ let fill_rectangle ?(alpha=1.) ~cr ~x ~y ~w ~h ~color () =
   ()
 
 let draw_rectangle_figure ~cr ~color r =
-  (let (r,g,b) = color +> Color.rgbf_of_string in
+  (let (r,g,b) = color |> Color.rgbf_of_string in
   Cairo.set_source_rgb cr r g b;
   );
  let line_width = device_to_user_size cr 3. in
@@ -4379,7 +4383,7 @@ let draw_rectangle_figure ~cr ~color r =
 *)
 let draw_rectangle_bis ~cr ~color ~line_width r =
   (let (r,g,b) = 
-    color +> Color.rgb_of_color +> Color.rgbf_of_rgb
+    color |> Color.rgb_of_color |> Color.rgbf_of_rgb
     in
    Cairo.set_source_rgb cr r g b;
   );
@@ -4435,10 +4439,12 @@ module Model = Model2
  *    a constant)
  *  - important code should be bigger. Just like in google maps
  *    the important roads are more visible. So need some sort of
- *    global analysis.
+ *    global semantic analysis.
  *  - show the data (the source code), but also show the relations
  *    (hence codegraph integration)
  *  - look at the code through different views (hence layers)
+ *  - SEMI deep semantic analysis, control flow + data flow so can answer
+ *    flow questions such as where a callback is called (hence datalog)
  * 
  * history:
  *  - saw Aspect Browser while working on aspects as an intern at IRISA
@@ -4448,12 +4454,12 @@ module Model = Model2
  *    highlighting with a certain color different architecture aspects
  *    of the Linux kernel (influenced by work on aspect browser)
  *  - talked about fancy code visualizer while at cleanmake with YY,
- *    spiros, etc.
+ *    Spiros, etc.
  *  - saw SeeSoft code visualizer while doing some bibliographic work
  *  - saw code thumbnails by MSR, and Rob Deline
- *  - saw treemap of Linux kernel by fekete => idea of mixing
+ *  - saw treemap of Linux kernel by Fekete => idea of mixing
  *    tree-map+code-thumbnails+seesoft = codemap
- *  - saw talk at CC about improving javadoc by putting in bigger fonts
+ *  - saw talk at CC'09 about improving javadoc by putting in bigger fonts
  *    really often used API functions => idea of light db and semantic
  *    visual feedback
  *  - read hierarchical edge bundling paper and its d3 implementation to 
@@ -4467,41 +4473,54 @@ module Model = Model2
  *    on live programming a la Bret Victor
  *  - http://www.kickstarter.com/projects/296054304/zeta-code, mostly focused
  *    on code relations, so related more to codegraph
- *  - textmate, meh
+ *  - textmate, nice fuzzy file find, very quick to go to a place
  *  - sublime, has thumbnails, but people don't really care about it
- *  - http://www.hello2morrow.com/products/sotoarc
- *  - http://scg.unibe.ch/codemap
- *  - http://scg.unibe.ch/wiki/projects/rbcrawler, class blueprint
+ *  - http://www.hello2morrow.com/products/sotoarc ?
+ *  - http://scg.unibe.ch/codemap ?
+ *  - http://scg.unibe.ch/wiki/projects/rbcrawler, class blueprint, very nice
+ *    when exploring tangled object code abusing inheritance
  *  - moose http://youtu.be/yvXm9LC17vk at 14min
- *  - http://redotheweb.com/CodeFlower/
+ *  - http://redotheweb.com/CodeFlower/ ?
  *  - code swarm, visualize git history, focused on people more than code
  *    https://code.google.com/p/gource/ 
  *    http://artzub.com/ghv/#repo=d3&climit=100&user=mbostock
  *  - http://www.codetrails.com/ctrlflow, smarter completion by infering
  *    importance of method (like I do, by #times this entity is globally used)
+ *  - codesonar, very nice interactive zoomable call graph visualizer
+ *    https://www.youtube.com/watch?v=EqDhtRoorGU also very deep semantic analysis
+ *    with control flow and data flow
+ *  - CodeCompass https://github.com/Ericsson/CodeCompass/
+ *  - Sourcetrail, recently open sourced
+ *    https://www.sourcetrail.com/blog/open_source/
  * 
  * features of IDE we do want (e.g. see the list at http://xamarin.com/studio):
- *  - smart syntax highlighting
+ *  - smart syntax highlighting (we do even more: semantic highlighting!)
  *  - go to definition (=~ TAGS, light db and search bar completion provides it)
  *  - code navigation (directory, files, also "hypertext" go to def/uses)
  *  - find uses (funcs, classes, TODO tricky for methods in dynamic languages)
  *  - code tooltip, hover on use of an entity to display information about
  *    it (#uses, TODO: type/args, comments, code, age, methods, etc)
- *  - unified search (files, entities, TODO but also content)
+ *  - unified "fuzzy" search (files, entities, TODO but also content),
+ *    SEMI project-wide fuzzy search is really useful for filenames but also content!
  *  - debugger? it helps understand code so a coverage layer or TODO live
- *    coverage tracing would be nice (as in tracegl)
- *  - source control? extract age, number of authors, churn information in
+ *    coverage tracing would be nice (as in tracegl),
+ *    also a way to see the actual concrete values of variables/parameters
+ *    inline would be nice too (as in intellij 14) (always-on visualization!)
+ *  - source control? can extract age, number of authors, churn information in
  *    layers
+ *  - SEMI dataflow from here, dataflow to here (intellij)
  * 
  * features of IDE we care less about:
  *  - folding/outline? thumbnails make this less important
- *  - auto completion? no. One nice thing of autocomplete though is that
+ *  - auto completion? One nice thing of autocomplete is that
  *    it proposes all the possible methods of an object, the overriden
- *    as well as not overriden parent methods.  We don't want autocomplete
+ *    as well as not overriden parent methods. We don't need autocomplete
  *    but we want the ability to understand a class by TODO "inlining" parent 
  *    methods that are relevant to understand the local code of the class
  *    (e.g. the short command of Eiffel)
- *  - refactoring? no
+ *  - code snippet? This is similar to auto completion, it's good for writing
+ *    new code, but not that useful to understand existing code.
+ *  - refactoring? no (but some spatch integration could be nice)
  *  - UI designer? no
  *  - deploy assistant, cloud assistant? no
  *)
@@ -4512,7 +4531,7 @@ module Model = Model2
 
 <<main flags>>
 
-(* see filters below, which files we are interested in *)
+(* see filters below, which filter files we are interested in *)
 let filter = ref (fun _file -> true)
 let skip_file  = ref (None: Common.filename option)
 (* less: a config file: GtkMain.Rc.add_default_file "/.../pfff_browser.rc"; *)
@@ -4525,37 +4544,40 @@ let action = ref ""
 (*****************************************************************************)
 
 let filters = [
-  (* pad specific, ocaml related *)
+  (* pad-specific: ocaml related files *)
   "pfff", (fun file ->
     match FT.file_type_of_file file with
-    | FT.PL (
-       (FT.ML _) | FT.Makefile | FT.Opa | FT.Prolog _ | FT.Web (FT.Php _)) -> 
-        (* todo: should be done in file_type_of_file *)
-        not (FT.is_syncweb_obj_file file)
-        && not ( 
+    | FT.PL (FT.ML _ | FT.Prolog _) | FT.Config FT.Makefile -> 
+        not ( 
                 (* file =~ ".*commons/" || *)
                 (* file =~ ".*external/" || *)
-                file =~ ".*_build/")
+                file =~ ".*\\.md5sum_.*")
     | _ -> false
   );
+  "xix", (fun file ->
+    match FT.file_type_of_file file with
+    | FT.PL ((FT.ML _) | (FT.C _ | FT.Asm)) | FT.Config FT.Makefile -> true
+    | _ -> false
+  );
+
   "ocaml", (fun file ->
     match File_type.file_type_of_file file with
-    | FT.PL (FT.ML _) | FT.PL (FT.Makefile)  -> 
-      (* todo: should be done in file_type_of_file *)
-      not (File_type.is_syncweb_obj_file file)
+    | FT.PL (FT.ML _) | FT.Config (FT.Makefile)  -> true
     | _ -> false
   );
   "mli", (fun file ->
     match File_type.file_type_of_file file with
-    | FT.PL (FT.ML "mli") | FT.PL (FT.Makefile)   -> 
-    (* todo: should be done in file_type_of_file *)
-      not (File_type.is_syncweb_obj_file file) &&
+    | FT.PL (FT.ML "mli") | FT.Config (FT.Makefile)   -> 
       not (file =~ ".*/commons/")
     | _ -> false
   );
   "nw", (fun file -> 
     match FT.file_type_of_file file with
     | FT.Text "nw" -> true | _ -> false
+  );
+  "doc", (fun file -> 
+    match FT.file_type_of_file file with
+    | FT.Text _ -> true | _ -> false
   );
 
   (* other languages *)
@@ -4567,9 +4589,16 @@ let filters = [
     match File_type.file_type_of_file file with
     | FT.PL (FT.Web (FT.Js)) -> true  | _ -> false
   );
+  "config", (fun file ->
+    match File_type.file_type_of_file file with
+    | FT.Config (FT.Yaml | FT.Json) -> true  | _ -> false
+  );
 
   "cpp", (let x = ref false in (fun file ->
-    Common2.once x (fun () -> Parse_cpp.init_defs !Flag_parsing_cpp.macros_h);
+    Common2.once x (fun () -> 
+      (* TODO: also add possible pfff_macros.h when there *)
+      Parse_cpp.init_defs !Flag_parsing_cpp.macros_h
+    );
     match FT.file_type_of_file file with
     | FT.PL (FT.C _ | FT.Cplusplus _) -> true 
     | FT.PL FT.Asm -> true
@@ -4577,11 +4606,17 @@ let filters = [
   ));
 
   (* exotic languages *)
-  "opa", (fun file -> 
+  "exotic", (fun file -> 
     match FT.file_type_of_file file with
-    | FT.PL (FT.Opa) (* | FT.PL (FT.ML _) *)  -> true
+    | FT.PL (FT.Opa | FT.Rust)  -> true
 (*    | FT.PL (FT.Web (_)) -> true *)
     | _ -> false
+  );
+
+  (* general categories *)
+  "pl", (fun file ->
+    match File_type.file_type_of_file file with
+    | FT.PL _ -> true  | _ -> false
   );
 ]
 
@@ -4610,7 +4645,7 @@ let set_gc () =
 
 (* could also to parse all json files and filter the one which do not parse *)
 let layers_in_dir dir =
-  Common2.readdir_to_file_list dir +> Common.map_filter (fun file ->
+  Common2.readdir_to_file_list dir |> Common.map_filter (fun file ->
     if file =~ "layer.*json"
     then Some (Filename.concat dir file)
     else None
@@ -4629,8 +4664,9 @@ let layers_in_dir dir =
 (* related work: http://cloc.sourceforge.net/ but have skip list
  * and archi_code_lexer.mll which lower the important of some files?
  *)
-let test_loc root =
-  let root = Common.realpath root in
+let test_loc print_top30 xs =
+  let xs = xs |> List.map Common.fullpath in
+  let root = Common2.common_prefix_of_files_or_dirs xs in
   let skip_file = !skip_file ||| Filename.concat root "skip_list.txt" in
   let skip_list =
     if Sys.file_exists skip_file
@@ -4644,7 +4680,7 @@ let test_loc root =
   let filter_file = (fun file -> 
     !filter file && (skip_list = [] || filter_files_skip_list [file] <> []))
   in
-  let treemap = Treemap_pl.code_treemap ~filter_file [root] in
+  let treemap = Treemap_pl.code_treemap ~filter_file xs in
 
   let res = ref [] in
   let rec aux tree =
@@ -4665,23 +4701,25 @@ let test_loc root =
         end
   in
   aux treemap;
-  let total = !res +> List.map snd +> List.map int_of_float  +> Common2.sum in
+  let total = !res |> List.map snd |> List.map int_of_float  |> Common2.sum in
   pr2 (spf "LOC = %d (%d files)" total (List.length !res));
-  let topx = 30 in
-  pr2 (spf "Top %d:" topx);
-  !res +> Common.sort_by_val_highfirst +> Common.take_safe topx 
-  +>  List.iter (fun (file, f) ->
+  if print_top30 then begin
+    let topx = 30 in
+    pr2 (spf "Top %d:" topx);
+    !res |> Common.sort_by_val_highfirst |> Common.take_safe topx 
+    |>  List.iter (fun (file, f) ->
       pr2 (spf "%-40s: %d" file (int_of_float f))
-  )
+    )
+  end
 
 
 let test_treemap_dirs () =
   let paths = 
     ["commons/common.ml"; "h_visualization"; "code_graph"] 
-    +> List.map Common.realpath in
+    |> List.map Common.fullpath in
   let paths = List.sort String.compare paths in
   let tree = 
-    paths +> Treemap.tree_of_dirs_or_files
+    paths |> Treemap.tree_of_dirs_or_files
       ~filter_dir:Lib_vcs.filter_vcs_dir
       ~filter_file:(fun file -> file =~ ".*\\.ml")
       ~file_hook:(fun _file -> 10)
@@ -4703,15 +4741,14 @@ let test_draw cr =
   (* [0,0][1,1] world scaled to a width x height screen *)
   Cairo.scale cr (float_of_int width) (float_of_int height);
 
-  Cairo.set_source_rgba cr ~red:0.5 ~green:0.5 ~blue:0.5 ~alpha:0.5;
+  Cairo.set_source_rgba cr 0.5 0.5 0.5   0.5;
   Cairo.set_line_width cr 0.001;
 
   Cairo.move_to cr 0.5 0.5;
   Cairo.line_to cr 0.6 0.6;
   Cairo.stroke cr;
 
-  Cairo.select_font_face cr "serif"
-    Cairo.FONT_SLANT_NORMAL Cairo.FONT_WEIGHT_BOLD;
+  Cairo.select_font_face cr "serif" ~weight:Cairo.Bold;
   Cairo.set_font_size cr 0.1;
   Cairo.move_to cr 0.1 0.1;
   Cairo.show_text cr "THIS IS SOME TEXT";
@@ -4721,7 +4758,7 @@ let test_draw cr =
   Cairo.move_to cr 0.1 0.3;
   Cairo.show_text cr "THIS IS SOME TEXT";
 
-  Cairo.set_source_rgb cr ~red:0.1 ~green:0.1 ~blue:0.1;
+  Cairo.set_source_rgb cr 0.1 0.1 0.1;
   Cairo.move_to cr 0.1 0.1;
   Cairo.line_to cr 0.1 0.2;
   Cairo.stroke cr;
@@ -4730,8 +4767,7 @@ let test_draw cr =
 
   for _i = 0 to 3 do
     let end_ = !start +. 0.5 in
-    Cairo.arc cr ~xc:0.5 ~yc:0.5 ~radius:0.3 ~angle1:!start
-      ~angle2:end_;
+    Cairo.arc cr 0.5 0.5 ~r:0.3 ~a1:!start ~a2:end_;
     Cairo.stroke cr;
     start := end_;
   done;
@@ -4741,13 +4777,13 @@ let test_draw cr =
 let test_cairo () =
   let _locale = GtkMain.Main.init () in
   let w = GWindow.window ~title:"test" () in
-  (w#connect#destroy GMain.quit) +> ignore;
+  (w#connect#destroy GMain.quit) |> ignore;
   let px = GDraw.pixmap ~width ~height ~window:w () in
   px#set_foreground `WHITE;
   px#rectangle ~x:0 ~y:0 ~width ~height ~filled:true ();
-  let cr = Cairo_lablgtk.create px#pixmap in
+  let cr = Cairo_gtk.create px#pixmap in
   test_draw cr;
-  (GMisc.pixmap px ~packing:w#add ()) +> ignore;
+  (GMisc.pixmap px ~packing:w#add ()) |> ignore;
   w#show ();
   GMain.main()
   
@@ -4766,7 +4802,7 @@ let all_actions () =
  extra_actions()@
  []
 
-let options () = [ 
+let options () = ([ 
   <<options>>
   ] @
   Common.options_of_actions action (all_actions()) @
@@ -4777,7 +4813,7 @@ let options () = [
     exit 0;
   ), 
     " guess what";
-  ]
+  ]) |> Arg.align
 
 (*****************************************************************************)
 (* The main entry point *)
@@ -4813,7 +4849,7 @@ let main () =
     (* --------------------------------------------------------- *)
     (* empty entry *)
     (* --------------------------------------------------------- *)
-    | [] -> Arg.usage (Arg.align (options())) usage_msg; 
+    | [] -> Arg.usage (options()) usage_msg; 
     );
   )
 
@@ -4870,7 +4906,8 @@ val node_of_entity:
 open Common
 
 module G = Graph_code
-module E = Database_code
+module E = Entity_code
+module Db = Database_code
 
 (*****************************************************************************)
 (* Prelude *)
@@ -4897,7 +4934,7 @@ let build_filedeps_of_dir_or_file g =
 
   let halready = Hashtbl.create 101 in
 
-  g +> G.iter_use_edges (fun n1 n2 ->
+  g |> G.iter_use_edges (fun n1 n2 ->
     try 
       let file1 = G.file_of_node n1 g in
       let file2 = G.file_of_node n2 g in
@@ -4914,11 +4951,11 @@ let build_filedeps_of_dir_or_file g =
        *)
       let dirs_n1 = Common2.inits_of_relative_dir file1 in
       let dirs_n2 = Common2.inits_of_relative_dir file2 in
-      dirs_n1 +> List.iter (fun dir ->
+      dirs_n1 |> List.iter (fun dir ->
         if not (is_prefix dir file2)
         then Hashtbl.add huses (dir, E.Dir) file2;
       );
-      dirs_n2 +> List.iter (fun dir ->
+      dirs_n2 |> List.iter (fun dir ->
         if not (is_prefix dir file1)
         then Hashtbl.add husers (dir, E.Dir) file1;
       );
@@ -4927,7 +4964,7 @@ let build_filedeps_of_dir_or_file g =
   );
   let hres = Hashtbl.create 101 in
   let keys = Common2.union_set (Common2.hkeys huses) (Common2.hkeys husers) in
-  keys +> List.iter (fun k ->
+  keys |> List.iter (fun k ->
     let uses = try Hashtbl.find_all huses k with Not_found -> [] in
     let users = try Hashtbl.find_all husers k with Not_found -> [] in
     (* todo: have to do uniq? if add in hash multiple times with same value,
@@ -4942,7 +4979,7 @@ let build_entities_of_file g =
   (* we use the 'find_all' property of those hashes *)
   let h = Hashtbl.create 101 in
 
-  g +> G.iter_nodes (fun n ->
+  g |> G.iter_nodes (fun n ->
     try 
       let info = G.nodeinfo n g in
       let file = info.G.pos.Parse_info.file in
@@ -4950,7 +4987,7 @@ let build_entities_of_file g =
       Hashtbl.add h file n;
     with Not_found -> ()
   );
-  Common2.hkeys h +> List.map (fun k ->
+  Common2.hkeys h |> List.map (fun k ->
     let xs = Hashtbl.find_all h k in
     k, xs
   )
@@ -4967,7 +5004,7 @@ let build_entities_of_file g =
  *)
 let add_headers_files_entities_of_file root xs =
   let headers =
-    xs +> Common.map_filter (fun (file, xs) ->
+    xs |> Common.map_filter (fun (file, xs) ->
       let (d,b,e) = Common2.dbe_of_filename_noext_ok file in
       match e with
       | "ml" -> 
@@ -4988,11 +5025,11 @@ let add_headers_files_entities_of_file root xs =
 
 let node_of_entity e g =
   let fullname = 
-    match e.E.e_fullname with
-    | "" -> e.E.e_name
+    match e.Db.e_fullname with
+    | "" -> e.Db.e_name
     | s -> s
   in 
-  let node = (fullname, e.E.e_kind) in
+  let node = (fullname, e.Db.e_kind) in
   if G.has_node node g
   then Some node
   else None
@@ -5044,7 +5081,7 @@ type macrolevel = Treemap.treemap_rendering
 
 
 type microlevel = {
-  point_to_line: Cairo.point -> line;
+  point_to_line: Figures.point -> line;
   line_to_rectangle: line -> Figures.rectangle;
   layout: layout;
   container: Treemap.treemap_rectangle;
@@ -5072,13 +5109,13 @@ type microlevel = {
     categ: Highlight_code.category option;
     font_size: float;
     color: Simple_color.emacs_color;
-    mutable pos: Cairo.point;
+    mutable pos: Figures.point;
   }
 
  (* Note that I don't use G.node because the string below is not fully
   * qualified so one must use match_short_vs_node when comparing with nodes.
   *)
-  and short_node = (string * Database_code.entity_kind)
+  and short_node = (string * Entity_code.entity_kind)
 
 <<type drawing>>
 
@@ -5116,9 +5153,9 @@ val context_of_drawing: drawing -> model Async.t -> context
 <<find_rectangle_at_user_point sig>>
 
 val find_line_in_rectangle_at_user_point:
-  Cairo.point -> Treemap.treemap_rectangle -> drawing -> line option
+  Figures.point -> Treemap.treemap_rectangle -> drawing -> line option
 val find_glyph_in_rectangle_at_user_point:
-  Cairo.point -> Treemap.treemap_rectangle -> drawing -> glyph option
+  Figures.point -> Treemap.treemap_rectangle -> drawing -> glyph option
 
 (* graph code integration *)
 
@@ -5162,11 +5199,9 @@ val lines_where_used_node:
 <<Facebook copyright>>
 open Common
 
-module Flag = Flag_visual
-module CairoH = Cairo_helpers
 module F = Figures
 module T = Treemap
-module E = Database_code
+module E = Entity_code
 
 (*****************************************************************************)
 (* The code model *)
@@ -5201,7 +5236,7 @@ type macrolevel = Treemap.treemap_rendering
  *)
 
 type microlevel = {
-  point_to_line: Cairo.point -> line;
+  point_to_line: Figures.point -> line;
   line_to_rectangle: line -> Figures.rectangle;
   layout: layout;
   container: Treemap.treemap_rectangle;
@@ -5216,14 +5251,14 @@ type microlevel = {
  (* Note that I don't use G.node because the string below is not fully
   * qualified so one must use match_short_vs_node when comparing with nodes.
   *)
-  and short_node = (string * Database_code.entity_kind)
+  and short_node = (string * Entity_code.entity_kind)
   and glyph = {
     str: string;
     categ: Highlight_code.category option;
     font_size: float;
     color: Simple_color.emacs_color;
     (* the lower left position, before calling Cairo.show_text str *)
-    mutable pos: Cairo.point;
+    mutable pos: Figures.point;
   }
   and layout = {
     lfont_size: float;
@@ -5309,9 +5344,9 @@ let find_glyph_in_rectangle_at_user_point user r dw =
       else
         let glyphs = glyphs.(line) in
         (* find the best one *)
-        glyphs +> List.rev +> Common.find_opt (fun glyph ->
+        glyphs |> List.rev |> Common.find_opt (fun glyph ->
           let pos = glyph.pos in
-          user.Cairo.x >= pos.Cairo.x
+          user.Figures.x >= pos.Figures.x
         )
     )
   )
@@ -5345,14 +5380,14 @@ let find_def_entity_at_line_opt line tr dw model =
     let short_node = List.assoc line microlevel.defs in
     (* try to match the possible shortname str with a fully qualified node 
     *)
-    nodes +> Common.map_filter (fun node ->
+    nodes |> Common.map_filter (fun node ->
       if match_short_vs_node short_node node
       then Some node
       else None
-    ) +> List.map (fun (s, kind) -> ((s, kind), rank_entity_kind kind))
-      +> Common.sort_by_val_highfirst
-      +> List.hd +> fst +> (fun x -> Some x)
-  with Not_found | Failure "hd" -> None
+    ) |> List.map (fun (s, kind) -> ((s, kind), rank_entity_kind kind))
+      |> Common.sort_by_val_highfirst
+      |> List.hd |> fst |> (fun x -> Some x)
+  with Not_found | Failure _ (* "hd"*) -> None
 
 let find_use_entity_at_line_and_glyph_opt line glyph tr dw model =
   model.g >>= (fun g ->
@@ -5361,13 +5396,13 @@ let find_use_entity_at_line_and_glyph_opt line glyph tr dw model =
     (* try because maybe have no enclosing defs *)
     try 
       let (line_def, _shortnode) = 
-        microlevel.defs +> List.rev +> List.find (fun (line2, _shortnode) ->
+        microlevel.defs |> List.rev |> List.find (fun (line2, _shortnode) ->
           line >= line2
         )
       in
       find_def_entity_at_line_opt line_def tr dw model >>= (fun node ->
         let uses = Graph_code.succ node Graph_code.Use g in
-        uses +> Common.find_opt (fun node ->
+        uses |> Common.find_opt (fun node ->
           let s = Graph_code.shortname_of_node node in
           let categ =  glyph.categ ||| Highlight_code.Normal in
           glyph.str =$= s &&
@@ -5393,20 +5428,20 @@ let deps_readable_files_of_node node model =
   | _, Some g ->
       let succ = Graph_code.succ node Graph_code.Use g in
       let pred = Graph_code.pred node Graph_code.Use g in
-      succ +> Common.map_filter (fun n ->
+      succ |> Common.map_filter (fun n ->
         try Some (Graph_code.file_of_node n g) with Not_found -> None
       ),
-      pred +> Common.map_filter (fun n ->
+      pred |> Common.map_filter (fun n ->
         try Some (Graph_code.file_of_node n g) with Not_found -> None
       )
 
 let deps_rects_of_rect tr dw model =
   let node = node_of_rect tr model in
   let uses, users = deps_readable_files_of_node node model in
-  uses +> Common.map_filter (fun file -> 
+  uses |> Common.map_filter (fun file -> 
     Common2.optionise (fun () -> Hashtbl.find dw.readable_file_to_rect file)
   ),
-  users +> Common.map_filter (fun file ->
+  users |> Common.map_filter (fun file ->
     Common2.optionise (fun () ->Hashtbl.find dw.readable_file_to_rect file)
   )
 
@@ -5419,9 +5454,9 @@ let line_and_microlevel_of_node_opt n dw model =
        *)
       let rect = Hashtbl.find dw.readable_file_to_rect file in
       let microlevel = Hashtbl.find dw.microlevel rect in
-      let line = microlevel.defs +> List.find (fun (_line, snode) ->
+      let line = microlevel.defs |> List.find (fun (_line, snode) ->
         match_short_vs_node snode n
-      ) +> fst in
+      ) |> fst in
       Some (n, line, microlevel)
     with Not_found -> None
   )
@@ -5431,7 +5466,7 @@ let uses_or_users_of_node node dw fsucc model =
   | None -> []
   | Some g ->
     let succ = fsucc node Graph_code.Use g in
-    succ +> Common.map_filter (fun n -> 
+    succ |> Common.map_filter (fun n -> 
       line_and_microlevel_of_node_opt n dw model
     )
 
@@ -5458,7 +5493,7 @@ let lines_where_used_node node startl microlevel =
     (* todo: should be from startl to endl (the start of the next entity) *)
     for line = startl to Array.length glypys - 1 do
       let xs = glypys.(line) in
-      if xs +> List.exists (fun glyph ->
+      if xs |> List.exists (fun glyph ->
         let categ =  glyph.categ ||| Highlight_code.Normal in
         glyph.str =$= s &&
         Database_code.matching_use_categ_kind categ (snd node)
@@ -5486,12 +5521,9 @@ open Common
 
 module G = Gui
 module K = GdkKeysyms
-module GR = Gdk.Rectangle
-module F = Figures
 module T = Treemap
 module CairoH = Cairo_helpers
 open Model2 (* for the fields *)
-module M = Model2
 module Controller = Controller2
 module Flag = Flag_visual
 module Style = Style2
@@ -5530,10 +5562,6 @@ let pr2, _pr2_once = Common2.mk_pr2_wrappers Flag.verbose_visual
 (* The legend *)
 (* ---------------------------------------------------------------------- *)
 <<expose_legend>>
-
-(*****************************************************************************)
-(* Events *)
-(*****************************************************************************)
 
 (*****************************************************************************)
 (* The main UI *)
@@ -5643,7 +5671,7 @@ val interface_doc: string
 <<draw_treemap_rectangle sig>>
 
 val draw_trect_using_layers:
-  cr:Cairo.t ->
+  cr:Cairo.context ->
   Layer_code.layers_with_index ->
   Treemap.treemap_rectangle -> 
   unit
@@ -5654,7 +5682,6 @@ val draw_trect_using_layers:
 
 <<draw_macrolevel.ml>>=
 <<Facebook copyright>>
-open Common
 open Common2.ArithFloatInfix
 
 open Figures (* for the fields *)
@@ -5731,7 +5758,7 @@ let draw_trect_using_layers ~cr layers_with_index rect =
 
 val draw_magnify_line:
   ?honor_color:bool ->
-  Cairo.t -> Model2.line -> Model2.microlevel -> unit
+  Cairo.context -> Model2.line -> Model2.microlevel -> unit
 @ 
 
 \subsection{[[draw_microlevel.ml]]}
@@ -5748,7 +5775,6 @@ module M = Model2
 module T = Treemap
 module Color = Simple_color
 module CairoH = Cairo_helpers
-module HC = Highlight_code
 module Flag = Flag_visual
 module Style = Style2
 module FT = File_type
@@ -5786,7 +5812,7 @@ type line_in_column = {
 
 type _pos = float (* x *) * float (* y *)
 
-type _point = Cairo.point
+type _point = Figures.point
 
 <<type draw_content_layout>>
 
@@ -5815,6 +5841,11 @@ let use_fancy_highlighting file =
     (*    | FT.PL (FT.Prolog _) *)
     | FT.PL (FT.Erlang)
     | FT.PL (FT.Opa)
+    | FT.PL (FT.Rust)
+    | FT.PL (FT.Skip)
+    | FT.PL (FT.Web (FT.TypeScript))
+    | FT.PL (FT.Go)
+    | FT.PL (FT.Ruby)
     ) -> true
   | (FT.Text "txt") when Common2.basename file =$= "info.txt" -> true
   | _ -> false
@@ -5852,11 +5883,11 @@ let line_to_rectangle line r layout =
   }
 
 let point_to_line pt r layout =
-  let x = pt.Cairo.x - r.p.x in
-  let y = pt.Cairo.y - r.p.y in
+  let x = pt.Figures.x - r.p.x in
+  let y = pt.Figures.y - r.p.y in
   let line_in_column = floor (y / layout.height_per_line) in
   let column = floor (x / layout.width_per_column) in
-  Line ((column * layout.nblines_per_column + line_in_column) +> int_of_float)
+  Line ((column * layout.nblines_per_column + line_in_column) |> int_of_float)
 
 (*****************************************************************************)
 (* Content properties *)
@@ -5871,7 +5902,7 @@ let color_of_categ categ =
     | None ->       Highlight_code.info_of_category Highlight_code.Normal
     | Some categ -> Highlight_code.info_of_category categ
   in
-  attrs +> Common.find_some (fun attr ->
+  attrs |> Common.find_some (fun attr ->
     match attr with
     | `FOREGROUND s 
     | `BACKGROUND s (* todo: should really draw the background of the text *)
@@ -5884,7 +5915,7 @@ let glyphs_of_file ~font_size ~font_size_real model_async file
   : (glyph list) array option =
 
   (* real position is set later in draw_content *)
-  let pos = { Cairo.x = 0.; y = 0. } in
+  let pos = { Figures.x = 0.; y = 0. } in
 
   match FT.file_type_of_file file with
   | _ when use_fancy_highlighting file ->
@@ -5901,20 +5932,20 @@ let glyphs_of_file ~font_size ~font_size_real model_async file
      * returned by nblines_eff may be different
      *)
     let nblines = Common2.nblines_eff file in
-    let arr = Array.create nblines [] in
+    let arr = Array.make nblines [] in
     let tokens_with_categ = Parsing.tokens_with_categ_of_file file entities in
 
     let line = ref 0 in
     let acc = ref [] in
     (try
-     tokens_with_categ +> List.iter (fun (s, categ, _filepos) ->
+     tokens_with_categ |> List.iter (fun (s, categ, _filepos) ->
       let final_font_size = 
         final_font_size_of_categ ~font_size ~font_size_real categ in
       let color = 
         color_of_categ categ in
 
       let xs = Common2.lines_with_nl_either s in
-      xs +> List.iter (function
+      xs |> List.iter (function
       | Common2.Left str ->
           Common.push { M. str; font_size=final_font_size; color; categ;pos } 
             acc;
@@ -5933,20 +5964,20 @@ let glyphs_of_file ~font_size ~font_size_real model_async file
 
   | FT.PL _ | FT.Text _ ->      
       Common.cat file
-      +> List.map (fun str -> 
+      |> List.map (fun str -> 
         [{ M.str; font_size; color = "black"; categ=None; pos }])
-      +> Array.of_list
-      +> (fun x -> Some x)
+      |> Array.of_list
+      |> (fun x -> Some x)
 
   | _ -> None
 
 let defs_of_glyphs glyphs =
   let res = ref [] in
-  glyphs +> Array.iteri (fun line_0_indexed glyphs ->
-    glyphs +> List.iter (fun glyph ->
-      glyph.categ +> Common.do_option (fun categ ->
+  glyphs |> Array.iteri (fun line_0_indexed glyphs ->
+    glyphs |> List.iter (fun glyph ->
+      glyph.categ |> Common.do_option (fun categ ->
         Database_code.entity_kind_of_highlight_category_def categ 
-        +> Common.do_option (fun kind ->
+        |> Common.do_option (fun kind ->
               Common.push (Line line_0_indexed, (glyph.str, kind)) res
         ))));
   List.rev !res
@@ -5995,14 +6026,14 @@ let draw_magnify_line ?(honor_color=true) cr line microlevel =
      *)
     if iline < Array.length glyphs then begin
      glyphs.(iline) 
-     +> (fun xs ->
+     |> (fun xs ->
       match xs with
       | [] -> []
       | x::xs ->
         if x.M.str =~ "[ \t]+" then xs
         else x::xs
     )
-    +> List.iter (fun glyph ->
+    |> List.iter (fun glyph ->
       (* let font_size = glyph.M.font_size * 3. in *)
       let font_size_real = 15. in
       let font_size = CairoH.device_to_user_size cr font_size_real in
@@ -6032,7 +6063,6 @@ let draw_magnify_line ?(honor_color=true) cr line microlevel =
 
 <<draw_labels.ml>>=
 <<Facebook copyright>>
-open Common
 open Common2.ArithFloatInfix
 
 open Figures (* for the fields *)
@@ -6056,9 +6086,9 @@ module CairoH = Cairo_helpers
 \subsection{[[draw_legend.mli]]}
 
 <<draw_legend.mli>>=
-val draw_legend: cr:Cairo.t -> unit
+val draw_legend: cr:Cairo.context -> unit
 
-val draw_legend_layer: cr:Cairo.t -> Layer_code.layers_with_index -> unit
+val draw_legend_layer: cr:Cairo.context -> Layer_code.layers_with_index -> unit
 
 @
 
@@ -6066,7 +6096,6 @@ val draw_legend_layer: cr:Cairo.t -> Layer_code.layers_with_index -> unit
 
 <<draw_legend.ml>>=
 <<Facebook copyright>>
-open Common
 open Common2.ArithFloatInfix
 
 module CairoH = Cairo_helpers
@@ -6082,14 +6111,13 @@ module L = Layer_code
 
 let draw_legend_of_color_string_pairs ~cr xs = 
 
-  Cairo.select_font_face cr "serif" 
-    Cairo.FONT_SLANT_NORMAL Cairo.FONT_WEIGHT_NORMAL;
+  Cairo.select_font_face cr "serif" ~weight:Cairo.Normal;
   let size = 25.  in
 
   Cairo.set_font_size cr (size * 0.6);
   Cairo.set_source_rgba cr 0. 0. 0.    1.0;
   
-  xs +> Common.index_list_1 +> List.iter (fun ((color,s), i) ->
+  xs |> Common.index_list_1 |> List.iter (fun ((color,s), i) ->
     let x = 10. in
     let y = float_of_int i * size in
 
@@ -6110,11 +6138,11 @@ let draw_legend_of_color_string_pairs ~cr xs =
 
 let draw_legend_layer ~cr layers_idx = 
   let pairs = 
-    layers_idx.L.layers +> Common.map_filter (fun (layer, is_active) ->
+    layers_idx.L.layers |> Common.map_filter (fun (layer, is_active) ->
       if is_active
       then Some layer.L.kinds
       else None
-    ) +> List.flatten +> List.map (fun (a, b) -> (b, a))
+    ) |> List.flatten |> List.map (fun (a, b) -> (b, a))
   in
   draw_legend_of_color_string_pairs ~cr pairs
 
@@ -6127,11 +6155,11 @@ let draw_legend_layer ~cr layers_idx =
 
 val paint: Model2.drawing -> Model2.model Async.t -> unit
 
-val zoom_pan_scale_map: Cairo.t -> Model2.drawing -> unit
+val zoom_pan_scale_map: Cairo.context -> Model2.drawing -> unit
 
 val device_to_user_area: Model2.drawing -> Figures.rectangle
 
-val with_map: Model2.drawing -> (Cairo.t -> 'a) -> 'a
+val with_map: Model2.drawing -> (Cairo.context -> 'a) -> 'a
 
 val button_action:
    Model2.world -> GdkEvent.Button.t -> bool
@@ -6154,6 +6182,8 @@ module T = Treemap
 module Flag = Flag_visual
 module M = Model2
 module Ctl = Controller2
+
+let debug = ref false
 
 (*****************************************************************************)
 (* Prelude *)
@@ -6267,7 +6297,6 @@ open Common
 open Common2.ArithFloatInfix
 
 open Model2
-module F = Figures
 module T = Treemap
 module CairoH = Cairo_helpers
 module M = Model2
@@ -6296,7 +6325,7 @@ let readable_txt_for_label txt current_root =
   in
   if String.length readable_txt > 25
   then 
-    let dirs = Filename.dirname readable_txt +> Common.split "/" in
+    let dirs = Filename.dirname readable_txt |> Common.split "/" in
     let file = Filename.basename readable_txt in
     spf "%s/.../%s" (List.hd dirs) file
   else readable_txt
@@ -6328,10 +6357,10 @@ let draw_deps_files tr dw model =
  with_overlay dw (fun cr_overlay ->
    let uses_rect, users_rect = M.deps_rects_of_rect tr dw model in
    (* todo: glowing layer *)
-   uses_rect +> List.iter (fun r ->
+   uses_rect |> List.iter (fun r ->
      CairoH.draw_rectangle_figure ~cr:cr_overlay ~color:"green" r.T.tr_rect;
    );
-   users_rect +> List.iter (fun r ->
+   users_rect |> List.iter (fun r ->
      CairoH.draw_rectangle_figure ~cr:cr_overlay ~color:"red" r.T.tr_rect;
    )
  )
@@ -6355,22 +6384,22 @@ let draw_deps_entities n dw model =
  with_overlay dw (fun cr_overlay ->
 
    line_and_microlevel_of_node_opt n dw model 
-   +> Common.do_option (fun (_n2, line, microlevel) ->
+   |> Common.do_option (fun (_n2, line, microlevel) ->
      let rectangle = microlevel.line_to_rectangle line in
      CairoH.draw_rectangle_figure ~cr:cr_overlay ~color:"white" rectangle
    );
 
    let uses, users = M.deps_nodes_of_node_clipped n dw model in
-   uses +> List.iter (fun (_n2, line, microlevel) ->
+   uses |> List.iter (fun (_n2, line, microlevel) ->
      let rectangle = microlevel.line_to_rectangle line in
      CairoH.draw_rectangle_figure ~cr:cr_overlay ~color:"green" rectangle;
    );
-   users +> List.iter (fun (_n2, line, microlevel) ->
+   users |> List.iter (fun (_n2, line, microlevel) ->
      let rectangle = microlevel.line_to_rectangle line in
      CairoH.draw_rectangle_figure ~cr:cr_overlay ~color:"red" rectangle;
      
      let lines_used = M.lines_where_used_node n line microlevel in
-     lines_used +> List.iter (fun line ->
+     lines_used |> List.iter (fun line ->
        let rectangle = microlevel.line_to_rectangle line in
        CairoH.draw_rectangle_figure ~cr:cr_overlay ~color:"purple" rectangle;
 
@@ -6389,9 +6418,9 @@ let draw_tooltip ~cr_overlay ~x ~y n g =
   let succ = Graph_code.succ n Graph_code.Use g in
   let files = 
     pred 
-    +> Common.map_filter (fun n ->
+    |> Common.map_filter (fun n ->
         Common2.optionise (fun () -> (Graph_code.file_of_node n g)))
-    +> Common.sort +> Common2.uniq
+    |> Common.sort |> Common2.uniq
   in
   let str = spf "
  Entity: %s
@@ -6404,19 +6433,18 @@ let draw_tooltip ~cr_overlay ~x ~y n g =
   let xs = Common2.lines str in
 
   (* copy paste of draw_label_overlay *)
-  Cairo.select_font_face cr_overlay "serif" 
-    Cairo.FONT_SLANT_NORMAL Cairo.FONT_WEIGHT_NORMAL;
+  Cairo.select_font_face cr_overlay "serif" ~weight:Cairo.Normal;
   Cairo.set_font_size cr_overlay Style.font_size_filename_cursor;
 
   let template = "peh" in
   let max_length = 
-    xs +> List.map (String.length) +> Common2.maximum +> float_of_int in
+    xs |> List.map (String.length) |> Common2.maximum |> float_of_int in
 
   let extent = CairoH.text_extents cr_overlay template in
-  let tw = extent.Cairo.text_width * ((max_length / 3.) +> ceil) in
-  let th = extent.Cairo.text_height * 1.2 in
+  let tw = extent.Cairo.width * ((max_length / 3.) |> ceil) in
+  let th = extent.Cairo.height * 1.2 in
 
-  let nblines = List.length xs +> float_of_int in
+  let nblines = List.length xs |> float_of_int in
   let refx = x - tw / 2. in
   let refy = y - (th * nblines) in
 
@@ -6428,7 +6456,7 @@ let draw_tooltip ~cr_overlay ~x ~y n g =
     ();
 
   Cairo.set_source_rgba cr_overlay 1. 1. 1.    1.0;
-  xs +> Common.index_list_0 +> List.iter (fun (txt, line) ->
+  xs |> Common.index_list_0 |> List.iter (fun (txt, line) ->
     let line = float_of_int line in
     Cairo.move_to cr_overlay refx (refy + line * th);
     CairoH.show_text cr_overlay txt;
@@ -6458,12 +6486,12 @@ let paint_initial dw =
 let hook_finish_paint w =
   (* pr2 "Hook_finish_paint"; *)
   let dw = w.dw in
-  w.current_node +> Common.do_option (fun n -> 
-    Async.async_get_opt w.model +> Common.do_option (fun model ->
+  w.current_node |> Common.do_option (fun n -> 
+    Async.async_get_opt w.model |> Common.do_option (fun model ->
       draw_deps_entities n dw model
     ));
-  w.current_node_selected +> Common.do_option (fun n -> 
-    Async.async_get_opt w.model +> Common.do_option (fun model ->
+  w.current_node_selected |> Common.do_option (fun n -> 
+    Async.async_get_opt w.model |> Common.do_option (fun model ->
       draw_deps_entities n dw model
     ))
 
@@ -6541,7 +6569,6 @@ val go_dirs_or_file:
 open Common
 
 open Model2
-module G = Gui
 module Controller = Controller2
 
 (*****************************************************************************)
@@ -6577,8 +6604,8 @@ module Controller = Controller2
 <<Facebook copyright>>
 open Common
 
-module SH = Highlight_code
-module Flag = Flag_visual
+module E = Entity_code
+module HC = Highlight_code
 
 (*****************************************************************************)
 (* Visual style *)
@@ -6685,7 +6712,6 @@ open Common
 
 <<cairo_helpers.ml>>=
 <<Facebook copyright>>
-open Common
 (* floats are the norm in graphics *)
 open Common2.ArithFloatInfix
 
@@ -6696,11 +6722,13 @@ module Color = Simple_color
 (*****************************************************************************)
 (* Prelude *)
 (*****************************************************************************)
+(* See http://archimedes.forge.ocamlcore.org/cairo/ for a tutorial on 
+ * Cairo in OCaml.
+ *)
 
 (*****************************************************************************)
 (* Helpers *)
 (*****************************************************************************)
-let (==~) = Common2.(==~)
 
 (*****************************************************************************)
 (* Text related *)
@@ -6708,21 +6736,10 @@ let (==~) = Common2.(==~)
 
 (* May have to move this in commons/ at some point *)
 
-let re_space = Str.regexp "^[ ]+$"
-let re_tab = Str.regexp "^[\t]+$"
+let _re_space = Str.regexp "^[ ]+$"
+let _re_tab = Str.regexp "^[\t]+$"
 
 <<cairo helpers functions>>
-
-(*****************************************************************************)
-(* Misc *)
-(*****************************************************************************)
-
-let is_old_cairo () = 
-  let s = Cairo.compile_time_version_string in
-  match () with
-  | _ when s =~ "1\\.[89]\\.*" -> false
-  | _ -> true
-
 
 @ 
 

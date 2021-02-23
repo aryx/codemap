@@ -342,7 +342,7 @@ let visit_program
           then tag ii String
 
       | T.TChar (_s, ii) -> tag ii String
-      | T.TFloat (_s,ii) | T.TInt (_s,ii) -> tag ii Number
+      | T.TFloat (_,ii) | T.TInt (_,ii) -> tag ii Number
       | T.Tfalse ii | T.Ttrue ii -> tag ii Boolean
 
       | T.Tlet ii | T.Tin ii | T.Tand ii | T.Trec ii
