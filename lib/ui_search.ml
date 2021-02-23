@@ -35,7 +35,7 @@ module M = Model2
 (* Search *)
 (* ---------------------------------------------------------------------- *)
 
-(*s: dialog_search_def *)
+(*s: [[dialog_search_def]] *)
 let dialog_search_def model = 
   let idx = (fun () -> 
     let model = Async.async_get model in
@@ -68,9 +68,9 @@ let dialog_search_def model =
     pr2 ("selected: " ^ s);
   );
   res
-(*e: dialog_search_def *)
+(*e: [[dialog_search_def]] *)
 
-(*s: run_grep_query *)
+(*s: [[run_grep_query]] *)
 let run_grep_query ~root s =
   (* --cached so faster ? use -w ?  
    * -I means no search for binary files
@@ -94,9 +94,9 @@ let run_grep_query ~root s =
       failwith ("wrong git grep line: " ^ s)
   ) in
   xs
-(*e: run_grep_query *)
+(*e: [[run_grep_query]] *)
 
-(*s: run_tbgs_query *)
+(*s: [[run_tbgs_query]] *)
 let run_tbgs_query ~root s =
   let cmd = 
     spf "cd %s; tbgs --stripdir %s" root s
@@ -113,6 +113,6 @@ let run_tbgs_query ~root s =
       failwith ("wrong tbgs line: " ^ s)
   ) in
   xs
-(*e: run_tbgs_query *)
+(*e: [[run_tbgs_query]] *)
 
 (*e: ui_search.ml *)

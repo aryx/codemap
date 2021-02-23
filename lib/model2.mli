@@ -159,7 +159,7 @@ type context = {
 val context_of_drawing: drawing -> model Async.t -> context
 
 
-(*s: init_drawing sig *)
+(*s: [[init_drawing]] sig *)
 val init_drawing :
   ?width:int ->
   ?height:int ->
@@ -168,23 +168,23 @@ val init_drawing :
   Common.path list -> 
   Common.dirname (* root *) ->
   drawing
-(*e: init_drawing sig *)
+(*e: [[init_drawing]] sig *)
 
-(*s: new_pixmap sig *)
+(*s: [[new_pixmap]] sig *)
 val new_surface: 
   alpha:bool -> width:int -> height:int -> Cairo.Surface.t
-(*e: new_pixmap sig *)
+(*e: [[new_pixmap]] sig *)
 
 (* point -> rectangle -> line -> glyph -> entity *)
 
-(*s: find_rectangle_at_user_point sig *)
+(*s: [[find_rectangle_at_user_point]] sig *)
 val find_rectangle_at_user_point :
   Figures.point -> drawing ->
   (Treemap.treemap_rectangle * (* most precise *)
    Treemap.treemap_rectangle list * (* englobbing ones *)
    Treemap.treemap_rectangle (* top one *)
   ) option
-(*e: find_rectangle_at_user_point sig *)
+(*e: [[find_rectangle_at_user_point]] sig *)
 
 val find_line_in_rectangle_at_user_point:
   Figures.point -> Treemap.treemap_rectangle -> drawing -> line option

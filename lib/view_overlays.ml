@@ -65,7 +65,7 @@ let with_overlay dw f =
 (* ---------------------------------------------------------------------- *)
 (* The current filename *)
 (* ---------------------------------------------------------------------- *)
-(*s: draw_label_overlay *)
+(*s: [[draw_label_overlay]] *)
 (* assumes cr_overlay has not been zoom_pan_scale *)
 let draw_label_overlay ~cr_overlay ~x ~y txt =
 
@@ -90,13 +90,13 @@ let draw_label_overlay ~cr_overlay ~x ~y txt =
   Cairo.set_source_rgba cr_overlay 1. 1. 1.    1.0;
   CairoH.show_text cr_overlay txt;
   ()
-(*e: draw_label_overlay *)
+(*e: [[draw_label_overlay]] *)
 
 (* ---------------------------------------------------------------------- *)
 (* The current rectangles *)
 (* ---------------------------------------------------------------------- *)
 
-(*s: draw_rectangle_overlay *)
+(*s: [[draw_rectangle_overlay]] *)
 let draw_englobing_rectangles_overlay ~dw (r, middle, r_englobing) =
  with_overlay dw (fun cr_overlay ->
   CairoH.draw_rectangle_figure 
@@ -120,7 +120,7 @@ let draw_englobing_rectangles_overlay ~dw (r, middle, r_englobing) =
       ~cr:cr_overlay ~color:(Some color) ~zoom:1.0 r;
   );
  )
-(*e: draw_rectangle_overlay *)
+(*e: [[draw_rectangle_overlay]] *)
 
 (* ---------------------------------------------------------------------- *)
 (* Uses and users macrolevel *)
@@ -239,7 +239,7 @@ let draw_tooltip ~cr_overlay ~x ~y n g =
 (* The selected rectangles *)
 (* ---------------------------------------------------------------------- *)
 
-(*s: draw_searched_rectangles *)
+(*s: [[draw_searched_rectangles]] *)
 let draw_searched_rectangles ~dw =
  with_overlay dw (fun cr_overlay ->
   dw.current_searched_rectangles |> List.iter (fun r ->
@@ -258,10 +258,10 @@ let draw_searched_rectangles ~dw =
    * r
    *)
  )
-(*e: draw_searched_rectangles *)
+(*e: [[draw_searched_rectangles]] *)
 
-(*s: zoomed_surface_of_rectangle *)
-(*e: zoomed_surface_of_rectangle *)
+(*s: [[zoomed_surface_of_rectangle]] *)
+(*e: [[zoomed_surface_of_rectangle]] *)
 
 (*****************************************************************************)
 (* Assembling overlays *)
@@ -287,7 +287,7 @@ let hook_finish_paint w =
       draw_deps_entities n dw model
     ))
 
-(*s: motion_refresher *)
+(*s: [[motion_refresher]] *)
 let motion_refresher ev w =
   paint_initial w.dw;
   hook_finish_paint w;
@@ -396,7 +396,7 @@ let motion_notify w ev =
       res
     ));
   true
-(*e: motion_refresher *)
+(*e: [[motion_refresher]] *)
 
 (*s: idle *)
 (*e: idle *)

@@ -199,7 +199,7 @@ type world = {
 (* Builders *)
 (*****************************************************************************)
 
-(*s: new_pixmap() *)
+(*s: [[new_pixmap]]() *)
 let new_surface ~alpha ~width ~height =
   let drawable = GDraw.pixmap ~width:1 ~height:1 () in
   drawable#set_foreground `WHITE;
@@ -215,9 +215,9 @@ let new_surface ~alpha ~width ~height =
     ) width height
 
 
-(*e: new_pixmap() *)
+(*e: [[new_pixmap]]() *)
 
-(*s: init_drawing() *)
+(*s: [[init_drawing]]() *)
 (* This is a first guess. The first configure ev will force a resize. *)
 let init_drawing   ?(width = 600) ?(height = 600) func layers paths root =
   let paths = List.map Common2.relative_to_absolute paths in
@@ -251,7 +251,7 @@ let init_drawing   ?(width = 600) ?(height = 600) func layers paths root =
     base    = new_surface ~alpha:false ~width ~height;
     overlay = new_surface ~alpha:true ~width ~height;
   }
-(*e: init_drawing() *)
+(*e: [[init_drawing]]() *)
 
 (*****************************************************************************)
 (* The drawing context *)
@@ -279,7 +279,7 @@ let context_of_drawing dw model = {
 (* Point -> (rectangle, line, glyph, entity) *)
 (*****************************************************************************)
 
-(*s: find_rectangle_at_user_point() *)
+(*s: [[find_rectangle_at_user_point]]() *)
 (* alt: we could use Cairo_bigarray and the pixel trick below if
  * it takes too long to detect which rectangle is under the cursor.
  * We could also sort the rectangles ... or have some kind of BSP.
@@ -319,7 +319,7 @@ let find_rectangle_at_user_point2 user dw =
 let find_rectangle_at_user_point a b = 
   Common.profile_code "Model.find_rectangle_at_point" (fun () ->
     find_rectangle_at_user_point2 a b)
-(*e: find_rectangle_at_user_point() *)
+(*e: [[find_rectangle_at_user_point]]() *)
 
 
 let find_line_in_rectangle_at_user_point user r dw =

@@ -24,7 +24,7 @@ module Db = Database_code
 (* Filenames *)
 (*****************************************************************************)
 
-(*s: readable_to_absolute_filename_under_root *)
+(*s: [[readable_to_absolute_filename_under_root]] *)
 (* People may run the visualizer on a subdir of what is mentionned in the
  * database code (e.g. subdir ~/www/flib of ~/www). The light_db
  * contains only readable paths (e.g. flib/foo.php); the reason for
@@ -64,9 +64,9 @@ let readable_to_absolute_filename_under_root ~root filename =
   with Not_found ->
     failwith 
       (spf "can't find file %s with root = %s" filename root)
-(*e: readable_to_absolute_filename_under_root *)
+(*e: [[readable_to_absolute_filename_under_root]] *)
 
-(*s: actual_root_of_db *)
+(*s: [[actual_root_of_db]] *)
 let actual_root_of_db ~root db =
   let a_file = (db.Db.entities.(0)).Db.e_file in
   let absolute_file = 
@@ -76,7 +76,7 @@ let actual_root_of_db ~root db =
   then Common.matched1 absolute_file
   else failwith (spf "Could not find actual_root of %s under %s: "
                     absolute_file root)
-(*e: actual_root_of_db *)
+(*e: [[actual_root_of_db]] *)
 
 (*****************************************************************************)
 (* Entities info *)
@@ -113,7 +113,7 @@ let hentities root db_opt =
   hentities
 (*e: hentities() *)
 
-(*s: hfiles_and_top_entities() *)
+(*s: [[hfiles_and_top_entities]]() *)
 (* used in the summary mixed mode *)
 let hfiles_and_top_entities root db_opt =
   let hfiles = Hashtbl.create 1001 in
@@ -129,13 +129,13 @@ let hfiles_and_top_entities root db_opt =
     ) ksorted
   );
   hfiles
-(*e: hfiles_and_top_entities() *)
+(*e: [[hfiles_and_top_entities]]() *)
 
 (*****************************************************************************)
 (* Completion data *)
 (*****************************************************************************)
 
-(*s: all_entities *)
+(*s: [[all_entities]] *)
 (* To get completion for functions/class/methods/files/directories.
  * 
  * We pass the root in addition to the db_opt because sometimes we 
@@ -169,6 +169,6 @@ let all_entities ~root files db_opt =
       Database_code.files_and_dirs_and_sorted_entities_for_completion
         ~threshold_too_many_entities:!Flag.threshold_too_many_entities
         db
-(*e: all_entities *)
+(*e: [[all_entities]] *)
 
 (*e: model_database_code.ml *)

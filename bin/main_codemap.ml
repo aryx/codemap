@@ -251,7 +251,7 @@ let set_gc () =
 (* Model helpers *)
 (*****************************************************************************)
 
-(*s: treemap_generator *)
+(*s: [[treemap_generator]] *)
 (* this is called each time we go in a new directory (or set of dirs) *)
 let treemap_generator ~filter_file = 
  fun paths ->
@@ -261,9 +261,9 @@ let treemap_generator ~filter_file =
   let rects = Treemap.render_treemap ~algo ~big_borders treemap in
   Common.pr2 (spf "%d rectangles to draw" (List.length rects));
   rects
-(*e: treemap_generator *)
+(*e: [[treemap_generator]] *)
 
-(*s: build_model *)
+(*s: function [[build_model]] *)
 (* this is currently called in the background *)
 let build_model2 root dbfile_opt graphfile_opt =   
 
@@ -299,7 +299,7 @@ let build_model2 root dbfile_opt graphfile_opt =
 let build_model a b c = 
   Common.profile_code "View.build_model" (fun () ->
     build_model2 a b c)
-(*e: build_model *)
+(*e: function [[build_model]] *)
 
 (* could also to parse all json files and filter the one which do not parse *)
 let layers_in_dir dir =
@@ -313,7 +313,7 @@ let layers_in_dir dir =
 (* Main action *)
 (*****************************************************************************)
 
-(*s: main_action() *)
+(*s: function [[main_action]] *)
 let main_action xs = 
   set_gc ();
   Logger.log Config_pfff.logger "codemap" None;
@@ -425,7 +425,7 @@ let main_action xs =
   in
 
   View2.mk_gui  ~screen_size:!screen_size ~legend:!legend !test_mode w
-(*e: main_action() *)
+(*e: function [[main_action]] *)
   
 (*****************************************************************************)
 (* Extra actions *)
@@ -502,7 +502,7 @@ let test_treemap_dirs () =
  * really easy to test a gui.
  *)
 
-(*s: visual_commitid() action *)
+(*s: [[visual_commitid]]() action *)
 let test_visual_commitid id =
   let files = Common.cmd_to_list
     (spf "git show --pretty=\"format:\" --name-only %s"
@@ -514,7 +514,7 @@ let test_visual_commitid id =
   in
   pr2_gen files;
   main_action files
-(*e: visual_commitid() action *)
+(*e: [[visual_commitid]]() action *)
 
 let width = 500
 let height = 500

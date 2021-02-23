@@ -49,7 +49,7 @@ let debug = ref false
 (* Scaling *)
 (*****************************************************************************)
 
-(*s: zoom_pan_scale_map *)
+(*s: [[zoom_pan_scale_map]] *)
 let zoom_pan_scale_map cr dw =
   Cairo.scale cr 
     (float_of_int dw.width / !T.xy_ratio)
@@ -58,16 +58,16 @@ let zoom_pan_scale_map cr dw =
   (* I first scale and then translate as the xtrans are in user coordinates *)
   Cairo.translate cr 0.0 0.0;
   ()
-(*e: zoom_pan_scale_map *)
+(*e: [[zoom_pan_scale_map]] *)
 
-(*s: with_map *)
+(*s: [[with_map]] *)
 let with_map dw f = 
   let cr = Cairo.create dw.base in
   zoom_pan_scale_map cr dw;
   f cr
-(*e: with_map *)
+(*e: [[with_map]] *)
 
-(*s: device_to_user_area *)
+(*s: [[device_to_user_area]] *)
 (* still needed ? reuse helper functions above ? *)
 let device_to_user_area dw = 
   with_map dw (fun cr ->
@@ -81,7 +81,7 @@ let device_to_user_area dw =
       F.q = CairoH.cairo_point_to_point user_point2;
     }
   )
-(*e: device_to_user_area *)
+(*e: [[device_to_user_area]] *)
 
 (*****************************************************************************)
 (* Painting *)
@@ -173,12 +173,12 @@ let paint a b =
 (* Events *)
 (*****************************************************************************)
 
-(*s: key_pressed *)
-(*e: key_pressed *)
-(*s: find_filepos_in_rectangle_at_user_point *)
-(*e: find_filepos_in_rectangle_at_user_point *)
+(*s: [[key_pressed]] *)
+(*e: [[key_pressed]] *)
+(*s: [[find_filepos_in_rectangle_at_user_point]] *)
+(*e: [[find_filepos_in_rectangle_at_user_point]] *)
    
-(*s: button_action *)
+(*s: [[button_action]] *)
 let button_action w ev =
   let dw = w.dw in
 
@@ -338,6 +338,6 @@ let button_action w ev =
       );
       true
   | _ -> false
-(*e: button_action *)
+(*e: [[button_action]] *)
 
 (*e: view_mainmap.ml *)

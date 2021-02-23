@@ -1,6 +1,6 @@
 SYNCFLAGS=-md5sum_in_auxfile -less_marks -lang ocaml
 
-VERSION=2
+VERSION=4
 DOC=Visual
 
 SRC_ORIG=Visual.nw

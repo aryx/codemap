@@ -28,7 +28,7 @@ module Controller = Controller2
 (* Navigation *)
 (*****************************************************************************)
 
-(*s: go_back *)
+(*s: [[go_back]] *)
 let go_back w = 
   (* reset also the motion notifier ? less needed because
    * the next motion will reset it
@@ -43,9 +43,9 @@ let go_back w =
   !Controller._set_title (Controller.title_of_path path);
   !Controller._refresh_da();
   ()
-(*e: go_back *)
+(*e: [[go_back]] *)
 
-(*s: go_dirs_or_file *)
+(*s: [[go_dirs_or_file]] *)
 let go_dirs_or_file ?(current_grep_query=None) w paths =
   let root = Common2.common_prefix_of_files_or_dirs paths in
   pr2 (spf "zooming in %s" (Common.join "|" paths));
@@ -75,6 +75,6 @@ let go_dirs_or_file ?(current_grep_query=None) w paths =
   View_mainmap.paint w.dw w.model;
   !Controller._refresh_da ();
   ()
-(*e: go_dirs_or_file *)
+(*e: [[go_dirs_or_file]] *)
 
 (*e: ui_navigation.ml *)

@@ -31,7 +31,7 @@ module CairoH = Cairo_helpers
 (* Label *)
 (*****************************************************************************)
 
-(*s: draw_treemap_rectangle_label_maybe *)
+(*s: [[draw_treemap_rectangle_label_maybe]] *)
 let _hmemo_text_extent = Hashtbl.create 101
 
 (* This can be quite cpu intensive. CairoH.text_extents is quite slow
@@ -274,6 +274,6 @@ and try_draw_label ~font_size_orig ~color ~alpha ~cr ~rect txt =
 let draw_treemap_rectangle_label_maybe ~cr ~zoom ~color rect =
   Common.profile_code "View.draw_label_maybe" (fun () ->
     draw_treemap_rectangle_label_maybe2 ~cr ~zoom ~color rect)
-(*e: draw_treemap_rectangle_label_maybe *)
+(*e: [[draw_treemap_rectangle_label_maybe]] *)
 
 (*e: draw_labels.ml *)

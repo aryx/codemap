@@ -56,12 +56,12 @@ let run_efunsclient ~file ~line =
 (* Wrappers *)
 (*****************************************************************************)
 
-(*s: open_file_in_current_editor() *)
+(*s: [[open_file_in_current_editor]]() *)
 let open_file_in_current_editor ~file ~line =
   let (Model2.Line line) = line in
   (* emacs/efuns line numbers start at 1 *)
   let line = line + 1 in
   run_efunsclient ~file ~line;
   run_emacsclient ~file ~line;
-(*e: open_file_in_current_editor() *)
+(*e: [[open_file_in_current_editor]]() *)
 (*e: editor_connection.ml *)

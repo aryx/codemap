@@ -59,7 +59,7 @@ let pr2, _pr2_once = Common2.mk_pr2_wrappers Flag.verbose_visual
 (* The main-map *)
 (* ---------------------------------------------------------------------- *)
 
-(*s: assemble_layers *)
+(*s: [[assemble_layers]] *)
 (* Composing the "layers". See cairo/tests/knockout.ml example.
  * Each move of the cursor will call assemble_layers which does all
  * those pixels copying (which is very fast).
@@ -80,7 +80,7 @@ let assemble_layers cr_final dw =
   Cairo.set_source_surface cr_final dw.overlay 0. 0.;
   Cairo.paint cr_final;
   ()
-(*e: assemble_layers *)
+(*e: [[assemble_layers]] *)
 
 (*s: expose *)
 (* opti: don't 'paint dw;' painting is the computation
@@ -117,7 +117,7 @@ let configure a b =
 (* ---------------------------------------------------------------------- *)
 (* The legend *)
 (* ---------------------------------------------------------------------- *)
-(*s: expose_legend *)
+(*s: [[expose_legend]] *)
 let expose_legend da w _ev = 
   let dw = w.dw in
   let cr = Cairo_gtk.create da#misc#window in
@@ -128,13 +128,13 @@ let expose_legend da w _ev =
   else Draw_legend.draw_legend_layer ~cr dw.layers
   );
   true
-(*e: expose_legend *)
+(*e: [[expose_legend]] *)
 
 (*****************************************************************************)
 (* The main UI *)
 (*****************************************************************************)
 
-(*s: mk_gui() *)
+(*s: [[mk_gui]]() *)
 let mk_gui ~screen_size ~legend test_mode w =
   let width, height, minimap_hpos, minimap_vpos = 
     Style.windows_params screen_size in
@@ -524,6 +524,6 @@ let mk_gui ~screen_size ~legend test_mode w =
   (* Gui.gmain_idle_add ~prio: 1000 (idle dw) |> ignore; *)
   GtkThread.main ();
   ()
-(*e: mk_gui() *)
+(*e: [[mk_gui]]() *)
 
 (*e: view2.ml *)

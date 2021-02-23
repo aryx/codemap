@@ -20,37 +20,37 @@
 (* Scaling *)
 (*****************************************************************************)
 
-(*s: scale_minimap *)
-(*e: scale_minimap *)
+(*s: [[scale_minimap]] *)
+(*e: [[scale_minimap]] *)
 
-(*s: with_minimap *)
-(*e: with_minimap *)
+(*s: [[with_minimap]] *)
+(*e: [[with_minimap]] *)
 
 (*****************************************************************************)
 (* Painting *)
 (*****************************************************************************)
 
-(*s: paint_minimap *)
-(*e: paint_minimap *)
+(*s: [[paint_minimap]] *)
+(*e: [[paint_minimap]] *)
 
 (* ---------------------------------------------------------------------- *)
 (* The mini-map *)
 (* ---------------------------------------------------------------------- *)
 
-(*s: expose_minimap *)
-(*e: expose_minimap *)
+(*s: [[expose_minimap]] *)
+(*e: [[expose_minimap]] *)
 
-(*s: configure_minimap *)
-(*e: configure_minimap *)
+(*s: [[configure_minimap]] *)
+(*e: [[configure_minimap]] *)
 
 (* ---------------------------------------------------------------------- *)
 (* The mini-map *)
 (* ---------------------------------------------------------------------- *)
 
-(*s: motion_notify_minimap *)
-(*e: motion_notify_minimap *)
+(*s: [[motion_notify_minimap]] *)
+(*e: [[motion_notify_minimap]] *)
 
-(*s: button_action_minimap *)
-(*e: button_action_minimap *)
+(*s: [[button_action_minimap]] *)
+(*e: [[button_action_minimap]] *)
 
 (*e: view_minimap.ml *)

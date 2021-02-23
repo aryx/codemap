@@ -1,4 +1,5 @@
-\documentclass{article}
+\documentclass[12pt]{report}
+%alt: 12pt, twocolumn, landscape
 
 %******************************************************************************
 % Prelude
@@ -41,42 +42,38 @@
 % Packages
 %------------------------------------------------------------------------------
 
-\usepackage{noweb}
-\noweboptions{}
-%note: allow chunk to be on different pages, so less white space at
-%  bottom of pages
-\def\nwendcode{\endtrivlist \endgroup}
-\let\nwdocspar=\par
-
 \usepackage{xspace}
-
 \usepackage{verbatim}
 %note: required by noweblatexpad for the \t \l \n in this file
 \usepackage{fancyvrb}
-
 \usepackage{url}
 \iffinal
 \usepackage{hyperref}
 \hypersetup{colorlinks=true}
 \fi
-
 \usepackage[pageref]{backref}
 \def\backref{{\footnotesize cited page(s)}~}%en: \def\backref{{\footnotesize cited page(s)}~}
-
-
 \usepackage{multirow}
-
 \usepackage{booktabs} 
 \newcommand{\otoprule}{\midrule[\heavyrulewidth]}
-
 \usepackage{graphicx}
-
 %\usepackage{fullpage}
+
+
+\input{Config}
+\usepackage{principia-latex/noweb}
+ \noweboptions{footnotesizecode,nomargintag}
+%%note: allow chunk on different pages, less white space at bottom of pages
+ \def\nwendcode{\endtrivlist \endgroup}
+ \let\nwdocspar=\par
+
 
 %------------------------------------------------------------------------------
 % Macros
 %------------------------------------------------------------------------------
-\input{Macros}
+\input{principia-latex/Macros}
+
+\newcommand{\pfff}{Pfff\xspace}
 
 %------------------------------------------------------------------------------
 % Config
@@ -86,23 +83,21 @@
 \wantrepetitivecodefalse
 \allcodefalse
 
+\begin{document}
 %******************************************************************************
 % Title
 %******************************************************************************
-
-\begin{document}
-
 \title{
 {\Huge 
 CodeMap
 }\\
 Google Maps for Source Code\\
-{version 0.3}
+{version 0.4}
 }
 
 \author{
 Yoann Padioleau\\
-\texttt{pad@fb.com}
+\texttt{pad@returntocorp.com}
 }
 %dup: authors.txt
 
@@ -113,6 +108,7 @@ Yoann Padioleau\\
 \hrule
 \begin{quote}
     Copyright \copyright{}  2010-2012 Facebook \\
+    Copyright \copyright{}  2013-2021 Yoann Padioleau \\
     Permission is granted to copy, distribute and/or modify this document
     under the terms of the GNU Free Documentation License, Version 1.3.
 \end{quote}
@@ -134,9 +130,9 @@ Yoann Padioleau\\
 % Body
 %******************************************************************************
 
-\section{Introduction}
+\chapter{Introduction}
 
-\subsection{Motivations}
+\section{Motivations}
 
 \begin{verbatim}
 (*
@@ -202,7 +198,7 @@ instead of a classic hiearchy browser.
 
 % follow movment towards tiling, ex: xmonad haskell window manager
 
-\subsection{Getting started}
+\section{Getting started}
 
 \begin{verbatim}
  * ./configure -visual
@@ -214,7 +210,7 @@ instead of a classic hiearchy browser.
  * 
 \end{verbatim}
 
-\subsection{Copyright}
+\section{Copyright}
 
 The source code of \pfff is governed by the following copyright:
 <<Facebook copyright>>=
@@ -235,17 +231,18 @@ The source code of \pfff is governed by the following copyright:
 @ 
 %alt: (* Copyright 2009, 2010 Facebook. All Rights Reserved. *)
 
-\subsection{About this document}
-#include "About.tex.nw"
+\section{About this document}
 
-\section{Examples of Use}
+#include "principia-latex/About.nw"
+
+\chapter{Examples of Use}
 
 \begin{verbatim}
 put cool scenario of use. cool question and how can get visual answer to
 those questions!
 \end{verbatim}
 
-\subsection{Viewing the Linux kernel}
+\section{Viewing the Linux kernel}
 
 Here are the basics:
 As you move the mouse, the blue highlighted areas are the next
@@ -257,7 +254,7 @@ emacs provided you have M-x server-start and have emacsclient
 in your path.
 
 
-<<interface_doc>>=
+<<[[interface_doc]]>>=
 let interface_doc = "
 This tool displays a \"code map\" of a software project using
 Treemaps. \"Treemaps display hierarchical (tree-structured) data as a
@@ -291,9 +288,9 @@ and have emacsclient in your path).
 @ 
 
 
-\subsection{Viewing Pfff itself}
+\section{Viewing Pfff itself}
 
-\subsection{Generic semantic visual feedback}
+\section{Generic semantic visual feedback}
 
 \begin{verbatim}
 % big = use
@@ -309,7 +306,7 @@ and have emacsclient in your path).
 \end{verbatim}
 
 
-\section{Implementation Overview}
+\chapter{Implementation Overview}
 
 \begin{verbatim}
 % say that model/view/controller
@@ -350,7 +347,7 @@ Dependencies diagram and Tabular.
  - gtk/cairo
 \end{verbatim}
 
-\section{Main}
+\chapter{Main}
 
 <<main flags>>=
 (* on macOS lion, X11 resizes the window to a smaller size so
@@ -376,7 +373,7 @@ let layer_dir  = ref (None: Common.dirname option)
 let test_mode = ref (None: string option)
 @
 
-<<main_action()>>=
+<<function [[main_action]]>>=
 let main_action xs = 
   set_gc ();
   Logger.log Config_pfff.logger "codemap" None;
@@ -490,9 +487,9 @@ let main_action xs =
   View2.mk_gui  ~screen_size:!screen_size ~legend:!legend !test_mode w
 @
 
-\section{The Model}
+\chapter{The Model}
 
-\subsection{The code database}
+\section{The code database}
 
 <<type model>>=
 (* filename below should be in readable path format *)
@@ -514,7 +511,7 @@ type model = {
  }
 @
 
-<<build_model>>=
+<<function [[build_model]]>>=
 (* this is currently called in the background *)
 let build_model2 root dbfile_opt graphfile_opt =   
 
@@ -553,9 +550,9 @@ let build_model a b c =
 @ 
 
 
-\subsection{The treemap generator}
+\section{The treemap generator}
 
-<<treemap_generator>>=
+<<[[treemap_generator]]>>=
 (* this is called each time we go in a new directory (or set of dirs) *)
 let treemap_generator ~filter_file = 
  fun paths ->
@@ -567,7 +564,7 @@ let treemap_generator ~filter_file =
   rects
 @ 
 
-\subsection{The final model}
+\section{The final model}
 
 <<type drawing>>=
 (* All the 'float' below are to be intepreted as user coordinates except when
@@ -605,7 +602,7 @@ type drawing = {
   <<type settings>>
 @
 
-\subsection{The microlevel specific model}
+\section{The microlevel specific model}
 
 <<type context>>=
 (* a slice of drawing used in the drawing functions *)
@@ -618,7 +615,7 @@ type context = {
 }
 @ 
 
-\subsection{On filenames}
+\section{On filenames}
 
 \begin{verbatim}
 quite tricky. Also had pbs with our testing code. Relative path
@@ -632,18 +629,18 @@ need readable in files so can reuse (for code light database and layers,
 see section X and Y later)
 \end{verbatim}
 
-<<readable_to_absolute_filename_under_root sig>>=
+<<[[readable_to_absolute_filename_under_root]] sig>>=
 val readable_to_absolute_filename_under_root :
   root:Common.path -> string -> string
 @
 
-<<actual_root_of_db sig>>=
+<<[[actual_root_of_db]] sig>>=
 val actual_root_of_db : 
   root:Common.path -> Database_code.database -> string
 @
 
 
-<<readable_to_absolute_filename_under_root>>=
+<<[[readable_to_absolute_filename_under_root]]>>=
 (* People may run the visualizer on a subdir of what is mentionned in the
  * database code (e.g. subdir ~/www/flib of ~/www). The light_db
  * contains only readable paths (e.g. flib/foo.php); the reason for
@@ -686,7 +683,7 @@ let readable_to_absolute_filename_under_root ~root filename =
 @
 
 
-<<actual_root_of_db>>=
+<<[[actual_root_of_db]]>>=
 let actual_root_of_db ~root db =
   let a_file = (db.Db.entities.(0)).Db.e_file in
   let absolute_file = 
@@ -699,7 +696,7 @@ let actual_root_of_db ~root db =
 @
 
 
-\subsection{Misc}
+\section{Misc}
 
 <<hentities sig>>=
 val hentities :
@@ -746,7 +743,7 @@ let hentities root db_opt =
 
 
 
-<<init_drawing sig>>=
+<<[[init_drawing]] sig>>=
 val init_drawing :
   ?width:int ->
   ?height:int ->
@@ -757,7 +754,7 @@ val init_drawing :
   drawing
 @
 
-<<init_drawing()>>=
+<<[[init_drawing]]()>>=
 (* This is a first guess. The first configure ev will force a resize. *)
 let init_drawing   ?(width = 600) ?(height = 600) func layers paths root =
   let paths = List.map Common2.relative_to_absolute paths in
@@ -793,9 +790,9 @@ let init_drawing   ?(width = 600) ?(height = 600) func layers paths root =
   }
 @
 
-\section{The UI}
+\chapter{The UI}
 
-\subsection{Overall organisation}
+\section{Overall organisation}
 
 \begin{verbatim}
  * Overall UI organisation:
@@ -807,7 +804,7 @@ let init_drawing   ?(width = 600) ?(height = 600) func layers paths root =
  * Conventions and info: see commons/gui.ml
 \end{verbatim}
 
-<<mk_gui sig>>=
+<<[[mk_gui]] sig>>=
 val mk_gui :
   screen_size:int -> legend:bool -> 'b option (* test *) -> Model2.world ->
   unit
@@ -824,17 +821,17 @@ val mk_gui :
 
 @ 
 
-\subsection{Menu}
+\section{Menu}
 
-\subsection{Toolbar}
+\section{Toolbar}
 
-\subsection{Main view}
+\section{Main view}
 
-\subsection{Status bar}
+\section{Status bar}
 
-\subsection{Misc}
+\section{Misc}
 
-<<mk_gui()>>=
+<<[[mk_gui]]()>>=
 let mk_gui ~screen_size ~legend test_mode w =
   let width, height, minimap_hpos, minimap_vpos = 
     Style.windows_params screen_size in
@@ -1226,21 +1223,21 @@ let mk_gui ~screen_size ~legend test_mode w =
   ()
 @
 
-\section{The Controller}
+\chapter{The Controller}
 
-\section{Macrolevel View: The Treemap}
+\chapter{Macrolevel View: The Treemap}
 
 %macro-level visualization. See also archi_code.ml.
 
-\subsection{Principles}
+\section{Principles}
 
 % xyratio
 
-\subsection{Drawing}
+\section{Drawing}
 
 % \label{user-vs-device}
 
-<<device_to_user_area>>=
+<<[[device_to_user_area]]>>=
 (* still needed ? reuse helper functions above ? *)
 let device_to_user_area dw = 
   with_map dw (fun cr ->
@@ -1257,7 +1254,7 @@ let device_to_user_area dw =
 @ 
 
 
-<<draw_treemap_rectangle sig>>=
+<<[[draw_treemap_rectangle]] sig>>=
 val draw_treemap_rectangle :
   cr:Cairo.context -> 
   ?color:Simple_color.emacs_color option -> 
@@ -1266,7 +1263,7 @@ val draw_treemap_rectangle :
   unit
 @ 
 
-<<draw_treemap_rectangle()>>=
+<<[[draw_treemap_rectangle]]()>>=
 let draw_treemap_rectangle2 ~cr ?(color=None) ?(alpha=1.) rect =
   let r = rect.T.tr_rect in
 
@@ -1295,9 +1292,9 @@ let draw_treemap_rectangle ~cr ?color ?alpha a =
 @ 
 
 
-\subsection{Labels}
+\section{Labels}
 
-<<draw_treemap_rectangle_label_maybe sig>>=
+<<[[draw_treemap_rectangle_label_maybe]] sig>>=
 val draw_treemap_rectangle_label_maybe :
   cr:Cairo.context -> 
   zoom:float -> 
@@ -1307,7 +1304,7 @@ val draw_treemap_rectangle_label_maybe :
 @ 
 
 
-<<draw_treemap_rectangle_label_maybe>>=
+<<[[draw_treemap_rectangle_label_maybe]]>>=
 let _hmemo_text_extent = Hashtbl.create 101
 
 (* This can be quite cpu intensive. CairoH.text_extents is quite slow
@@ -1553,13 +1550,13 @@ let draw_treemap_rectangle_label_maybe ~cr ~zoom ~color rect =
 @ 
 
 
-\subsection{Color code}
+\section{Color code}
 
 \begin{verbatim}
 This is kind of interfile "aspect"
 \end{verbatim}
 
-<<paint_legend>>=
+<<[[paint_legend]]>>=
 (* todo: make the architecture a layer so no need for special case *)
 let draw_legend ~cr =
 
@@ -1578,7 +1575,7 @@ let draw_legend ~cr =
 
 @ 
 
-<<expose_legend>>=
+<<[[expose_legend]]>>=
 let expose_legend da w _ev = 
   let dw = w.dw in
   let cr = Cairo_gtk.create da#misc#window in
@@ -1593,19 +1590,19 @@ let expose_legend da w _ev =
 
 
 
-\section{Microlevel View: Source Thumbnails}
+\chapter{Microlevel View: Source Thumbnails}
 
 % micro-level visualization. See also highlight_code.ml
 
-\subsection{Principles}
+\section{Principles}
 
-\subsection{Drawing}
+\section{Drawing}
 
-<<type draw_content_layout>>=
+<<type [[draw_content_layout]]>>=
 @ 
 
 
-<<draw_treemap_rectangle_content_maybe sig>>=
+<<[[draw_treemap_rectangle_content_maybe]] sig>>=
 (* will render (maybe) the file content of treemap_rectangle.tr_label *)
 val draw_treemap_rectangle_content_maybe:
   Cairo.context ->
@@ -1615,9 +1612,9 @@ val draw_treemap_rectangle_content_maybe:
   Model2.microlevel option
 @ 
 
-\subsection{Entities size}
+\section{Entities size}
 
-<<final_font_size_when_multiplier>>=
+<<[[final_font_size_when_multiplier]]>>=
 let final_font_size_when_multiplier 
     ~multiplier ~size_font_multiplier_multiplier 
     ~font_size ~font_size_real 
@@ -1641,7 +1638,7 @@ let final_font_size_when_multiplier
 @ 
 
 
-<<final_font_size_of_categ>>=
+<<[[final_font_size_of_categ]]>>=
 let final_font_size_of_categ ~font_size ~font_size_real categ = 
 
   let multiplier = Style.size_font_multiplier_of_categ ~font_size_real categ in
@@ -1661,9 +1658,9 @@ let final_font_size_of_categ ~font_size ~font_size_real categ =
 @ 
 
 
-\subsection{Column layout}
+\section{Column layout}
 
-<<font_size_when_have_x_columns>>=
+<<[[font_size_when_have_x_columns]]>>=
 let font_size_when_have_x_columns ~nblines ~chars_per_column ~w ~h ~with_n_columns = 
   let size_x = (w / with_n_columns) / chars_per_column in
   let size_y = (h / (nblines / with_n_columns)) in
@@ -1671,7 +1668,7 @@ let font_size_when_have_x_columns ~nblines ~chars_per_column ~w ~h ~with_n_colum
 @ 
 
 
-<<optimal_nb_columns>>=
+<<[[optimal_nb_columns]]>>=
 (* Given a file with nblines and nbcolumns (usually 80) and
  * a rectangle of w width and h height, what is the optimal
  * number of columns. The principle is to start at 1 column
@@ -1693,7 +1690,7 @@ let optimal_nb_columns ~nblines ~chars_per_column ~w ~h =
 @
 
 
-<<draw_column_bars>>=
+<<[[draw_column_bars]]>>=
 let draw_column_bars2 cr layout r = 
   for i = 1 to int_of_float (layout.split_nb_columns - 1.) do
     let i = float_of_int i in
@@ -1718,11 +1715,11 @@ let draw_column_bars cr layout rect =
 @ 
 
 
-\subsection{Content rendering}
+\section{Content rendering}
 
 % thumbnails and actual source is same code! not like in visual studio
 
-<<draw_content>>=
+<<[[draw_content]]>>=
 let draw_content2 cr layout context tr =
 
   let r = tr.T.tr_rect in
@@ -1827,7 +1824,7 @@ let draw_content cr layout context tr =
 @
 
 
-<<draw_treemap_rectangle_content_maybe>>=
+<<[[draw_treemap_rectangle_content_maybe]]>>=
 let draw_treemap_rectangle_content_maybe2 cr clipping context tr  =
   let r = tr.T.tr_rect in
 
@@ -1897,13 +1894,13 @@ let draw_treemap_rectangle_content_maybe cr clipping context rect =
     draw_treemap_rectangle_content_maybe2 cr clipping context rect)
 @ 
 
-\subsection{Color code}
+\section{Color code}
 
 
 
-\section{Macro+Micro View}
+\chapter{Macro+Micro View}
 
-\subsection{Painting}
+\section{Painting}
 
 % also contain the code for calling the micro-level
 
@@ -1991,19 +1988,19 @@ let paint a b =
 
 
 
-\subsection{Mixed view}
+\section{Mixed view}
 
-<<draw_summary_content>>=
+<<[[draw_summary_content]]>>=
 @ 
 
 
-<<hfiles_and_top_entities sig>>=
+<<[[hfiles_and_top_entities]] sig>>=
 val hfiles_and_top_entities :
   Common.path -> Database_code.database option -> 
   (Common.filename, Database_code.entity list) Hashtbl.t
 @
 
-<<hfiles_and_top_entities()>>=
+<<[[hfiles_and_top_entities]]()>>=
 (* used in the summary mixed mode *)
 let hfiles_and_top_entities root db_opt =
   let hfiles = Hashtbl.create 1001 in
@@ -2024,15 +2021,15 @@ let hfiles_and_top_entities root db_opt =
 <<model fields hook>>=
 @ 
 
-\section{Layers}
+\chapter{Layers}
 
-\subsection{Micro-level}
+\section{Micro-level}
 
 \begin{verbatim}
 This is kind of intra-file "aspect"
 \end{verbatim}
 
-\subsection{Macro-level}
+\section{Macro-level}
 
 % need majority when multiple match same file ?
 
@@ -2042,7 +2039,7 @@ the regular archi_code treemap which is also
 about aspects.
 \end{verbatim}
 
-\subsection{UI}
+\section{UI}
 
 <<ui_layers.mli>>=
 val choose_layer: 
@@ -2097,20 +2094,20 @@ let choose_layer ~root layer_title_opt w =
 @ 
 
 
-\section{Navigation}
+\chapter{Navigation}
 
-<<key_pressed>>=
+<<[[key_pressed]]>>=
 @ 
 
 
-<<find_filepos_in_rectangle_at_user_point>>=
+<<[[find_filepos_in_rectangle_at_user_point]]>>=
 @ 
 
-<<text_with_user_pos sig>>=
+<<[[text_with_user_pos]] sig>>=
 @ 
 
 
-<<button_action>>=
+<<[[button_action]]>>=
 let button_action w ev =
   let dw = w.dw in
 
@@ -2274,10 +2271,10 @@ let button_action w ev =
 
 
 
-\subsection{Zooming in a directory}
+\section{Zooming in a directory}
 
 
-<<go_dirs_or_file>>=
+<<[[go_dirs_or_file]]>>=
 let go_dirs_or_file ?(current_grep_query=None) w paths =
   let root = Common2.common_prefix_of_files_or_dirs paths in
   pr2 (spf "zooming in %s" (Common.join "|" paths));
@@ -2310,7 +2307,7 @@ let go_dirs_or_file ?(current_grep_query=None) w paths =
 @ 
 
 
-<<find_rectangle_at_user_point sig>>=
+<<[[find_rectangle_at_user_point]] sig>>=
 val find_rectangle_at_user_point :
   Figures.point -> drawing ->
   (Treemap.treemap_rectangle * (* most precise *)
@@ -2319,7 +2316,7 @@ val find_rectangle_at_user_point :
   ) option
 @
 
-<<find_rectangle_at_user_point()>>=
+<<[[find_rectangle_at_user_point]]()>>=
 (* alt: we could use Cairo_bigarray and the pixel trick below if
  * it takes too long to detect which rectangle is under the cursor.
  * We could also sort the rectangles ... or have some kind of BSP.
@@ -2361,15 +2358,15 @@ let find_rectangle_at_user_point a b =
     find_rectangle_at_user_point2 a b)
 @
 
-\subsection{Zooming in multiple directories}
+\section{Zooming in multiple directories}
 
 \begin{verbatim}
 see multi dir search
 \end{verbatim}
 
-\subsection{Zooming in a file}
+\section{Zooming in a file}
 
-\subsection{Opening a file in an external editor}
+\section{Opening a file in an external editor}
 
 <<editor_connection.mli>>=
 
@@ -2403,7 +2400,7 @@ let run_efunsclient ~file ~line =
 @
 
 
-<<open_file_in_current_editor()>>=
+<<[[open_file_in_current_editor]]()>>=
 let open_file_in_current_editor ~file ~line =
   let (Model2.Line line) = line in
   (* emacs/efuns line numbers start at 1 *)
@@ -2413,9 +2410,9 @@ let open_file_in_current_editor ~file ~line =
 @
 
 
-\subsection{Going back}
+\section{Going back}
 
-<<go_back>>=
+<<[[go_back]]>>=
 let go_back w = 
   (* reset also the motion notifier ? less needed because
    * the next motion will reset it
@@ -2432,7 +2429,7 @@ let go_back w =
   ()
 @ 
 
-\subsection{Magnifying glass}
+\section{Magnifying glass}
 
 %Incruste Mode
 
@@ -2440,50 +2437,50 @@ let go_back w =
 @ 
 
 
-\subsection{Minimap}
+\section{Minimap}
 
 
-<<motion_notify_minimap>>=
+<<[[motion_notify_minimap]]>>=
 @ 
 
 
-<<button_action_minimap>>=
+<<[[button_action_minimap]]>>=
 @ 
 
 
-<<paint_minimap>>=
+<<[[paint_minimap]]>>=
 @ 
 
 
-<<expose_minimap>>=
+<<[[expose_minimap]]>>=
 @ 
 
 
-<<configure_minimap>>=
+<<[[configure_minimap]]>>=
 @ 
 
 
-<<with_minimap>>=
+<<[[with_minimap]]>>=
 @ 
 
 <<fields drawing minimap>>=
 @
 
-<<scale_minimap>>=
+<<[[scale_minimap]]>>=
 @ 
 
 
-\subsection{Fine-grained pan and zoom}
+\section{Fine-grained pan and zoom}
 
 
-<<with_map>>=
+<<[[with_map]]>>=
 let with_map dw f = 
   let cr = Cairo.create dw.base in
   zoom_pan_scale_map cr dw;
   f cr
 @ 
 
-<<zoom_pan_scale_map>>=
+<<[[zoom_pan_scale_map]]>>=
 let zoom_pan_scale_map cr dw =
   Cairo.scale cr 
     (float_of_int dw.width / !T.xy_ratio)
@@ -2500,9 +2497,9 @@ mutable width: int;
 mutable height: int;
 @
 
-\section{Search}
+\chapter{Search}
 
-<<dialog_search_def>>=
+<<[[dialog_search_def]]>>=
 let dialog_search_def model = 
   let idx = (fun () -> 
     let model = Async.async_get model in
@@ -2538,7 +2535,7 @@ let dialog_search_def model =
 @ 
 
 
-<<run_grep_query>>=
+<<[[run_grep_query]]>>=
 let run_grep_query ~root s =
   (* --cached so faster ? use -w ?  
    * -I means no search for binary files
@@ -2565,7 +2562,7 @@ let run_grep_query ~root s =
 @ 
 
 
-<<run_tbgs_query>>=
+<<[[run_tbgs_query]]>>=
 let run_tbgs_query ~root s =
   let cmd = 
     spf "cd %s; tbgs --stripdir %s" root s
@@ -2593,7 +2590,7 @@ mutable current_searched_rectangles: Treemap.treemap_rectangle list;
 mutable current_grep_query: (Common.filename, line) Hashtbl.t;
 @
 
-\subsection{Definition search}
+\section{Definition search}
 
 \begin{verbatim}
 %tags-like
@@ -2603,7 +2600,7 @@ mutable current_grep_query: (Common.filename, line) Hashtbl.t;
 
 
 
-<<all_entities sig>>=
+<<[[all_entities]] sig>>=
 (* Will generate extra entities for files, dirs, and also generate
  * an extra entity when have a fullname that is not empty
  *)
@@ -2622,7 +2619,7 @@ val build_completion_defs_index :
   Database_code.entity list -> Big_grep.index
 @ 
 
-<<build_completion_defs_index>>=
+<<[[build_completion_defs_index]]>>=
 (* I was previously using a prefix-clustering optimisation but it
  * does not allow suffix search. Moreover it was still slow so
  * Big_grep is just simpler and better.
@@ -2655,7 +2652,7 @@ big_grep_idx: Big_grep.index;
 \end{verbatim}
 
 
-<<all_entities>>=
+<<[[all_entities]]>>=
 (* To get completion for functions/class/methods/files/directories.
  * 
  * We pass the root in addition to the db_opt because sometimes we 
@@ -2721,7 +2718,7 @@ module HC = Highlight_code
 (* Code indexing *)
 (*****************************************************************************)
 
-<<build_completion_defs_index>>
+<<[[build_completion_defs_index]]>>
 
 (*****************************************************************************)
 (* Icons *)
@@ -2985,7 +2982,7 @@ let my_entry_completion_eff ~callback_selected ~callback_changed x =
 
 @ 
 
-\subsection{Use Search, aka Visual [[grep]]}
+\section{Use Search, aka Visual [[grep]]}
 
 
 \begin{verbatim}
@@ -2994,15 +2991,15 @@ let my_entry_completion_eff ~callback_selected ~callback_changed x =
 \end{verbatim}
 
 
-\subsection{Directory search}
+\section{Directory search}
 
 \begin{verbatim}
 %multi dirs
 \end{verbatim}
 
-\subsection{Multi-directories}
+\section{Multi-directories}
 
-\subsection{Example search}
+\section{Example search}
 
 \begin{verbatim}
 %test search
@@ -3011,11 +3008,11 @@ let my_entry_completion_eff ~callback_selected ~callback_changed x =
 \end{verbatim}
 
 
-\section{Overlays}
+\chapter{Overlays}
 
 % draw vs paint vs xxx
 
-\subsection{Cairo overlays}
+\section{Cairo overlays}
 
 \begin{verbatim}
 aka layers
@@ -3034,9 +3031,9 @@ mutable overlay: Cairo.Surface.t;
  *)
 @
 
-\subsection{Rectangle overlay}
+\section{Rectangle overlay}
 
-<<draw_rectangle_overlay>>=
+<<[[draw_rectangle_overlay]]>>=
 let draw_englobing_rectangles_overlay ~dw (r, middle, r_englobing) =
  with_overlay dw (fun cr_overlay ->
   CairoH.draw_rectangle_figure 
@@ -3063,9 +3060,9 @@ let draw_englobing_rectangles_overlay ~dw (r, middle, r_englobing) =
 @ 
 
 
-\subsection{Label overlay}
+\section{Label overlay}
 
-<<draw_label_overlay>>=
+<<[[draw_label_overlay]]>>=
 (* assumes cr_overlay has not been zoom_pan_scale *)
 let draw_label_overlay ~cr_overlay ~x ~y txt =
 
@@ -3092,9 +3089,9 @@ let draw_label_overlay ~cr_overlay ~x ~y txt =
   ()
 @ 
 
-\subsection{Searched files overlay}
+\section{Searched files overlay}
 
-<<draw_searched_rectangles>>=
+<<[[draw_searched_rectangles]]>>=
 let draw_searched_rectangles ~dw =
  with_overlay dw (fun cr_overlay ->
   dw.current_searched_rectangles |> List.iter (fun r ->
@@ -3115,14 +3112,14 @@ let draw_searched_rectangles ~dw =
  )
 @ 
 
-\subsection{Zoom overlay}
+\section{Zoom overlay}
 
-<<zoomed_surface_of_rectangle>>=
+<<[[zoomed_surface_of_rectangle]]>>=
 @ 
 
-\subsection{Assembling overlays}
+\section{Assembling overlays}
 
-<<motion_refresher>>=
+<<[[motion_refresher]]>>=
 let motion_refresher ev w =
   paint_initial w.dw;
   hook_finish_paint w;
@@ -3234,16 +3231,16 @@ let motion_notify w ev =
 @ 
 
 
-\section{Final Rendering}
+\chapter{Final Rendering}
 
-\subsection{The big picture}
+\section{The big picture}
 
 \begin{verbatim}
 
 \end{verbatim}
 
 
-\subsection{The [[configure]] event}
+\section{The [[configure]] event}
 
 <<configure>>=
 let configure2 w ev = 
@@ -3263,9 +3260,9 @@ let configure a b =
 @ 
 
 
-\subsection{The [[expose]] event}
+\section{The [[expose]] event}
 
-<<assemble_layers>>=
+<<[[assemble_layers]]>>=
 (* Composing the "layers". See cairo/tests/knockout.ml example.
  * Each move of the cursor will call assemble_layers which does all
  * those pixels copying (which is very fast).
@@ -3305,22 +3302,22 @@ let expose a b c =
 @ 
 
 
-\subsection{Trace: clicking a directory}
+\section{Trace: clicking a directory}
 
 \begin{verbatim}
 diagram where see events, functions,  draw vs paint vs overlays.
 \end{verbatim}
 
-\subsection{Trace: moving the mouse}
+\section{Trace: moving the mouse}
 
 \begin{verbatim}
 diagram where see events, functions,  draw vs paint vs overlays.
 \end{verbatim}
 
 
-\section{Language Modes}
+\chapter{Language Modes}
 
-\subsection{Parsing}
+\section{Parsing}
 
 <<parsing2.mli>>=
 
@@ -3337,7 +3334,7 @@ val use_arity_of_use_count:
 @ 
 
 
-\subsection{Generic semantic visual feedback}
+\section{Generic semantic visual feedback}
 
 <<parsing2.ml>>=
 <<Facebook copyright>>
@@ -3779,26 +3776,26 @@ let tokens_with_categ_of_file file hentities =
 
 
 
-\subsection{OCaml}
+\section{OCaml}
 
-\subsection{Tex/Latex/NoWeb}
+\section{Tex/Latex/NoWeb}
 
 
 
-\subsection{PHP}
+\section{PHP}
 
-\subsection{Javascript}
+\section{Javascript}
 
-\subsection{[[C/C++]] and variants}
+\section{[[C/C++]] and variants}
 %variants: thrift
 
-\subsection{Haskell}
+\section{Haskell}
 
-\subsection{Lisp/Scheme}
+\section{Lisp/Scheme}
 
-\section{Optimisations}
+\chapter{Optimisations}
 
-\subsection{Threads, Idle, Timeouts}
+\section{Threads, Idle, Timeouts}
 
 <<type async>>=
 type 'a t = {
@@ -3867,7 +3864,7 @@ let async_get_opt a =
 
 @ 
 
-\section{Configuration}
+\chapter{Configuration}
 
 <<options>>=
   "-screen_size", Arg.Set_int screen_size,
@@ -3947,7 +3944,7 @@ val font_text: string
 
 @ 
 
-<<windows_params()>>=
+<<[[windows_params]]()>>=
 let windows_params screen_size =
   let width, height, minimap_hpos, minimap_vpos = 
     match screen_size with
@@ -3972,7 +3969,7 @@ let windows_params screen_size =
 @
 
 
-<<size_font_multiplier_of_categ()>>=
+<<[[size_font_multiplier_of_categ]]()>>=
 let multiplier_use x = 
   match x with
   | HC.HugeUse -> 3.3
@@ -4053,7 +4050,7 @@ let size_font_multiplier_of_categ ~font_size_real categ =
 @
 
 
-<<zoom_factor_incruste_mode>>=
+<<[[zoom_factor_incruste_mode]]>>=
 (* TODO: should be automatically computed. Should have instead a
  * wanted_real_font_size_when_incruste_mode = 9.
  *)
@@ -4061,7 +4058,7 @@ let zoom_factor_incruste_mode = 10. (* was 18 *)
 @
 
 
-<<threshold_draw_dark_background_font_size_real>>=
+<<[[threshold_draw_dark_background_font_size_real]]>>=
 (* CONFIG *)
 let threshold_draw_dark_background_font_size_real = 5.
 @
@@ -4110,9 +4107,9 @@ let extra_filter = ref (None: string option) (* regexp *)
 @ 
 
 
-\section{Other Features}
+\chapter{Other Features}
 
-<<visual_commitid() action>>=
+<<[[visual_commitid]]() action>>=
 let test_visual_commitid id =
   let files = Common.cmd_to_list
     (spf "git show --pretty=\"format:\" --name-only %s"
@@ -4141,7 +4138,7 @@ let test_visual_commitid id =
 
 
 
-\section{Related Work}
+\chapter{Related Work}
 
 \begin{verbatim}
 
@@ -4162,25 +4159,25 @@ all." - frish
 
 \end{verbatim}
 
-\section{Conclusion}
+\chapter{Conclusion}
 
 Hope you like it.
 
 
 \appendix
 
-\section{Gtk}
+\chapter{Gtk}
 
-\section{Cairo}
+\chapter{Cairo}
 
 % ref to good tutorial
 
-<<new_pixmap sig>>=
+<<[[new_pixmap]] sig>>=
 val new_surface: 
   alpha:bool -> width:int -> height:int -> Cairo.Surface.t
 @
 
-<<new_pixmap()>>=
+<<[[new_pixmap]]()>>=
 let new_surface ~alpha ~width ~height =
   let drawable = GDraw.pixmap ~width:1 ~height:1 () in
   drawable#set_foreground `WHITE;
@@ -4404,9 +4401,9 @@ let draw_rectangle_bis ~cr ~color ~line_width r =
 
 
 
-\section{Extra Code}
+\chapter{Extra Code}
 
-\subsection{[[main_codemap.ml]]}
+\section{[[main_codemap.ml]]}
 
 <<main_codemap.ml>>=
 (*
@@ -4639,9 +4636,9 @@ let set_gc () =
 (* Model helpers *)
 (*****************************************************************************)
 
-<<treemap_generator>>
+<<[[treemap_generator]]>>
 
-<<build_model>>
+<<function [[build_model]]>>
 
 (* could also to parse all json files and filter the one which do not parse *)
 let layers_in_dir dir =
@@ -4655,7 +4652,7 @@ let layers_in_dir dir =
 (* Main action *)
 (*****************************************************************************)
 
-<<main_action()>>
+<<function [[main_action]]>>
   
 (*****************************************************************************)
 (* Extra actions *)
@@ -4732,7 +4729,7 @@ let test_treemap_dirs () =
  * really easy to test a gui.
  *)
 
-<<visual_commitid() action>>
+<<[[visual_commitid]]() action>>
 
 let width = 500
 let height = 500
@@ -4860,9 +4857,9 @@ let _ =
   )
 @ 
 
-\subsection{[[flag_visual.ml]]}
+\section{[[flag_visual.ml]]}
 
-\subsection{[[model_graph_code.mli]]}
+\section{[[model_graph_code.mli]]}
 
 <<model_graph_code.mli>>=
 val build_filedeps_of_dir_or_file: 
@@ -4883,23 +4880,23 @@ val node_of_entity:
   Database_code.entity -> Graph_code.graph -> Graph_code.node option
 @ 
 
-\subsection{[[model_database_code.mli]]}
+\section{[[model_database_code.mli]]}
 
 <<model_database_code.mli>>=
 
 <<hentities sig>>
 
-<<hfiles_and_top_entities sig>>
+<<[[hfiles_and_top_entities]] sig>>
 
-<<all_entities sig>>
+<<[[all_entities]] sig>>
 
-<<actual_root_of_db sig>>
+<<[[actual_root_of_db]] sig>>
 
-<<readable_to_absolute_filename_under_root sig>>
+<<[[readable_to_absolute_filename_under_root]] sig>>
 
 @ 
 
-\subsection{[[model_graph_code.ml]]}
+\section{[[model_graph_code.ml]]}
 
 <<model_graph_code.ml>>=
 <<Facebook copyright>>
@@ -5035,7 +5032,7 @@ let node_of_entity e g =
   else None
 @ 
 
-\subsection{[[model_database_code.ml]]}
+\section{[[model_database_code.ml]]}
 
 <<model_database_code.ml>>=
 <<Facebook copyright>>
@@ -5048,9 +5045,9 @@ module Db = Database_code
 (* Filenames *)
 (*****************************************************************************)
 
-<<readable_to_absolute_filename_under_root>>
+<<[[readable_to_absolute_filename_under_root]]>>
 
-<<actual_root_of_db>>
+<<[[actual_root_of_db]]>>
 
 (*****************************************************************************)
 (* Entities info *)
@@ -5058,17 +5055,17 @@ module Db = Database_code
 
 <<hentities()>>
 
-<<hfiles_and_top_entities()>>
+<<[[hfiles_and_top_entities]]()>>
 
 (*****************************************************************************)
 (* Completion data *)
 (*****************************************************************************)
 
-<<all_entities>>
+<<[[all_entities]]>>
 
 @ 
 
-\subsection{[[model2.mli]]}
+\section{[[model2.mli]]}
 
 <<model2.mli>>=
 
@@ -5144,13 +5141,13 @@ type world = {
 val context_of_drawing: drawing -> model Async.t -> context
 
 
-<<init_drawing sig>>
+<<[[init_drawing]] sig>>
 
-<<new_pixmap sig>>
+<<[[new_pixmap]] sig>>
 
 (* point -> rectangle -> line -> glyph -> entity *)
 
-<<find_rectangle_at_user_point sig>>
+<<[[find_rectangle_at_user_point]] sig>>
 
 val find_line_in_rectangle_at_user_point:
   Figures.point -> Treemap.treemap_rectangle -> drawing -> line option
@@ -5193,7 +5190,7 @@ val lines_where_used_node:
 
 @ 
 
-\subsection{[[model2.ml]]}
+\section{[[model2.ml]]}
 
 <<model2.ml>>=
 <<Facebook copyright>>
@@ -5303,9 +5300,9 @@ type world = {
 (* Builders *)
 (*****************************************************************************)
 
-<<new_pixmap()>>
+<<[[new_pixmap]]()>>
 
-<<init_drawing()>>
+<<[[init_drawing]]()>>
 
 (*****************************************************************************)
 (* The drawing context *)
@@ -5324,7 +5321,7 @@ let context_of_drawing dw model = {
 (* Point -> (rectangle, line, glyph, entity) *)
 (*****************************************************************************)
 
-<<find_rectangle_at_user_point()>>
+<<[[find_rectangle_at_user_point]]()>>
 
 
 let find_line_in_rectangle_at_user_point user r dw =
@@ -5504,15 +5501,15 @@ let lines_where_used_node node startl microlevel =
 
 @ 
 
-\subsection{[[view2.mli]]}
+\section{[[view2.mli]]}
 
 
 <<view2.mli>>=
-<<mk_gui sig>>
+<<[[mk_gui]] sig>>
 @ 
 
 
-\subsection{[[view2.ml]]}
+\section{[[view2.ml]]}
 
 <<view2.ml>>=
 <<Facebook copyright>>
@@ -5552,7 +5549,7 @@ let pr2, _pr2_once = Common2.mk_pr2_wrappers Flag.verbose_visual
 (* The main-map *)
 (* ---------------------------------------------------------------------- *)
 
-<<assemble_layers>>
+<<[[assemble_layers]]>>
 
 <<expose>>
 
@@ -5561,18 +5558,18 @@ let pr2, _pr2_once = Common2.mk_pr2_wrappers Flag.verbose_visual
 (* ---------------------------------------------------------------------- *)
 (* The legend *)
 (* ---------------------------------------------------------------------- *)
-<<expose_legend>>
+<<[[expose_legend]]>>
 
 (*****************************************************************************)
 (* The main UI *)
 (*****************************************************************************)
 
-<<mk_gui()>>
+<<[[mk_gui]]()>>
 
 @ 
 
 
-\subsection{[[controller2.mli]]}
+\section{[[controller2.mli]]}
 
 <<controller2.mli>>=
 
@@ -5605,7 +5602,7 @@ val title_of_path: string -> string
 
 @ 
 
-\subsection{[[controller2.ml]]}
+\section{[[controller2.ml]]}
 
 <<controller2.ml>>=
 <<Facebook copyright>>
@@ -5650,25 +5647,25 @@ let title_of_path s = "CodeMap: " ^ s
 
 @ 
 
-\subsection{[[help.mli]]}
+\section{[[help.mli]]}
 
 <<help.mli>>=
 val interface_doc: string
 
 @ 
 
-\subsection{[[help.ml]]}
+\section{[[help.ml]]}
 
 <<help.ml>>=
-<<interface_doc>>
+<<[[interface_doc]]>>
 @ 
 
 
-\subsection{[[draw_macrolevel.mli]]}
+\section{[[draw_macrolevel.mli]]}
 
 <<draw_macrolevel.mli>>=
 
-<<draw_treemap_rectangle sig>>
+<<[[draw_treemap_rectangle]] sig>>
 
 val draw_trect_using_layers:
   cr:Cairo.context ->
@@ -5678,7 +5675,7 @@ val draw_trect_using_layers:
 
 @ 
 
-\subsection{[[draw_macrolevel.ml]]}
+\section{[[draw_macrolevel.ml]]}
 
 <<draw_macrolevel.ml>>=
 <<Facebook copyright>>
@@ -5696,7 +5693,7 @@ module Color = Simple_color
 (* Drawing a treemap rectangle *)
 (*****************************************************************************)
 
-<<draw_treemap_rectangle()>>
+<<[[draw_treemap_rectangle]]()>>
 
 
 (*****************************************************************************)
@@ -5745,23 +5742,23 @@ let draw_trect_using_layers ~cr layers_with_index rect =
     );
   end
 
-<<draw_summary_content>>
+<<[[draw_summary_content]]>>
 @ 
 
-\subsection{[[draw_microlevel.mli]]}
+\section{[[draw_microlevel.mli]]}
 
 <<draw_microlevel.mli>>=
 
-<<draw_treemap_rectangle_content_maybe sig>>
+<<[[draw_treemap_rectangle_content_maybe]] sig>>
 
-<<text_with_user_pos sig>>
+<<[[text_with_user_pos]] sig>>
 
 val draw_magnify_line:
   ?honor_color:bool ->
   Cairo.context -> Model2.line -> Model2.microlevel -> unit
 @ 
 
-\subsection{[[draw_microlevel.ml]]}
+\section{[[draw_microlevel.ml]]}
 
 <<draw_microlevel.ml>>=
 <<Facebook copyright>>
@@ -5814,7 +5811,7 @@ type _pos = float (* x *) * float (* y *)
 
 type _point = Figures.point
 
-<<type draw_content_layout>>
+<<type [[draw_content_layout]]>>
 
 (*****************************************************************************)
 (* Helpers *)
@@ -5894,7 +5891,7 @@ let point_to_line pt r layout =
 (*****************************************************************************)
 
 (* Anamorphic entities *)
-<<final_font_size_of_categ>>
+<<[[final_font_size_of_categ]]>>
 
 let color_of_categ categ =
   let attrs =
@@ -5986,21 +5983,21 @@ let defs_of_glyphs glyphs =
 (* Columns *)
 (*****************************************************************************)
 
-<<font_size_when_have_x_columns>>
+<<[[font_size_when_have_x_columns]]>>
    
-<<optimal_nb_columns>>
+<<[[optimal_nb_columns]]>>
 
-<<draw_column_bars>>
+<<[[draw_column_bars]]>>
 
 
 (*****************************************************************************)
 (* File Content *)
 (*****************************************************************************)
 
-<<draw_content>>
+<<[[draw_content]]>>
 
 
-<<draw_treemap_rectangle_content_maybe>>
+<<[[draw_treemap_rectangle_content_maybe]]>>
 
 (*****************************************************************************)
 (* Magnifyer Content *)
@@ -6051,15 +6048,15 @@ let draw_magnify_line ?(honor_color=true) cr line microlevel =
     end
 @ 
 
-\subsection{[[draw_labels.mli]]}
+\section{[[draw_labels.mli]]}
 
 <<draw_labels.mli>>=
 
-<<draw_treemap_rectangle_label_maybe sig>>
+<<[[draw_treemap_rectangle_label_maybe]] sig>>
 
 @ 
 
-\subsection{[[draw_label.ml]]}
+\section{[[draw_label.ml]]}
 
 <<draw_labels.ml>>=
 <<Facebook copyright>>
@@ -6079,11 +6076,11 @@ module CairoH = Cairo_helpers
 (* Label *)
 (*****************************************************************************)
 
-<<draw_treemap_rectangle_label_maybe>>
+<<[[draw_treemap_rectangle_label_maybe]]>>
 
 @ 
 
-\subsection{[[draw_legend.mli]]}
+\section{[[draw_legend.mli]]}
 
 <<draw_legend.mli>>=
 val draw_legend: cr:Cairo.context -> unit
@@ -6092,7 +6089,7 @@ val draw_legend_layer: cr:Cairo.context -> Layer_code.layers_with_index -> unit
 
 @
 
-\subsection{[[draw_legend.ml]]}
+\section{[[draw_legend.ml]]}
 
 <<draw_legend.ml>>=
 <<Facebook copyright>>
@@ -6134,7 +6131,7 @@ let draw_legend_of_color_string_pairs ~cr xs =
 (* Drawing *)
 (*****************************************************************************)
 
-<<paint_legend>>
+<<[[paint_legend]]>>
 
 let draw_legend_layer ~cr layers_idx = 
   let pairs = 
@@ -6149,7 +6146,7 @@ let draw_legend_layer ~cr layers_idx =
 @
 
 
-\subsection{[[view_mainmap.mli]]}
+\section{[[view_mainmap.mli]]}
 
 <<view_mainmap.mli>>=
 
@@ -6166,7 +6163,7 @@ val button_action:
 
 @ 
 
-\subsection{[[view_mainmap.ml]]}
+\section{[[view_mainmap.ml]]}
 
 <<view_mainmap.ml>>=
 <<Facebook copyright>>
@@ -6204,11 +6201,11 @@ let debug = ref false
 (* Scaling *)
 (*****************************************************************************)
 
-<<zoom_pan_scale_map>>
+<<[[zoom_pan_scale_map]]>>
 
-<<with_map>>
+<<[[with_map]]>>
 
-<<device_to_user_area>>
+<<[[device_to_user_area]]>>
 
 (*****************************************************************************)
 (* Painting *)
@@ -6220,19 +6217,19 @@ let debug = ref false
 (* Events *)
 (*****************************************************************************)
 
-<<key_pressed>>
-<<find_filepos_in_rectangle_at_user_point>>
+<<[[key_pressed]]>>
+<<[[find_filepos_in_rectangle_at_user_point]]>>
    
-<<button_action>>
+<<[[button_action]]>>
 
 @ 
 
-\subsection{[[view_minimap.mli]]}
+\section{[[view_minimap.mli]]}
 
 <<view_minimap.mli>>=
 @ 
 
-\subsection{[[view_minimap.ml]]}
+\section{[[view_minimap.ml]]}
 
 <<view_minimap.ml>>=
 <<Facebook copyright>>
@@ -6241,36 +6238,36 @@ let debug = ref false
 (* Scaling *)
 (*****************************************************************************)
 
-<<scale_minimap>>
+<<[[scale_minimap]]>>
 
-<<with_minimap>>
+<<[[with_minimap]]>>
 
 (*****************************************************************************)
 (* Painting *)
 (*****************************************************************************)
 
-<<paint_minimap>>
+<<[[paint_minimap]]>>
 
 (* ---------------------------------------------------------------------- *)
 (* The mini-map *)
 (* ---------------------------------------------------------------------- *)
 
-<<expose_minimap>>
+<<[[expose_minimap]]>>
 
-<<configure_minimap>>
+<<[[configure_minimap]]>>
 
 (* ---------------------------------------------------------------------- *)
 (* The mini-map *)
 (* ---------------------------------------------------------------------- *)
 
-<<motion_notify_minimap>>
+<<[[motion_notify_minimap]]>>
 
-<<button_action_minimap>>
+<<[[button_action_minimap]]>>
 
 @ 
 
 
-\subsection{[[view_overlays.mli]]}
+\section{[[view_overlays.mli]]}
 
 <<view_overlays.mli>>=
 
@@ -6288,7 +6285,7 @@ val hook_finish_paint:
 @ 
 
 
-\subsection{[[view_overlays.ml]]}
+\section{[[view_overlays.ml]]}
 
 <<view_overlays.ml>>=
 <<Facebook copyright>>
@@ -6342,13 +6339,13 @@ let with_overlay dw f =
 (* ---------------------------------------------------------------------- *)
 (* The current filename *)
 (* ---------------------------------------------------------------------- *)
-<<draw_label_overlay>>
+<<[[draw_label_overlay]]>>
 
 (* ---------------------------------------------------------------------- *)
 (* The current rectangles *)
 (* ---------------------------------------------------------------------- *)
 
-<<draw_rectangle_overlay>>
+<<[[draw_rectangle_overlay]]>>
 
 (* ---------------------------------------------------------------------- *)
 (* Uses and users macrolevel *)
@@ -6467,9 +6464,9 @@ let draw_tooltip ~cr_overlay ~x ~y n g =
 (* The selected rectangles *)
 (* ---------------------------------------------------------------------- *)
 
-<<draw_searched_rectangles>>
+<<[[draw_searched_rectangles]]>>
 
-<<zoomed_surface_of_rectangle>>
+<<[[zoomed_surface_of_rectangle]]>>
 
 (*****************************************************************************)
 (* Assembling overlays *)
@@ -6495,13 +6492,13 @@ let hook_finish_paint w =
       draw_deps_entities n dw model
     ))
 
-<<motion_refresher>>
+<<[[motion_refresher]]>>
 
 <<idle>>
 
 @ 
 
-\subsection{[[ui_search.mli]]}
+\section{[[ui_search.mli]]}
 
 <<ui_search.mli>>=
 
@@ -6517,7 +6514,7 @@ val run_tbgs_query:
 @ 
 
 
-\subsection{[[ui_search.ml]]}
+\section{[[ui_search.ml]]}
 
 <<ui_search.ml>>=
 <<Facebook copyright>>
@@ -6541,15 +6538,15 @@ module M = Model2
 (* Search *)
 (* ---------------------------------------------------------------------- *)
 
-<<dialog_search_def>>
+<<[[dialog_search_def]]>>
 
-<<run_grep_query>>
+<<[[run_grep_query]]>>
 
-<<run_tbgs_query>>
+<<[[run_tbgs_query]]>>
 
 @ 
 
-\subsection{[[ui_navigation.mli]]}
+\section{[[ui_navigation.mli]]}
 
 <<ui_navigation.mli>>=
 
@@ -6562,7 +6559,7 @@ val go_dirs_or_file:
 
 @ 
 
-\subsection{[[ui_navigation.ml]]}
+\section{[[ui_navigation.ml]]}
 
 <<ui_navigation.ml>>=
 <<Facebook copyright>>
@@ -6579,26 +6576,26 @@ module Controller = Controller2
 (* Navigation *)
 (*****************************************************************************)
 
-<<go_back>>
+<<[[go_back]]>>
 
-<<go_dirs_or_file>>
+<<[[go_dirs_or_file]]>>
 
 @ 
 
 
 
 
-\subsection{[[parsing2.mli]]}
+\section{[[parsing2.mli]]}
 
-\subsection{[[parsing2.ml]]}
+\section{[[parsing2.ml]]}
 
-\subsection{[[completion2.mli]]}
+\section{[[completion2.mli]]}
 
-\subsection{[[completion2.ml]]}
+\section{[[completion2.ml]]}
 
-\subsection{[[style2.mli]]}
+\section{[[style2.mli]]}
 
-\subsection{[[style2.ml]]}
+\section{[[style2.ml]]}
 
 <<style2.ml>>=
 <<Facebook copyright>>
@@ -6612,9 +6609,9 @@ module HC = Highlight_code
 (*****************************************************************************)
 (* see also model2.settings *)
 
-<<zoom_factor_incruste_mode>>
+<<[[zoom_factor_incruste_mode]]>>
 
-<<threshold_draw_dark_background_font_size_real>>
+<<[[threshold_draw_dark_background_font_size_real]]>>
 
 let font_size_filename_cursor = 30.
 
@@ -6631,16 +6628,16 @@ let font_text =
   | 6 -> "terminal"
   | _ -> raise Impossible
 
-<<size_font_multiplier_of_categ()>>
+<<[[size_font_multiplier_of_categ]]()>>
 
-<<windows_params()>>
+<<[[windows_params]]()>>
 
 @ 
 
-\subsection{[[editor_connection.mli]]}
+\section{[[editor_connection.mli]]}
 
 
-\subsection{[[editor_connection.ml]]}
+\section{[[editor_connection.ml]]}
 
 <<editor_connection.ml>>=
 <<Facebook copyright>>
@@ -6664,10 +6661,10 @@ open Common
 (* Wrappers *)
 (*****************************************************************************)
 
-<<open_file_in_current_editor()>>
+<<[[open_file_in_current_editor]]()>>
 @ 
 
-\subsection{[[async.mli]]}
+\section{[[async.mli]]}
 
 <<async.mli>>=
 
@@ -6676,7 +6673,7 @@ open Common
 
 @ 
 
-\subsection{[[async.ml]]}
+\section{[[async.ml]]}
 
 <<async.ml>>=
 <<Facebook copyright>>
@@ -6700,7 +6697,7 @@ open Common
 
 @ 
 
-\subsection{[[cairo_helpers.mli]]}
+\section{[[cairo_helpers.mli]]}
 
 
 <<cairo_helpers.mli>>=
@@ -6708,7 +6705,7 @@ open Common
 <<cairo helpers functions sig>>
 @ 
 
-\subsection{[[cairo_helpers.ml]]}
+\section{[[cairo_helpers.ml]]}
 
 <<cairo_helpers.ml>>=
 <<Facebook copyright>>
@@ -6743,50 +6740,49 @@ let _re_tab = Str.regexp "^[\t]+$"
 
 @ 
 
-\section{Changelog}
+\chapter{Changelog}
 \label{sec:changelog}
 
-\section*{Indexes}
+\chapter*{Indexes}
 \addcontentsline{toc}{section}{Index}
 
 %\chapter{References} 
 \addcontentsline{toc}{section}{References}
 
-\begin{thebibliography}{99}
 
-\bibitem[1]{wp-literate-programming} Donald Knuth,,
-{\em Literate Programming}, 
-\url{http://en.wikipedia.org/wiki/Literate\_Program}
+\bibliography{principia-latex/Principia}
+\bibliographystyle{alpha}
 
-\bibitem[2]{noweb} Norman Ramsey,
-{\em Noweb}, 
-\url{http://www.cs.tufts.edu/~nr/noweb/}
-
-\bibitem[3]{syncweb} Yoann Padioleau,
-{\em Syncweb, literate programming meets unison}, 
-\url{http://padator.org/software/project-syncweb/readme.txt}
-
-
-\bibitem[4]{common-pad-manual} Yoann Padioleau,
-{\em Commons Pad OCaml Library}, 
-\url{http://padator.org/docs/Commons.pdf}
-
-
-\bibitem[5]{treemap-wikipedia} Wikipedia,
-{\em Treemapping}, 
-\url{http://en.wikipedia.org/wiki/Treemapping}
-
-
+%\begin{thebibliography}{99}
+%
+%\bibitem[1]{wp-literate-programming} Donald Knuth,,
+%{\em Literate Programming}, 
+%\url{http://en.wikipedia.org/wiki/Literate\_Program}
+%
+%\bibitem[2]{noweb} Norman Ramsey,
+%{\em Noweb}, 
+%\url{http://www.cs.tufts.edu/~nr/noweb/}
+%
+%\bibitem[3]{syncweb} Yoann Padioleau,
+%{\em Syncweb, literate programming meets unison}, 
+%\url{http://padator.org/software/project-syncweb/readme.txt}
+%
+%
+%\bibitem[4]{common-pad-manual} Yoann Padioleau,
+%{\em Commons Pad OCaml Library}, 
+%\url{http://padator.org/docs/Commons.pdf}
+%
+%
+%\bibitem[5]{treemap-wikipedia} Wikipedia,
+%{\em Treemapping}, 
+%\url{http://en.wikipedia.org/wiki/Treemapping}
+%
 % SeeSoft and other code visualization 
-
-\end{thebibliography}
+%
+%\end{thebibliography}
 
 %******************************************************************************
 % Postlude
 %******************************************************************************
 
 \end{document}
-
-
-
-

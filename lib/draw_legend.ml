@@ -53,7 +53,7 @@ let draw_legend_of_color_string_pairs ~cr xs =
 (* Drawing *)
 (*****************************************************************************)
 
-(*s: paint_legend *)
+(*s: [[paint_legend]] *)
 (* todo: make the architecture a layer so no need for special case *)
 let draw_legend ~cr =
 
@@ -70,7 +70,7 @@ let draw_legend ~cr =
   ) in
   draw_legend_of_color_string_pairs ~cr grouped_archis
 
-(*e: paint_legend *)
+(*e: [[paint_legend]] *)
 
 let draw_legend_layer ~cr layers_idx = 
   let pairs = 

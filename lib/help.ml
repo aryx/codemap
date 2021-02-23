@@ -1,5 +1,5 @@
 (*s: help.ml *)
-(*s: interface_doc *)
+(*s: [[interface_doc]] *)
 let interface_doc = "
 This tool displays a \"code map\" of a software project using
 Treemaps. \"Treemaps display hierarchical (tree-structured) data as a
@@ -30,5 +30,5 @@ favourite editor (provided you have M-x server-start
 and have emacsclient in your path).
 
 "
-(*e: interface_doc *)
+(*e: [[interface_doc]] *)
 (*e: help.ml *)

@@ -64,8 +64,8 @@ type _pos = float (* x *) * float (* y *)
 
 type _point = Figures.point
 
-(*s: type draw_content_layout *)
-(*e: type draw_content_layout *)
+(*s: type [[draw_content_layout]] *)
+(*e: type [[draw_content_layout]] *)
 
 (*****************************************************************************)
 (* Helpers *)
@@ -145,7 +145,7 @@ let point_to_line pt r layout =
 (*****************************************************************************)
 
 (* Anamorphic entities *)
-(*s: final_font_size_of_categ *)
+(*s: [[final_font_size_of_categ]] *)
 let final_font_size_of_categ ~font_size ~font_size_real categ = 
 
   let multiplier = Style.size_font_multiplier_of_categ ~font_size_real categ in
@@ -162,7 +162,7 @@ let final_font_size_of_categ ~font_size ~font_size_real categ =
   in
   Common2.borne ~min:font_size ~max:(font_size * 30.) (font_size * multiplier)
 
-(*e: final_font_size_of_categ *)
+(*e: [[final_font_size_of_categ]] *)
 
 let color_of_categ categ =
   let attrs =
@@ -254,14 +254,14 @@ let defs_of_glyphs glyphs =
 (* Columns *)
 (*****************************************************************************)
 
-(*s: font_size_when_have_x_columns *)
+(*s: [[font_size_when_have_x_columns]] *)
 let font_size_when_have_x_columns ~nblines ~chars_per_column ~w ~h ~with_n_columns = 
   let size_x = (w / with_n_columns) / chars_per_column in
   let size_y = (h / (nblines / with_n_columns)) in
   min size_x size_y
-(*e: font_size_when_have_x_columns *)
+(*e: [[font_size_when_have_x_columns]] *)
    
-(*s: optimal_nb_columns *)
+(*s: [[optimal_nb_columns]] *)
 (* Given a file with nblines and nbcolumns (usually 80) and
  * a rectangle of w width and h height, what is the optimal
  * number of columns. The principle is to start at 1 column
@@ -280,9 +280,9 @@ let optimal_nb_columns ~nblines ~chars_per_column ~w ~h =
     else current_nb_columns - 1.
   in
   aux 0.0 1.0
-(*e: optimal_nb_columns *)
+(*e: [[optimal_nb_columns]] *)
 
-(*s: draw_column_bars *)
+(*s: [[draw_column_bars]] *)
 let draw_column_bars2 cr layout r = 
   for i = 1 to int_of_float (layout.split_nb_columns - 1.) do
     let i = float_of_int i in
@@ -304,14 +304,14 @@ let draw_column_bars2 cr layout r =
 let draw_column_bars cr layout rect =
   Common.profile_code "View.draw_bars" (fun () ->
     draw_column_bars2 cr layout rect)
-(*e: draw_column_bars *)
+(*e: [[draw_column_bars]] *)
 
 
 (*****************************************************************************)
 (* File Content *)
 (*****************************************************************************)
 
-(*s: draw_content *)
+(*s: [[draw_content]] *)
 let draw_content2 cr layout context tr =
 
   let r = tr.T.tr_rect in
@@ -413,10 +413,10 @@ let draw_content2 cr layout context tr =
 let draw_content cr layout context tr =
   Common.profile_code "View.draw_content" (fun () ->
     draw_content2 cr layout context tr)
-(*e: draw_content *)
+(*e: [[draw_content]] *)
 
 
-(*s: draw_treemap_rectangle_content_maybe *)
+(*s: [[draw_treemap_rectangle_content_maybe]] *)
 let draw_treemap_rectangle_content_maybe2 cr clipping context tr  =
   let r = tr.T.tr_rect in
 
@@ -484,7 +484,7 @@ let draw_treemap_rectangle_content_maybe2 cr clipping context tr  =
 let draw_treemap_rectangle_content_maybe cr clipping context rect = 
   Common.profile_code "View.draw_content_maybe" (fun () ->
     draw_treemap_rectangle_content_maybe2 cr clipping context rect)
-(*e: draw_treemap_rectangle_content_maybe *)
+(*e: [[draw_treemap_rectangle_content_maybe]] *)
 
 (*****************************************************************************)
 (* Magnifyer Content *)

@@ -25,17 +25,17 @@ module HC = Highlight_code
 (*****************************************************************************)
 (* see also model2.settings *)
 
-(*s: zoom_factor_incruste_mode *)
+(*s: [[zoom_factor_incruste_mode]] *)
 (* TODO: should be automatically computed. Should have instead a
  * wanted_real_font_size_when_incruste_mode = 9.
  *)
 let zoom_factor_incruste_mode = 10. (* was 18 *)
-(*e: zoom_factor_incruste_mode *)
+(*e: [[zoom_factor_incruste_mode]] *)
 
-(*s: threshold_draw_dark_background_font_size_real *)
+(*s: [[threshold_draw_dark_background_font_size_real]] *)
 (* CONFIG *)
 let threshold_draw_dark_background_font_size_real = 5.
-(*e: threshold_draw_dark_background_font_size_real *)
+(*e: [[threshold_draw_dark_background_font_size_real]] *)
 
 let font_size_filename_cursor = 30.
 
@@ -52,7 +52,7 @@ let font_text =
   | 6 -> "terminal"
   | _ -> raise Impossible
 
-(*s: size_font_multiplier_of_categ() *)
+(*s: [[size_font_multiplier_of_categ]]() *)
 let multiplier_use x = 
   match x with
   | HC.HugeUse -> 3.3
@@ -130,9 +130,9 @@ let size_font_multiplier_of_categ ~font_size_real categ =
 
         1. 
     )
-(*e: size_font_multiplier_of_categ() *)
+(*e: [[size_font_multiplier_of_categ]]() *)
 
-(*s: windows_params() *)
+(*s: [[windows_params]]() *)
 let windows_params screen_size =
   let width, height, minimap_hpos, minimap_vpos = 
     match screen_size with
@@ -154,6 +154,6 @@ let windows_params screen_size =
         failwith "not valid screen_size"
   in
   width, height, minimap_hpos, minimap_vpos
-(*e: windows_params() *)
+(*e: [[windows_params]]() *)
 
 (*e: style2.ml *)
