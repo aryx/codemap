@@ -1,2 +1,0 @@
-draw2.ml |68fd16bddc6d4f21bd63ddd9b9f8069e
-Facebook copyright |3e9f36f9162f7ff80eee476efc33c5c4

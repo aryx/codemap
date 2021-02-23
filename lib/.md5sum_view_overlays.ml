@@ -1,8 +1,0 @@
-view_overlays.ml |2d8ac200e55ef6b5a28fdb0f2a8a39d2
-Facebook copyright |c9ccf317ec7bd0492de635a1a558e10a
-draw_label_overlay |d9409e2b0bf4e66538b2da7fd8d72927
-draw_rectangle_overlay |addc19041ea9d07eac3477a82e966f06
-draw_searched_rectangles |aca9adf87587de493ec2a4b806f30d7e
-zoomed_surface_of_rectangle |e1c06d85ae7b8b032bef47e42e4c08f9
-motion_refresher |ba866199a177f3838f261344c3148e34
-idle |e1c06d85ae7b8b032bef47e42e4c08f9

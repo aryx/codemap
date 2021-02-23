@@ -1,3 +1,0 @@
-draw_common.ml |7ec168d11f7aa3c3271ffc3011f6a07c
-Facebook copyright |c9ccf317ec7bd0492de635a1a558e10a
-final_font_size_when_multiplier |e2b96cd5e69799a11c4fe2b96e2192d7

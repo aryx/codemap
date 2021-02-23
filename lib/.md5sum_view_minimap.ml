@@ -1,9 +1,0 @@
-view_minimap.ml |6b4c97248cef22284f403de02fa98759
-Facebook copyright |c9ccf317ec7bd0492de635a1a558e10a
-scale_minimap |e1c06d85ae7b8b032bef47e42e4c08f9
-with_minimap |e1c06d85ae7b8b032bef47e42e4c08f9
-paint_minimap |e1c06d85ae7b8b032bef47e42e4c08f9
-expose_minimap |e1c06d85ae7b8b032bef47e42e4c08f9
-configure_minimap |e1c06d85ae7b8b032bef47e42e4c08f9
-motion_notify_minimap |e1c06d85ae7b8b032bef47e42e4c08f9
-button_action_minimap |e1c06d85ae7b8b032bef47e42e4c08f9

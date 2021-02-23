@@ -1,6 +1,0 @@
-style2.ml |7f9c1261ed341f6d3d9498a5825208e6
-Facebook copyright |c9ccf317ec7bd0492de635a1a558e10a
-zoom_factor_incruste_mode |a9f1cac6c2a8d34b60195315bcf03478
-threshold_draw_dark_background_font_size_real |9e1608817b0240ab011ee2a1a256e22c
-size_font_multiplier_of_categ() |5f6b0d3b010365e036e37209588e4377
-windows_params() |ea8f5fae6b36bb74ab12f67bd13fefe0

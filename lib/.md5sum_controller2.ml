@@ -1,2 +1,0 @@
-controller2.ml |e2ecf740935c38690a52a80a0691e6fd
-Facebook copyright |c9ccf317ec7bd0492de635a1a558e10a
