@@ -217,13 +217,16 @@ let visit_program
       );
 
       V.kname = (fun (k, _) x ->
-        let (_id, infos) = x in
-        (match infos.name_qualifier with
-         | Some (QDots xs) ->
+        (match x with
+        | IdQualified ((_id, infos), _id_info) ->
+          (match infos.name_qualifier with
+           | Some (QDots xs) ->
              xs |> List.iter (fun id ->
                tag_id id (Entity (Module, Use2 fake_no_use2))
              )
-         | _ -> ()
+           | _ -> ()
+          )
+        | _ -> ()
         );
         k x
       );

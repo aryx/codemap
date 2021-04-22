@@ -81,6 +81,7 @@ let use_fancy_highlighting file =
     | FT.PL (FT.Web (FT.Js))
     | FT.PL (FT.Web (FT.Html))
     | FT.PL (FT.ML _)
+    | FT.PL (FT.Scala)
     | FT.PL (FT.Cplusplus _ | FT.C _ | FT.ObjectiveC _)
     | FT.PL (FT.Thrift)
     | FT.Text ("nw" | "tex"  | "texi" | "web" | "org")

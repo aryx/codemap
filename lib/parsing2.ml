@@ -48,6 +48,7 @@ type ast =
   | Lisp of Parse_lisp.program_and_tokens
   | Erlang of Parse_erlang.program_and_tokens
   | Skip  of Parse_skip.program_and_tokens
+  | Scala of (AST_scala.program, Parser_scala.token) Parse_info.parsing_result
 
   (* web *)
   | Html of Parse_html.program_and_tokens
@@ -247,6 +248,21 @@ let tokens_with_categ_of_file file hentities =
         highlight_visit = (fun ~tag_hook prefs (ast, toks) -> 
           Highlight_ml.visit_program ~tag_hook prefs file (ast, toks));
         info_of_tok = Token_helpers_ml.info_of_tok;
+        }
+        file prefs hentities
+
+  | FT.PL (FT.Scala) ->
+      tokens_with_categ_of_file_helper 
+        { parse = (parse_cache (fun file -> 
+           Common.save_excursion Flag_parsing.error_recovery true (fun()->
+             Scala (Parse_scala.parse file)
+         ))
+         (function 
+         | Scala {PI. ast; tokens; _} -> [ast, tokens] 
+         | _ -> raise Impossible));
+        highlight_visit = (fun ~tag_hook prefs (ast, toks) -> 
+          Highlight_scala.visit_program ~tag_hook prefs file (ast, toks));
+        info_of_tok = Token_helpers_scala.info_of_tok;
         }
         file prefs hentities
 

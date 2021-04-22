@@ -157,7 +157,7 @@ let color_of_webpl_type kind =
 
 
   | PL.Css -> "yellow"
-  | PL.Js | PL.Coffee | PL.TypeScript | PL.TSX -> "SpringGreen"
+  | PL.Js | PL.Coffee | PL.TypeScript -> "SpringGreen"
   | PL.Html | PL.Xml -> "sienna"
 
 (*  | PL.Pic _ -> "RosyBrown" *)

@@ -70,6 +70,7 @@ let size_font_multiplier_of_categ ~font_size_real categ =
     (* entities defs *)
 
     | HC.Entity (E.Module, (HC.Def2 use))   -> 5. *. multiplier_use use
+    | HC.Entity (E.Package, (HC.Def2 use))   -> 5. *. multiplier_use use
     | HC.Entity (E.Type, (HC.Def2 use))     -> 5. *. multiplier_use use
     | HC.Entity (E.Class, (HC.Def2 use))    -> 5. *. multiplier_use use
 

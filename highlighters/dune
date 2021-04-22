@@ -10,6 +10,7 @@
    pfff-graph_code
    pfff-lang_ml
    pfff-lang_js
+   pfff-lang_scala
  )
  (preprocess (pps ppx_deriving.show))
 )
