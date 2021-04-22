@@ -66,6 +66,17 @@ let no_use = (NoInfoPlace, UniqueDef, MultiUse)
 let disable_token_phase2 = false
 
 (*****************************************************************************)
+(* Helpers *)
+(*****************************************************************************)
+let is_ident = function
+  | T.ID_LOWER (_, ii)
+  | T.ID_BACKQUOTED (_, ii)
+  | T.ID_UPPER (_, ii)
+  | T.OP (_, ii)
+    -> Some ii
+  | _ -> None
+
+(*****************************************************************************)
 (* Code highlighter *)
 (*****************************************************************************)
 
@@ -159,8 +170,14 @@ let visit_program
      * the default parser because of some weird extensions so having
      * a solid token-based tagger is still useful as a last resort.
     *)
-    | (T.Kclass _ | T.Kobject _ | T.Ktrait _)::T.ID_UPPER(_s, ii)::xs ->
+    | T.Kcase _::(T.Kclass _ | T.Kobject _)::T.ID_UPPER(_s, ii)::xs ->
+        tag_if_not_tagged_bis ii (Entity (Constructor, Def2 no_def));
+        aux_toks xs;
+    | (T.Kclass _ | T.Ktrait _)::T.ID_UPPER(_s, ii)::xs ->
         tag_if_not_tagged_bis ii (Entity (Type, Def2 no_def));
+        aux_toks xs;
+    | (T.Kobject _)::T.ID_UPPER(_s, ii)::xs ->
+        tag_if_not_tagged_bis ii (Entity (Module, Def2 no_def));
         aux_toks xs;
     | T.Kpackage _::T.ID_LOWER(_s, ii)::xs ->
         let ent = (Entity (Package, Def2 no_def)) in
@@ -174,9 +191,11 @@ let visit_program
         tag_if_not_tagged_bis ii (Entity (Global, Def2 no_def));
         aux_toks xs;
     (* could be a method, need more context *)
-    | (T.Kdef _)::T.ID_LOWER(_s, ii)::xs ->
-        tag_if_not_tagged_bis ii (Entity (Function, Def2 no_def));
-        aux_toks xs;
+    | (T.Kdef _)::x::xs ->
+        is_ident x |> Common.do_option (fun ii ->
+          tag_if_not_tagged_bis ii (Entity (Function, Def2 no_def));
+        );
+        aux_toks (x::xs);
 
     | (T.DOT _)::T.ID_LOWER(_s, ii)::after::xs ->
         (match after with
@@ -190,6 +209,10 @@ let visit_program
         aux_toks (after::xs);
     | T.ID_LOWER (_, ii)::T.LPAREN _::xs ->
         tag_if_not_tagged_bis ii (Entity (Function, Use2 no_use));
+        aux_toks xs
+
+    | T.ID_LOWER (_, ii)::T.EQMORE _::xs ->
+        tag_if_not_tagged_bis ii (Parameter Def);
         aux_toks xs
 
 (*
@@ -357,12 +380,13 @@ let visit_program
 
       (* Punctuation *)
 
+      | T.UNDERSCORE ii -> tag_if_not_tagged ii UseOfRef
+
       | T.EQ ii
       | T.DOT ii
       | T.SEMI ii | T.COMMA ii | T.COLON ii
 
       | T.PIPE ii
-      | T.UNDERSCORE ii
       | T.TILDE ii
       | T.BANG ii 
       | T.SHARP ii 
@@ -395,8 +419,18 @@ let visit_program
       (* Identifiers *)
       | T.SymbolLiteral (_, ii) -> tag ii Atom
 
-      | T.ID_LOWER (_, ii) -> 
-            tag_if_not_tagged ii Normal
+      | T.ID_LOWER (s, ii) -> 
+            (match s with
+            | "implicitly" -> tag ii UseOfRef
+(*
+            | _ when Hashtbl.mem h_pervasives_pad s ->
+               tag ii BuiltinCommentColor
+            | _ when Hashtbl.mem h_builtin_bool s ->
+               tag ii BuiltinBoolean
+*)
+           (* all the identifiers should have been tagged by now. *)
+            | _ -> tag_if_not_tagged ii Normal
+            )
       | T.ID_UPPER (_, ii) -> 
             tag_if_not_tagged ii (Entity (Type, Use2 no_use))
       | T.ID_BACKQUOTED (_, ii) -> 
@@ -405,20 +439,5 @@ let visit_program
             tag ii Normal
       | T.OP (_, ii) -> 
             tag_if_not_tagged ii Operator
-      
-(*
-      | T.TLowerIdent (s, ii)->
-          (match s with
-           | _ when Hashtbl.mem h_pervasives_pad s ->
-               tag ii BuiltinCommentColor
-           | _ when Hashtbl.mem h_builtin_bool s ->
-               tag ii BuiltinBoolean
-           (* all the identifiers should have been tagged by now. *)
-           | _ when not is_lex_or_yacc_file && not !debug_missing_tag ->
-               tag_if_not_tagged ii Error
-           | _ -> ()
-          )
-
-*)
 
     )
