@@ -30,6 +30,8 @@ module Style = Style2
 module FT = File_type
 module Parsing = Parsing2
 
+let logger = Logging.get_logger [__MODULE__]
+
 (*****************************************************************************)
 (* Prelude *)
 (*****************************************************************************)
@@ -188,6 +190,7 @@ let glyphs_of_file ~font_size ~font_size_real model_async file
 
   match FT.file_type_of_file file with
   | _ when use_fancy_highlighting file ->
+     logger#info "fancy highlighting for %s" file;
 
     let entities = 
       match Async.async_get_opt model_async with
@@ -231,14 +234,17 @@ let glyphs_of_file ~font_size ~font_size_real model_async file
       failwith (spf "try on %s, nblines = %d, line = %d" file nblines !line)
     )
 
-  | FT.PL _ | FT.Text _ ->      
+  | FT.PL _ | FT.Text _ | FT.Config _ ->
+     logger#info "black highlighting for %s" file;
       Common.cat file
       |> List.map (fun str -> 
         [{ M.str; font_size; color = "black"; categ=None; pos }])
       |> Array.of_list
       |> (fun x -> Some x)
 
-  | _ -> None
+  | _ ->
+     logger#info "no highlighting for %s" file;
+     None
 
 let defs_of_glyphs glyphs =
   let res = ref [] in
@@ -425,6 +431,7 @@ let draw_treemap_rectangle_content_maybe2 cr clipping context tr  =
   then (* pr2 ("not drawing: " ^ file) *) None
   else begin
     let file = tr.T.tr_label in
+    logger#info "considering to draw %s" file;
 
     (* if the file is not textual, or contain weird characters, then
      * it confuses cairo which then can confuse computation done in gtk

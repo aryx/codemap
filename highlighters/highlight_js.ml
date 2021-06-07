@@ -62,7 +62,7 @@ let visit_program ~tag_hook _prefs (ast, toks) =
    * differently parameters, locals, globals, etc.
   *)
   let gen = Js_to_generic.program ast in
-  (* TODO Naming_AST.resolve Lang.Javascript gen; *)
+  Naming_AST.resolve Lang.Javascript gen;
   Highlight_AST.visit_program
     (already_tagged, tag)
     gen;

@@ -105,7 +105,7 @@ let visit_program
    * all the AST-based code highlighters.
   *)
   let gen = Ml_to_generic.program ast in
-  (* TODO Naming_AST.resolve Lang.OCaml gen; *)
+  Naming_AST.resolve Lang.OCaml gen;
   Highlight_AST.visit_program
     (already_tagged, tag)
     gen;

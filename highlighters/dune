@@ -11,6 +11,7 @@
    pfff-lang_ml
    pfff-lang_js
    pfff-lang_scala
+   pfff-lang_GENERIC-analyze ; for generic name resolver
  )
  (preprocess (pps ppx_deriving.show))
 )

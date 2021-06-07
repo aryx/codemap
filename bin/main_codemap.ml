@@ -10,6 +10,8 @@ module FT = File_type
 
 module Model = Model2
 
+let logger = Logging.get_logger [__MODULE__]
+
 (*****************************************************************************)
 (* Prelude *)
 (*****************************************************************************)
@@ -147,6 +149,8 @@ let test_mode = ref (None: string option)
 let filter = ref (fun _file -> true)
 let skip_file  = ref (None: Common.filename option)
 (* less: a config file: GtkMain.Rc.add_default_file "/.../pfff_browser.rc"; *)
+
+let log_config_file = ref "log_config.json"
 
 (* action mode *)
 let action = ref ""
@@ -316,7 +320,6 @@ let layers_in_dir dir =
 (*s: function [[main_action]] *)
 let main_action xs = 
   set_gc ();
-  Logger.log Config_pfff.logger "codemap" None;
 
   (* this used to be done by linking with gtkInit.cmo, but better like this *)
   let _locale = GtkMain.Main.init () in
@@ -676,6 +679,13 @@ let main () =
   in
   let args = Common.parse_options (options()) usage_msg Sys.argv in
 
+  if Sys.file_exists !log_config_file
+  then begin
+    Logging.load_config_file !log_config_file;
+    logger#info "loaded %s" !log_config_file;
+  end;
+
+    
   (* must be done after Arg.parse, because Common.profile is set by it *)
   Common.profile_code "Main total" (fun () -> 
 

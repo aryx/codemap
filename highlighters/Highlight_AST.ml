@@ -1,6 +1,6 @@
 (* Yoann Padioleau
  *
- * Copyright (C) 2020 R2C
+ * Copyright (C) 2020, 2021 R2C
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public License
@@ -19,6 +19,7 @@ open Highlight_code
 open Entity_code
 module E = Entity_code
 module G = AST_generic
+module H = AST_generic_helpers
 module PI = Parse_info
 module V = Visitor_AST
 
@@ -34,6 +35,7 @@ module V = Visitor_AST
  *
  * history:
  *  - generalized from highlight_ml.ml and highlight_js.ml
+ *  - extended for Highlight_scala.ml
  *
 *)
 
@@ -59,7 +61,7 @@ let info_of_name ((_s, info), _nameinfo) = info
 (* AST helpers *)
 (*****************************************************************************)
 
-let kind_of_body x =
+let kind_of_body attrs x =
   let def2 = Def2 fake_no_def2 in
   match x with
   | Lambda _ -> Entity (Function, def2)
@@ -71,7 +73,16 @@ let kind_of_body x =
                         { name_qualifier = Some (QDots ["Hashtbl", _]); _ }), _idinfo)),
           _args) ->
       Entity (Global, def2)
-  | _ -> Entity (Constant, def2)
+
+  (* general cases *)
+  | _ -> 
+      let kind = 
+        match () with
+        |  _ when H.has_keyword_attr Const  attrs -> Constant
+        | _ when H.has_keyword_attr Mutable attrs -> Global
+        | _ -> Constant
+      in 
+      Entity (kind, def2)
 
 (* todo: actually it can be a typedef alias to a function too
  * but this would require some analysis
@@ -123,6 +134,9 @@ let visit_program
     if not (Hashtbl.mem already_tagged ii)
     then tag ii categ
   in
+  let tag_ids xs categ =
+    xs |> List.iter (fun id -> tag_id id categ)
+  in
 
   (* ocaml specific *)
   let in_let = ref false in
@@ -133,7 +147,7 @@ let visit_program
 
       V.kdef = (fun (k, _) x ->
         match x with
-        | ({ name = EN (Id (id, _)); _}, def) ->
+        | ({ name = EN (Id (id, _)); attrs; _}, def) ->
             (match def with
              | Signature ty ->
                  tag_id id (kind_of_ty ty);
@@ -174,12 +188,15 @@ let visit_program
 
              | VarDef { vinit = Some body; vtype = _ }  ->
                  (if not !in_let
-                  then tag_id id (kind_of_body body)
+                  then tag_id id (kind_of_body attrs body)
                   else tag_id id (Local Def)
                  );
                  Common.save_excursion in_let true (fun () ->
                    k x
                  )
+
+             | VarDef { vinit = None; vtype = _ }  ->
+                  k x
 
              | FuncDef _ ->
                  (if not !in_let
@@ -189,8 +206,18 @@ let visit_program
                  Common.save_excursion in_let true (fun () ->
                    k x
                  )
+             | ClassDef _ ->
+                 let kind = 
+                      if H.has_keyword_attr G.CaseClass attrs
+                      then Constructor
+                      else Class
+                 in
+                 tag_id id (Entity (kind, (Def2 NoUse)));
+                 k x
+             | FieldDefColon _ | MacroDef _ | UseOuterDecl _
+             | OtherDef _ ->
+                  k x
 
-             | _ -> k x
             )
         | _ -> k x
       );
@@ -209,8 +236,30 @@ let visit_program
       V.kdir = (fun (k, _) x ->
         (match x with
          | ImportAll (_, DottedName xs, _) ->
-             let id = last_id xs in
-             tag_id id (Entity (Module, Use2 fake_no_use2))
+             (match List.rev xs with
+             | id::xs ->
+                tag_ids xs (Entity (Package, Use2 fake_no_use2));
+               (* depend on language, Class in Scala, Module in OCaml *)
+               (* let kind = Class in *)
+               (* OCaml specific? *)
+               (* tag_id id (Entity (kind, Use2 fake_no_use2)) *)
+               tag_id id BadSmell
+             | [] -> ()
+             )
+         | ImportFrom (_, DottedName xs, id, opt) ->
+              tag_ids xs (Entity (Package, Use2 fake_no_use2));
+              (* depend on language, Class in Scala, Module in OCaml *)
+              let kind =  Class in
+              (match opt with
+              | None ->
+                tag_id id (Entity (kind, Def2 fake_no_def2))
+              | Some (id2, _) ->
+                tag_id id (Entity (kind, Use2 fake_no_use2));
+                tag_id id2 (Entity (kind, Def2 fake_no_def2))
+             );
+              
+         | G.Package (_, xs) ->
+            tag_ids xs (Entity (Package, Def2 fake_no_def2))
          | _-> ()
         );
         k x
@@ -221,9 +270,7 @@ let visit_program
         | IdQualified ((_id, infos), _id_info) ->
           (match infos.name_qualifier with
            | Some (QDots xs) ->
-             xs |> List.iter (fun id ->
-               tag_id id (Entity (Module, Use2 fake_no_use2))
-             )
+             tag_ids xs (Entity (Module, Use2 fake_no_use2))
            | _ -> ()
           )
         | _ -> ()
@@ -288,14 +335,7 @@ let visit_program
 
       V.kexpr = (fun (k, _) x ->
         match x with
-        (* TODO: use generic AST based highlighter
-              | Id (name, scope) ->
-                 (match !scope with
-                 | NotResolved | Global _ ->
-                    tag_name name (Entity (E.Global, (Use2 fake_no_use2)))
-                 | Local -> tag_name name (H.Local Use)
-                 | Param -> tag_name name (H.Parameter Use)
-                 );
+        (* 
               | Apply (Id (name, {contents = Global _ | NotResolved}), _) ->
                  tag_name name (Entity (E.Function, (Use2 fake_no_use2)));
               | Apply (Id (_name, {contents = Local | Param}), _) ->
@@ -303,13 +343,28 @@ let visit_program
                  ()
         *)
 
-        | N (Id (id, _idinfo)) ->
-            (* TODO could be a param, could be a local. use scope analysis
-             * TODO could also be actually a func passed to a higher
+        | N (Id (id, idinfo)) ->
+            (* TODO could be a func passed to a higher
              *  order function, as in List.map snd, or even x |> Common.sort
             *)
             (* could have been tagged as a function name in the rule below *)
-            tag_id id (Local Use);
+            let categ = 
+              match !(idinfo.id_resolved) with
+              | Some (kind, _sid) ->
+                 (match kind with
+                 | G.Local -> (Local Use)
+                 | G.Param -> (Parameter Use)
+                 | G.Global -> Entity (Global, Use2 fake_no_use2)
+                 | G.EnclosedVar -> Entity (Global, Use2 fake_no_use2)
+                 | G.ImportedEntity _ -> Entity (Global, Use2 fake_no_use2)
+                 | G.ImportedModule _ -> Entity (Module, Use2 fake_no_use2)
+                 | G.TypeName -> Entity (Type, Use2 fake_no_use2)
+                 | G.Macro -> Entity (Macro, Use2 fake_no_use2)
+                 | G.EnumConstant -> Entity (Constructor, Use2 fake_no_use2)
+                 )
+              | None -> Normal
+            in
+            tag_id id categ;
             k x
 
         | IdSpecial (kind, info) ->
@@ -327,6 +382,11 @@ let visit_program
         (* ocaml specific *)
         | Call (N (Id ((("ref", info)), _idinfo)), _args) ->
             tag info UseOfRef;
+            k x
+
+
+        | Call (DotAccess (_, _, (EN (Id (id, _)))), _) ->
+            tag_id id (Entity (Method, (Use2 fake_no_use2)));
             k x
 
         | Call (N (Id (id, _idinfo)), _args) ->

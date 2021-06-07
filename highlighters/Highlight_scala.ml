@@ -17,7 +17,7 @@ open Common
 open Highlight_code
 open Entity_code
 module PI = Parse_info
-module T = Parser_scala
+module T = Token_scala
 module FT = File_type
 
 (*****************************************************************************)
@@ -86,8 +86,8 @@ let is_ident = function
  * to figure out what kind of ident it is.
 *)
 let visit_program
-    ?(lexer_based_tagger=true)
-    ~tag_hook _prefs  _file (_ast, toks) =
+    ?(lexer_based_tagger=false)
+    ~tag_hook _prefs  _file (ast, toks) =
 
   let already_tagged = Hashtbl.create 101 in
   let tag = (fun ii categ ->
@@ -107,16 +107,15 @@ let visit_program
   (* -------------------------------------------------------------------- *)
   (* AST phase 1 *)
   (* -------------------------------------------------------------------- *)
-  (* Now using the AST_generic instead of Ast_ml to factorize code between
+  (* Now using the AST_generic factorize code between
    * all the AST-based code highlighters.
   *)
-  (*
-  let gen = Ml_to_generic.program ast in
-  (* TODO Naming_AST.resolve Lang.OCaml gen; *)
+  let gen = Scala_to_generic.program ast in
+  Naming_AST.resolve Lang.Scala gen;
   Highlight_AST.visit_program
     (already_tagged, tag)
     gen;
-  *)
+
   (* -------------------------------------------------------------------- *)
   (* toks phase 1 (sequence of tokens) *)
   (* -------------------------------------------------------------------- *)
@@ -199,7 +198,7 @@ let visit_program
 
     | (T.DOT _)::T.ID_LOWER(_s, ii)::after::xs ->
         (match after with
-        | T.EQ _ | T.OP _ | T.PLUS _ | T.MINUS _ | T.STAR _
+        | T.EQUALS _ | T.OP _ | T.PLUS _ | T.MINUS _ | T.STAR _
         | T.RPAREN _ | T.RBRACKET _ | T.RBRACE _ -> 
           tag_if_not_tagged_bis ii (Entity (Field, Use2 no_use));
         | T.LPAREN _ ->
@@ -211,87 +210,17 @@ let visit_program
         tag_if_not_tagged_bis ii (Entity (Function, Use2 no_use));
         aux_toks xs
 
-    | T.ID_LOWER (_, ii)::T.EQMORE _::xs ->
+    | T.ID_LOWER (_, ii)::T.ARROW _::xs ->
         tag_if_not_tagged_bis ii (Parameter Def);
         aux_toks xs
 
-(*
-    | T.Tlet(ii)::T.TLowerIdent(_s, ii3)::xs
-      when PI.col_of_info ii = 0 ->
-
-        if not (Hashtbl.mem already_tagged ii3) && lexer_based_tagger
-        then tag ii3 (Entity (Function, (Def2 NoUse)));
-        aux_toks xs;
-
-
-    | T.Ttype(ii)::T.TLowerIdent(_s, ii3)::xs
-      when PI.col_of_info ii = 0 ->
-
-        if not (Hashtbl.mem already_tagged ii3) && lexer_based_tagger
-        then tag ii3 (Entity (Type, Def2 NoUse));
-        aux_toks xs;
-
-        (* module defs *)
-
-    (* bad smell, use of ref *)
-
-    | T.TBang _ii1::T.TLowerIdent(_s2, ii2)::xs ->
-        tag ii2 (UseOfRef);
-        aux_toks xs
-
-    |    T.TLowerIdent(_, ii1)
-         ::(T.TAssign ii2 | T.TAssignMutable ii2)
-         ::xs ->
-        tag ii1 (UseOfRef);
-        tag ii2 (UseOfRef);
-        aux_toks xs
-
-    (* module use, and function call! *)
-
-    | T.TUpperIdent(_s, ii)::T.TDot _ii2::T.TUpperIdent(_s2, _ii3)::xs ->
-        tag ii (Entity (Module, Use2 fake_no_use2));
-        aux_toks xs;
-
-    | T.TUpperIdent(s, ii)::T.TDot _ii2::T.TLowerIdent(_s2, ii3)::xs ->
-
-        (* see my .emacs *)
-        if Hashtbl.mem h_builtin_modules s then begin
-          tag ii BuiltinCommentColor;
-          if not (Hashtbl.mem already_tagged ii3) && lexer_based_tagger
-          then tag ii3 Builtin;
-        end else begin
-          tag ii (Entity (Module, Use2 fake_no_use2));
-          (* tag ii3 (Function Use); *)
-        end;
-        aux_toks xs;
-
-        (* labels *)
-        (* can be a def or use, no way to know
-            | T.TTilde ii1::T.TLowerIdent (_s, ii2)::xs ->
-                (* TODO when parser, can also have Use *)
-                tag ii1 (Parameter Def);
-                tag ii2 (Parameter Def);
-                aux_toks xs
-        *)
-
-    (* attributes *)
-    | T.TBracketAtAt _::T.TLowerIdent (_, ii1)::
-      T.TDot _::T.TLowerIdent (_, ii2)::xs ->
-        tag ii1 Attribute;
-        tag ii2 Attribute;
-        aux_toks xs
-
-    | T.TBracketAtAt _::T.TLowerIdent (_, ii)::xs ->
-        tag ii Attribute;
-        aux_toks xs
-  *)
     | _x::xs ->
         aux_toks xs
   and tag_path_and_aux_toks _ent xs =
     aux_toks xs
   in
   let toks' = toks |> Common.exclude (function
-    | T.Space _ -> true
+    | T.Space _ | T.NEWLINE _  | T.NEWLINES _ -> true
     | _ -> false
   )
   in
@@ -331,7 +260,7 @@ let visit_program
              | _ -> tag ii Comment
             )
 *)
-      | T.Nl _ii | T.Space _ii -> ()
+      | T.Nl _ | T.Space _ | T.NEWLINE _ | T.NEWLINES _ -> ()
       | T.Unknown ii -> tag ii Error
       | T.EOF _ii-> ()
 
@@ -380,16 +309,16 @@ let visit_program
 
       (* Punctuation *)
 
-      | T.UNDERSCORE ii -> tag_if_not_tagged ii UseOfRef
+      | T.USCORE ii -> tag_if_not_tagged ii UseOfRef
 
-      | T.EQ ii
+      | T.EQUALS ii
       | T.DOT ii
       | T.SEMI ii | T.COMMA ii | T.COLON ii
 
       | T.PIPE ii
       | T.TILDE ii
       | T.BANG ii 
-      | T.SHARP ii 
+      | T.HASH ii 
 
 
       | T.LBRACKET ii | T.RBRACKET ii
@@ -408,11 +337,11 @@ let visit_program
       | T.STAR ii
           -> tag ii Operator
 
-      | T.MORECOLON ii 
-      | T.LESSPERCENT ii
-      | T.LESSMINUS ii
-      | T.LESSCOLON ii
-      | T.EQMORE ii
+      | T.SUBTYPE ii 
+      | T.SUPERTYPE ii
+      | T.VIEWBOUND ii
+      | T.LARROW ii                 
+      | T.ARROW ii
         ->
           tag ii Operator
 
@@ -432,12 +361,12 @@ let visit_program
             | _ -> tag_if_not_tagged ii Normal
             )
       | T.ID_UPPER (_, ii) -> 
-            tag_if_not_tagged ii (Entity (Type, Use2 no_use))
+            tag_if_not_tagged_bis ii (Entity (Type, Use2 no_use))
       | T.ID_BACKQUOTED (_, ii) -> 
-            tag_if_not_tagged ii Normal
+            tag_if_not_tagged_bis ii Normal
       | T.ID_DOLLAR (_, ii) -> 
             tag ii Normal
       | T.OP (_, ii) -> 
-            tag_if_not_tagged ii Operator
+            tag_if_not_tagged_bis ii Operator
 
     )
