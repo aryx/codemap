@@ -4,5 +4,5 @@ val visit_program:
     (Parse_info.t -> Highlight_code.category -> unit) ->
   Highlight_code.highlighter_preferences ->
   (*(Database_php.id * Common.filename * Database_php.database) option -> *)
-  Ast_js.program * Parser_js.token list ->
+  Ast_js.a_program * Parser_js.token list ->
   unit

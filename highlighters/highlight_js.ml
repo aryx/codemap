@@ -95,7 +95,8 @@ let visit_program ~tag_hook _prefs (ast, toks) =
     | T.T_BACKQUOTE ii -> tag ii H.String
     | T.T_DOLLARCURLY ii -> tag ii H.String
 
-    | T.T_REGEX (_, ii) -> tag ii H.Regexp
+    | T.T_REGEX ((_lt, (_, ii), _rt), _modopt) ->
+       tag ii H.Regexp
 
     (* all the name and varname should have been tagged by now. *)
     | T.T_ID (_, ii) ->

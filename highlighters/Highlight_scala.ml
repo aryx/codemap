@@ -346,7 +346,9 @@ let visit_program
           tag ii Operator
 
       (* Identifiers *)
-      | T.SymbolLiteral (_, ii) -> tag ii Atom
+      | T.SymbolLiteral (ii1, (_, ii2)) ->
+         tag ii1 Atom;
+         tag ii2 Atom
 
       | T.ID_LOWER (s, ii) -> 
             (match s with

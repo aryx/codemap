@@ -93,9 +93,10 @@ let kind_of_ty ty =
   | TyFun _ -> (FunctionDecl NoUse)
 
   (* ocaml specific *)
-  | TyNameApply ([("ref", _)], _) -> Entity (Global, def2)
+  | TyApply (TyN (Id (("ref", _), _)), _) -> Entity (Global, def2)
   (* todo: should handle module aliases there too *)
-  | TyNameApply ([("Hashtbl",_); ("t", _)], _)->
+  | TyApply (TyN (IdQualified ((("t", _), 
+        { name_qualifier = Some (QDots [("Hashtbl", _)]); _ }), _)), _) ->
       Entity (Global, def2)
   | _ -> Entity (Constant, def2)
 
@@ -470,10 +471,14 @@ let visit_program
          | TyN (IdQualified (name,_idinfo)) ->
              let info = info_of_name name in
              tag info (Entity (Type, (Use2 fake_no_use2)))
-         | TyNameApply (name, _ty_args) ->
-             let info = info_of_dotted_ident name in
+         | TyApply (TyN (Id (id, _)), _ty_args) ->
              (* different color for higher-order types *)
-             tag info TypeVoid;
+             tag_id id TypeVoid;
+             (* todo: ty_args *)
+         | TyApply (TyN (IdQualified (name, _idinfo)), _ty_args) ->
+             (* different color for higher-order types *)
+             let info = info_of_name name in
+             tag info TypeVoid
              (* todo: ty_args *)
          | TyVar id ->
              tag_id id TypeVoid;

@@ -153,11 +153,11 @@ let color_of_source_archi kind =
 
 let color_of_webpl_type kind = 
   match kind with
-  | PL.Php _ -> "IndianRed"
+  | PL.Php _ | PL.Hack -> "IndianRed"
 
 
   | PL.Css -> "yellow"
-  | PL.Js | PL.Coffee | PL.TypeScript -> "SpringGreen"
+  | PL.Js | PL.Coffee | PL.TypeScript | PL.Vue -> "SpringGreen"
   | PL.Html | PL.Xml -> "sienna"
 
 (*  | PL.Pic _ -> "RosyBrown" *)

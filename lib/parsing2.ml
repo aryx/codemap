@@ -52,7 +52,7 @@ type ast =
 
   (* web *)
   | Html of Parse_html.program_and_tokens
-  | Js  of (Ast_js.program, Parser_js.token) Parse_info.parsing_result
+  | Js  of (Ast_js.a_program, Parser_js.token) Parse_info.parsing_result
   | Php of (Cst_php.program, Parser_php.token) Parse_info.parsing_result
 
   (* system *)
