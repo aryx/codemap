@@ -1,0 +1,26 @@
+#-*- org -*-
+
+* Last
+
+*** make it work on MacOS!
+seems to display at the beginning, especially id don't add -screen_size
+and use default, but after it disappears
+
+*** rely on Naming_AST.ml to uncomment code in Highlight_AST.ml
+for better color for params, locals, globals (test on C code),
+but also improve method vs func, etc. 
+Fix all the commented-out code.
+
+*** switch to lablgtk3?
+even gtk4 lately.
+
+*** factorize AST-based lang-specific highlighters in Highlight_AST.ml?
+Java,
+Python,
+etc.
+so can remove more visitor_xxx.ml ?
+
+*** switch to revery? more portable? better code orga? FRP/ELM wins?
+
+*** codemap on parser_ruby.dyp does not work anymore
+
