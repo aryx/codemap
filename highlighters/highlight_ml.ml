@@ -95,7 +95,7 @@ let visit_program
 
   let is_lex_or_yacc_file =
     match File_type.file_type_of_file file with
-    | FT.PL (FT.ML ("mll" | "mly" | "dyp")) -> true
+    | FT.PL (FT.OCaml ("mll" | "mly" | "dyp")) -> true
     | _ -> false
   in
   (* -------------------------------------------------------------------- *)
@@ -105,7 +105,7 @@ let visit_program
    * all the AST-based code highlighters.
   *)
   let gen = Ml_to_generic.program ast in
-  Naming_AST.resolve Lang.OCaml gen;
+  Naming_AST.resolve Lang.Ocaml gen;
   Highlight_AST.visit_program
     (already_tagged, tag)
     gen;

@@ -1,6 +1,6 @@
 (* Yoann Padioleau
  *
- * Copyright (C) 2020, 2021 R2C
+ * Copyright (C) 2020-2022 R2C
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public License
@@ -22,6 +22,9 @@ module G = AST_generic
 module H = AST_generic_helpers
 module PI = Parse_info
 module V = Visitor_AST
+
+(* TODO: ugly, because of ambiguous G.Param in AST_generic *)
+[@@@warning "-42"]
 
 (*****************************************************************************)
 (* Prelude *)
@@ -57,20 +60,25 @@ let fake_no_use2 = (NoInfoPlace, UniqueDef, MultiUse)
 
 let info_of_name ((_s, info), _nameinfo) = info
 
+let id_of_name = function
+  | Id (id, _) -> id
+  | IdQualified { name_last = (id, _); _} -> id
+
 (*****************************************************************************)
 (* AST helpers *)
 (*****************************************************************************)
 
 let kind_of_body attrs x =
   let def2 = Def2 fake_no_def2 in
-  match x with
+  match x.e with
   | Lambda _ -> Entity (Function, def2)
 
   (* ocaml specific *)
-  | Call (N (Id ((("ref", _)), _idinfo)), _args) ->
+  | Call ({e = N (Id ((("ref", _)), _idinfo)); _}, _args) ->
       Entity (Global, def2)
-  | Call (N (IdQualified ((("create", _),
-                        { name_qualifier = Some (QDots ["Hashtbl", _]); _ }), _idinfo)),
+  | Call ({e = N (IdQualified 
+              { name_last = ("create", _), None;
+                name_middle = Some (QDots [("Hashtbl", _), None]); _ }); _} ,
           _args) ->
       Entity (Global, def2)
 
@@ -89,14 +97,16 @@ let kind_of_body attrs x =
 *)
 let kind_of_ty ty =
   let def2 = Def2 fake_no_def2 in
-  match ty with
+  match ty.t with
   | TyFun _ -> (FunctionDecl NoUse)
 
   (* ocaml specific *)
-  | TyApply (TyN (Id (("ref", _), _)), _) -> Entity (Global, def2)
+  | TyApply ({ t = TyN (Id (("ref", _), _)); _}, _) -> Entity (Global, def2)
   (* todo: should handle module aliases there too *)
-  | TyApply (TyN (IdQualified ((("t", _), 
-        { name_qualifier = Some (QDots [("Hashtbl", _)]); _ }), _)), _) ->
+  | TyApply ({ t = TyN (IdQualified {
+        name_last = (("t", _), None);
+        name_middle = Some (QDots [(("Hashtbl", _), None)]); 
+        _ }); _}, _) ->
       Entity (Global, def2)
   | _ -> Entity (Constant, def2)
 
@@ -105,6 +115,7 @@ let last_id xs =
   | x::_xs -> x
   | [] -> failwith "last_id: empty list of idents"
 
+(* TODO: should not need if AST_generic was cleaner *)
 let info_of_dotted_ident xs =
   match List.rev xs with
     | [] -> raise Impossible
@@ -179,7 +190,7 @@ let visit_program
                       )
                   | AndType (_, xs, _) ->
                       xs |> List.iter (function
-                        | FieldStmt ({s=DefStmt({name=EN (Id (id, _)); _}, _);_})->
+                        | F ({s=DefStmt({name=EN (Id (id, _)); _}, _);_})->
                             tag_id id (Entity (Field, (Def2 fake_no_def2)));
                         | _ ->  ()
                       );
@@ -209,14 +220,14 @@ let visit_program
                  )
              | ClassDef _ ->
                  let kind = 
-                      if H.has_keyword_attr G.CaseClass attrs
+                      if H.has_keyword_attr G.RecordClass attrs
                       then Constructor
                       else Class
                  in
                  tag_id id (Entity (kind, (Def2 NoUse)));
                  k x
              | FieldDefColon _ | MacroDef _ | UseOuterDecl _
-             | OtherDef _ ->
+             | OtherDef _ | EnumEntryDef _ ->
                   k x
 
             )
@@ -235,7 +246,7 @@ let visit_program
                );
       *)
       V.kdir = (fun (k, _) x ->
-        (match x with
+        (match x.d with
          | ImportAll (_, DottedName xs, _) ->
              (match List.rev xs with
              | id::xs ->
@@ -268,12 +279,8 @@ let visit_program
 
       V.kname = (fun (k, _) x ->
         (match x with
-        | IdQualified ((_id, infos), _id_info) ->
-          (match infos.name_qualifier with
-           | Some (QDots xs) ->
-             tag_ids xs (Entity (Module, Use2 fake_no_use2))
-           | _ -> ()
-          )
+        | IdQualified { name_middle = Some (QDots xs); _} ->
+           tag_ids (List.map fst xs) (Entity (Module, Use2 fake_no_use2))
         | _ -> ()
         );
         k x
@@ -285,7 +292,7 @@ let visit_program
              tag_id id (Parameter Def);
              (* less: let kpattern do its job? *)
          | ParamPattern _ -> ()
-         | ParamClassic p | ParamRest (_, p) | ParamHashSplat (_, p) ->
+         | Param p | ParamRest (_, p) | ParamHashSplat (_, p) ->
              (match p.pname with
               | Some id ->
                   tag_id id (Parameter Def);
@@ -335,7 +342,7 @@ let visit_program
       );
 
       V.kexpr = (fun (k, _) x ->
-        match x with
+        match x.e with
         (* 
               | Apply (Id (name, {contents = Global _ | NotResolved}), _) ->
                  tag_name name (Entity (E.Function, (Use2 fake_no_use2)));
@@ -376,26 +383,28 @@ let visit_program
             k x
 
         (* pad specific *)
-        | Call (N (Id ((("=~", _)), _idinfo)),
-                (_, [_arg1; Arg (L (G.String (_, info)))], _)) ->
+        | Call ({ e = N (Id ((("=~", _)), _idinfo)); _},
+                (_, [_arg1; Arg ({ e = L (G.String (_, info)); _})], _)) ->
             tag info Regexp;
             k x
         (* ocaml specific *)
-        | Call (N (Id ((("ref", info)), _idinfo)), _args) ->
+        | Call ({ e = N (Id ((("ref", info)), _idinfo)); _}, _args) ->
             tag info UseOfRef;
             k x
 
 
-        | Call (DotAccess (_, _, (EN (Id (id, _)))), _) ->
+        | Call ({ e = DotAccess (_, _, (FN (Id (id, _)))); _}, _) ->
             tag_id id (Entity (Method, (Use2 fake_no_use2)));
             k x
 
-        | Call (N (Id (id, _idinfo)), _args) ->
+        | Call ({ e = N (Id (id, _idinfo)); _}, _args) ->
             tag_id id (Entity (Function, (Use2 fake_no_use2)));
             k x
-        | Call (N (IdQualified ((id, {name_qualifier = qu; _}), _idinfo)), _args)->
+        | Call ({e = N (IdQualified 
+                    { name_last = (id, None);
+                      name_middle = qu; _}); _}, _args)->
             (match qu with
-             | Some (QDots [s2, info2]) when Hashtbl.mem h_builtin_modules s2->
+             | Some (QDots [(s2, info2), None]) when Hashtbl.mem h_builtin_modules s2->
                  tag info2 BuiltinCommentColor;
                  tag_id id Builtin;
              | _ ->
@@ -404,9 +413,11 @@ let visit_program
             k x
 
         (* disambiguate "with" which can be used for match, try, or record *)
+(* TODO now a stmt
         | MatchPattern (_e1, (*tok_with,*) _match_cases) ->
             (*tag tok_with (KeywordConditional); *)
             k x
+*)
 
         (* JS TODO
                     | Apply (ObjAccess (_, _, PN name), _) ->
@@ -414,7 +425,8 @@ let visit_program
                     | Fun (_, Some name) ->
                         tag_name name (Entity (E.Function, (Use2 fake_no_use2)));
         *)
-        | DotAccess (_e, tok, (EN (Id (id, _) | IdQualified ((id, _),_)))) ->
+        | DotAccess (_e, tok, 
+             (FN (Id (id, _) | IdQualified {name_last = (id, _); _}))) ->
             (match PI.str_of_info tok with
              (* ocaml specific *)
              | "#" -> tag_id id (Entity (Method, (Use2 fake_no_use2)))
@@ -423,31 +435,33 @@ let visit_program
             );
             k x
         | G.Constructor (name, _eopt) ->
-            let info = info_of_dotted_ident name in
-            tag info (Entity (Constructor,(Use2 fake_no_use2)));
+            let id = id_of_name name in
+            tag_id id (Entity (Constructor,(Use2 fake_no_use2)));
             k x
 
         | Record (_, xs, _) ->
             xs |> List.iter (fun x ->
               match x with
-              | FieldStmt ({s=DefStmt ({ name = EN (Id (id, _idinfo)); _}, _);_})->
+              | F ({s=DefStmt ({ name = EN (Id (id, _idinfo)); _}, _);_})->
                   tag_id id (Entity (Field, (Use2 fake_no_use2)));
               | _ -> ()
             );
             k x
         (* coupling: with how record with qualified name in ml_to_generic.ml *)
+(* TODO encoded differently now
         | OtherExpr (OE_RecordFieldName, (Di name)::_) ->
             let info = info_of_dotted_ident name in
             tag info (Entity (Field, (Use2 fake_no_use2)));
             k x
+*)
 
         | _ -> k x
       );
 
       V.kpattern = (fun (k, _) x ->
         (match x with
-         | PatConstructor (di, _popt) ->
-             let id = Common2.list_last di in
+         | PatConstructor (name, _popt) ->
+             let id = id_of_name name in
              if !in_try_with
              then tag_id id (KeywordExn)
              else tag_id id (ConstructorMatch fake_no_use2)
@@ -465,20 +479,14 @@ let visit_program
       );
 
       V.ktype_ = (fun (k, _) t ->
-        (match t with
-         | TyN (Id (id, _)) ->
+        (match t.t with
+         | TyN (name) ->
+             let id = id_of_name name in
              tag_id id (Entity (Type, (Use2 fake_no_use2)))
-         | TyN (IdQualified (name,_idinfo)) ->
-             let info = info_of_name name in
-             tag info (Entity (Type, (Use2 fake_no_use2)))
-         | TyApply (TyN (Id (id, _)), _ty_args) ->
+         | TyApply ({t = TyN (name); _}, _ty_args) ->
+             let id = id_of_name name in
              (* different color for higher-order types *)
              tag_id id TypeVoid;
-             (* todo: ty_args *)
-         | TyApply (TyN (IdQualified (name, _idinfo)), _ty_args) ->
-             (* different color for higher-order types *)
-             let info = info_of_name name in
-             tag info TypeVoid
              (* todo: ty_args *)
          | TyVar id ->
              tag_id id TypeVoid;

@@ -163,7 +163,7 @@ let filters = [
   (* pad-specific: ocaml related files *)
   "pfff", (fun file ->
     match FT.file_type_of_file file with
-    | FT.PL (FT.ML _ | FT.Prolog _) | FT.Config FT.Makefile -> 
+    | FT.PL (FT.OCaml _ | FT.Prolog _) | FT.Config FT.Makefile -> 
         not ( 
                 (* file =~ ".*commons/" || *)
                 (* file =~ ".*external/" || *)
@@ -172,18 +172,18 @@ let filters = [
   );
   "xix", (fun file ->
     match FT.file_type_of_file file with
-    | FT.PL ((FT.ML _) | (FT.C _ | FT.Asm)) | FT.Config FT.Makefile -> true
+    | FT.PL ((FT.OCaml _) | (FT.C _ | FT.Asm)) | FT.Config FT.Makefile -> true
     | _ -> false
   );
 
   "ocaml", (fun file ->
     match File_type.file_type_of_file file with
-    | FT.PL (FT.ML _) | FT.Config (FT.Makefile)  -> true
+    | FT.PL (FT.OCaml _) | FT.Config (FT.Makefile)  -> true
     | _ -> false
   );
   "mli", (fun file ->
     match File_type.file_type_of_file file with
-    | FT.PL (FT.ML "mli") | FT.Config (FT.Makefile)   -> 
+    | FT.PL (FT.OCaml "mli") | FT.Config (FT.Makefile)   -> 
       not (file =~ ".*/commons/")
     | _ -> false
   );
@@ -387,10 +387,10 @@ let main_action xs =
     end
     else []
   in
-  let filter_files_skip_list = Skip_code.filter_files skip_list root in
+  let filter_files_skip_list = Skip_code.filter_files skip_list ~root in
   let filter_file = (fun file -> 
     !filter file && 
-    (skip_list = [] || filter_files_skip_list [file] <> []))
+    (skip_list = [] || fst (filter_files_skip_list [file]) <> []))
   in
 
   let treemap_func = treemap_generator ~filter_file in
@@ -449,9 +449,9 @@ let test_loc print_top30 xs =
     end
     else []
   in
-  let filter_files_skip_list = Skip_code.filter_files skip_list root in
+  let filter_files_skip_list = Skip_code.filter_files skip_list ~root in
   let filter_file = (fun file -> 
-    !filter file && (skip_list = [] || filter_files_skip_list [file] <> []))
+    !filter file && (skip_list = [] || fst (filter_files_skip_list [file]) <> []))
   in
   let treemap = Treemap_pl.code_treemap ~filter_file xs in
 

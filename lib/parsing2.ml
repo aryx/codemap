@@ -44,11 +44,11 @@ module Flag = Flag_visual
 type ast = 
   (* functional *)
   | ML  of (Ast_ml.program, Parser_ml.token) Parse_info.parsing_result
+  | Scala of (AST_scala.program, Parser_scala.token) Parse_info.parsing_result
   | Hs  of Parse_hs.program_and_tokens
   | Lisp of Parse_lisp.program_and_tokens
   | Erlang of Parse_erlang.program_and_tokens
   | Skip  of Parse_skip.program_and_tokens
-  | Scala of (AST_scala.program, Parser_scala.token) Parse_info.parsing_result
 
   (* web *)
   | Html of Parse_html.program_and_tokens
@@ -56,9 +56,9 @@ type ast =
   | Php of (Cst_php.program, Parser_php.token) Parse_info.parsing_result
 
   (* system *)
-  | Cpp of Parse_cpp.toplevels_and_tokens
-  | Rust of Parse_rust.program_and_tokens
+  | Cpp of (Ast_cpp.program, Parser_cpp.token) Parse_info.parsing_result
   | Go of (Ast_go.program, Parser_go.token) Parse_info.parsing_result
+  | Rust of Parse_rust.program_and_tokens
 
   (* mainstream *)
   | Java of (Ast_java.program, Parser_java.token) Parse_info.parsing_result
@@ -236,7 +236,7 @@ let tokens_with_categ_of_file file hentities =
         file prefs hentities
 
   (* works also for Fsharp; at least the tokenizer *)
-  | FT.PL (FT.ML _) ->
+  | FT.PL (FT.OCaml _) ->
       tokens_with_categ_of_file_helper 
         { parse = (parse_cache (fun file -> 
            Common.save_excursion Flag_parsing.error_recovery true (fun()->
@@ -367,6 +367,27 @@ let tokens_with_categ_of_file file hentities =
         }
         file prefs hentities
 
+  | FT.PL (FT.Cplusplus _ | FT.C _ | FT.Thrift | FT.ObjectiveC _) ->
+      tokens_with_categ_of_file_helper 
+        { parse = (parse_cache 
+         (fun file -> 
+          Common.save_excursion Flag_parsing.error_recovery true (fun () ->
+           (* work by side effect on ast2 too *)
+(* TODO? or Naming_AST.ml now better anyway?
+           Check_variables_cpp.check_and_annotate_program
+             ast;
+*)
+           Cpp (Parse_cpp.parse file)
+         ))
+         
+         (function 
+         | Cpp {PI. ast; tokens; _} -> [ast, tokens]
+         | _ -> raise Impossible));
+        highlight_visit = Highlight_cpp.visit_toplevel;
+        info_of_tok = Token_helpers_cpp.info_of_tok;
+        }
+        file prefs hentities
+
   | FT.PL (FT.Go) ->
       tokens_with_categ_of_file_helper 
         { parse = (parse_cache 
@@ -401,23 +422,6 @@ let tokens_with_categ_of_file file hentities =
         }
         file prefs hentities
 
-  | FT.PL (FT.Cplusplus _ | FT.C _ | FT.Thrift | FT.ObjectiveC _) ->
-      tokens_with_categ_of_file_helper 
-        { parse = (parse_cache 
-         (fun file -> 
-          Common.save_excursion Flag_parsing.error_recovery true (fun () ->
-           let (ast2, _stat) = Parse_cpp.parse file in
-           let ast = Parse_cpp.program_of_program2 ast2 in
-           (* work by side effect on ast2 too *)
-           Check_variables_cpp.check_and_annotate_program
-             ast;
-           Cpp ast2
-         ))
-         (function Cpp x -> x | _ -> raise Impossible));
-        highlight_visit = Highlight_cpp.visit_toplevel;
-        info_of_tok = Token_helpers_cpp.info_of_tok;
-        }
-        file prefs hentities
 
   | FT.PL (FT.Web (FT.Js | FT.Coffee | FT.TypeScript)) ->
       tokens_with_categ_of_file_helper 
