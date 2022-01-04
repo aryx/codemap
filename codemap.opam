@@ -16,7 +16,7 @@ bug-reports: "https://github.com/aryx/codemap/issues"
 # These are build dependencies.
 # Development-only dependencies are in 'dev/dev.opam'.
 #
-#TODO: there is also dependencies to pfff!             
+#TODO: there are also tons of dependencies to pfff and pfff-lang_GENERIC_base in semgrep
 depends: [
   "dune" {>= "2.7.0" }
   "lablgtk"
