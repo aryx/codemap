@@ -360,8 +360,8 @@ let visit_program
               match !(idinfo.id_resolved) with
               | Some (kind, _sid) ->
                  (match kind with
-                 | G.Local -> (Local Use)
-                 | G.Param -> (Parameter Use)
+                 | G.LocalVar -> (Local Use)
+                 | G.Parameter -> (Parameter Use)
                  | G.Global -> Entity (Global, Use2 fake_no_use2)
                  | G.EnclosedVar -> Entity (Global, Use2 fake_no_use2)
                  | G.ImportedEntity _ -> Entity (Global, Use2 fake_no_use2)
