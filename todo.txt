@@ -2,6 +2,30 @@
 
 * Last
 
+*** use model-view-update to simplify the code?
+
+*** fix efuns, codemap, emacs config, macos config, etc.
+
+**** efuns: Thread.kill not available and all those
+second cursor errors
+
+**** codemap: no more regexps displayed, just the leading /
+because split_info? need put back in stream of tokens?
+
+*** RELAX move arch_code.* out of pfff, move h_visualization/ too
+put in codemap
+
+*** RELAX maybe move highlight_code.ml in codemap 
+so easy to change color constructor?
+
+*** RELAX add highlight_code.ml to Visual.mw?
+
+*** codemap not highlighing correctly fields in visitors
+in Analyze_pattern.ml
+
+*** move all pfff/todo.txt in codemap/todo.txt
+
+
 *** make it work on MacOS!
 seems to display at the beginning, especially id don't add -screen_size
 and use default, but after it disappears
