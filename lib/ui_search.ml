@@ -64,7 +64,7 @@ let dialog_search_def model =
         text
       )
   in
-  res |> Common.do_option (fun s -> 
+  res |> Option.iter (fun s -> 
     pr2 ("selected: " ^ s);
   );
   res

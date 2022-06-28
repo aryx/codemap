@@ -271,7 +271,7 @@ let treemap_generator ~filter_file =
 (* this is currently called in the background *)
 let build_model2 root dbfile_opt graphfile_opt =   
 
-  let db_opt = dbfile_opt |> Common.map_opt Database_code.load_database in
+  let db_opt = dbfile_opt |> Option.map Database_code.load_database in
   let files = 
     Common.files_of_dir_or_files_no_vcs_nofilter [root] |> List.filter !filter
   in
@@ -279,7 +279,7 @@ let build_model2 root dbfile_opt graphfile_opt =
   let all_entities = Model_database_code.all_entities ~root files db_opt in
   let big_grep_idx = Completion2.build_completion_defs_index all_entities in
 
-  let g_opt = graphfile_opt |> Common.map_opt Graph_code.load in
+  let g_opt = graphfile_opt |> Option.map Graph_code.load in
   let hfile_deps_of_node, hentities_of_file =
     match g_opt with
     | None -> Hashtbl.create 0, Hashtbl.create 0
@@ -359,7 +359,7 @@ let main_action xs =
       )
       | _ -> None
   in
-  db_file |> Common.do_option (fun db -> 
+  db_file |> Option.iter (fun db -> 
     pr2 (spf "Using pfff light db: %s" db)
   );
   let graph_file = 
@@ -375,7 +375,7 @@ let main_action xs =
       )
     | _ -> None
   in
-  graph_file |> Common.do_option (fun db -> 
+  graph_file |> Option.iter (fun db -> 
     pr2 (spf "Using graphcode: %s" db)
   );
   let skip_file = !skip_file ||| Filename.concat root "skip_list.txt" in

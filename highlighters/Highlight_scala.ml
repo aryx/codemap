@@ -191,7 +191,7 @@ let visit_program
         aux_toks xs;
     (* could be a method, need more context *)
     | (T.Kdef _)::x::xs ->
-        is_ident x |> Common.do_option (fun ii ->
+        is_ident x |> Option.iter (fun ii ->
           tag_if_not_tagged_bis ii (Entity (Function, Def2 no_def));
         );
         aux_toks (x::xs);

@@ -95,7 +95,7 @@ let paint_content_maybe_rect ~user_rect dw model rect =
    let microlevel_opt = 
      Draw_microlevel.draw_treemap_rectangle_content_maybe
        cr clipping context rect in
-   microlevel_opt |> Common.do_option (fun microlevel ->
+   microlevel_opt |> Option.iter (fun microlevel ->
      Hashtbl.replace dw.microlevel rect microlevel
    );
   (* have to redraw the label *)
@@ -129,7 +129,7 @@ let lazy_paint user_rect dw model () =
 let paint2 dw model = 
   pr2 (spf "paint");
   
-  !Ctl.paint_content_maybe_refresher |> Common.do_option GMain.Idle.remove;
+  !Ctl.paint_content_maybe_refresher |> Option.iter GMain.Idle.remove;
   Ctl.current_rects_to_draw := [];
 
   let user_rect = device_to_user_area dw in
@@ -194,13 +194,13 @@ let button_action w ev =
       pr2 (spf "button %d pressed" button);
       (match button with
       | 1 -> 
-        r_opt |> Common.do_option (fun (r, _, _r_englobing) ->
+        r_opt |> Option.iter (fun (r, _, _r_englobing) ->
           let file = r.T.tr_label in
           pr2 (spf "clicking on %s" file);
         );
         true
       | 2 ->
-        r_opt |> Common.do_option (fun (r, _, _r_englobing) ->
+        r_opt |> Option.iter (fun (r, _, _r_englobing) ->
           let file = r.T.tr_label in
           pr2 (spf "opening %s" file);
           let line = 
@@ -211,7 +211,7 @@ let button_action w ev =
         true
 
       | 3 ->
-        r_opt |> Common.do_option (fun (tr, _, _r_englobing) ->
+        r_opt |> Option.iter (fun (tr, _, _r_englobing) ->
           (* actually file_or_dir *)
           let file = tr.T.tr_label in
 
@@ -332,7 +332,7 @@ let button_action w ev =
 
   | `TWO_BUTTON_PRESS ->
       pr2 ("double click");
-      r_opt |> Common.do_option (fun (_r, _, r_englobing) ->
+      r_opt |> Option.iter (fun (_r, _, r_englobing) ->
         let path = r_englobing.T.tr_label in
         !Ctl._go_dirs_or_file w [path];
       );

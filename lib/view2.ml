@@ -219,7 +219,7 @@ let mk_gui ~screen_size ~legend test_mode w =
         fc#add_item "_Git grep" ~key:K._G ~callback:(fun () -> 
 
           let res = Ui_search.dialog_search_def w.model in
-          res |> Common.do_option (fun s ->
+          res |> Option.iter (fun s ->
             let root = w.root_orig in
             let matching_files = Ui_search.run_grep_query ~root s in
             let files = matching_files |> List.map fst |> Common2.uniq in
@@ -233,7 +233,7 @@ let mk_gui ~screen_size ~legend test_mode w =
         fc#add_item "_Tbgs query" ~key:K._T ~callback:(fun () -> 
 
           let res = Ui_search.dialog_search_def w.model in
-          res |> Common.do_option (fun s ->
+          res |> Option.iter (fun s ->
             let root = w.dw.current_root in
             let matching_files = Ui_search.run_tbgs_query ~root s in
             let files = matching_files |> List.map fst |> Common2.uniq in
@@ -342,8 +342,8 @@ let mk_gui ~screen_size ~legend test_mode w =
 
           pr2 (spf "e= %s, final_paths= %s" str(Common.join "|" final_paths));
           w.current_entity <- Some e;
-          Async.async_get_opt w.model |> Common.do_option (fun model ->
-            model.g |> Common.do_option (fun g ->
+          Async.async_get_opt w.model |> Option.iter (fun model ->
+            model.g |> Option.iter (fun g ->
               w.current_node_selected <- 
                 Model_graph_code.node_of_entity e g
             )
@@ -517,7 +517,7 @@ let mk_gui ~screen_size ~legend test_mode w =
   win#show ();
 
   (* test *)
-  test_mode |> Common.do_option (fun _s -> 
+  test_mode |> Option.iter (fun _s -> 
     (* View_test.do_command s model *)
     ()
   );

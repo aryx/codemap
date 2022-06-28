@@ -95,7 +95,7 @@ let actual_root_of_db ~root db =
 let hentities root db_opt = 
   let hentities = Hashtbl.create 1001 in
 
-  db_opt |> Common.do_option (fun db ->
+  db_opt |> Option.iter (fun db ->
 
     let actual_root = actual_root_of_db ~root db in
 
@@ -118,7 +118,7 @@ let hentities root db_opt =
 let hfiles_and_top_entities root db_opt =
   let hfiles = Hashtbl.create 1001 in
 
-  db_opt |> Common.do_option (fun db ->
+  db_opt |> Option.iter (fun db ->
     let ksorted = 
       Db.build_top_k_sorted_entities_per_file ~k:5 db.Db.entities in
     let actual_root = actual_root_of_db ~root db in

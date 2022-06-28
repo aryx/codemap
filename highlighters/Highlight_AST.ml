@@ -364,7 +364,7 @@ let visit_program
                  | G.Parameter -> (Parameter Use)
                  | G.Global -> Entity (Global, Use2 fake_no_use2)
                  | G.EnclosedVar -> Entity (Global, Use2 fake_no_use2)
-                 | G.ImportedEntity _ -> Entity (Global, Use2 fake_no_use2)
+                 | G.ImportedEntity _ | G.ResolvedName _ -> Entity (Global, Use2 fake_no_use2)
                  | G.ImportedModule _ -> Entity (Module, Use2 fake_no_use2)
                  | G.TypeName -> Entity (Type, Use2 fake_no_use2)
                  | G.Macro -> Entity (Macro, Use2 fake_no_use2)

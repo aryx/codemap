@@ -250,9 +250,9 @@ let defs_of_glyphs glyphs =
   let res = ref [] in
   glyphs |> Array.iteri (fun line_0_indexed glyphs ->
     glyphs |> List.iter (fun glyph ->
-      glyph.categ |> Common.do_option (fun categ ->
+      glyph.categ |> Option.iter (fun categ ->
         Database_code.entity_kind_of_highlight_category_def categ 
-        |> Common.do_option (fun kind ->
+        |> Option.iter (fun kind ->
               Common.push (Line line_0_indexed, (glyph.str, kind)) res
         ))));
   List.rev !res
@@ -372,7 +372,7 @@ let draw_content2 cr layout context tr =
   let glyphs_opt = 
     glyphs_of_file ~font_size ~font_size_real context.model2 file in
 
-  glyphs_opt |> Common.do_option (fun glyphs ->
+  glyphs_opt |> Option.iter (fun glyphs ->
     glyphs |> Array.iteri (fun line_0_indexed _glyph ->
       let lc = line_to_line_in_column (Line line_0_indexed) layout in
       let x, y = line_in_column_to_bottom_pos lc r layout in

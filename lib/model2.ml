@@ -43,7 +43,7 @@ type model = {
   (*e: model fields hook *)
 
   (* for microlevel use/def information *)
-  g: Graph_code.graph option;
+  g: Graph_code.t option;
   (* for macrolevel use/def information, only for Dir and File *)
   hfile_deps_of_node: (Graph_code.node, Common.filename deps) Hashtbl.t;
   (* we used to store line information there, but the file may have changed *)

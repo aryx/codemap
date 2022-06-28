@@ -156,7 +156,7 @@ let draw_deps_entities n dw model =
  with_overlay dw (fun cr_overlay ->
 
    line_and_microlevel_of_node_opt n dw model 
-   |> Common.do_option (fun (_n2, line, microlevel) ->
+   |> Option.iter (fun (_n2, line, microlevel) ->
      let rectangle = microlevel.line_to_rectangle line in
      CairoH.draw_rectangle_figure ~cr:cr_overlay ~color:"white" rectangle
    );
@@ -278,12 +278,12 @@ let paint_initial dw =
 let hook_finish_paint w =
   (* pr2 "Hook_finish_paint"; *)
   let dw = w.dw in
-  w.current_node |> Common.do_option (fun n -> 
-    Async.async_get_opt w.model |> Common.do_option (fun model ->
+  w.current_node |> Option.iter (fun n -> 
+    Async.async_get_opt w.model |> Option.iter (fun model ->
       draw_deps_entities n dw model
     ));
-  w.current_node_selected |> Common.do_option (fun n -> 
-    Async.async_get_opt w.model |> Common.do_option (fun model ->
+  w.current_node_selected |> Option.iter (fun n -> 
+    Async.async_get_opt w.model |> Option.iter (fun model ->
       draw_deps_entities n dw model
     ))
 
@@ -300,7 +300,7 @@ let motion_refresher ev w =
     Cairo.device_to_user cr x y |> CairoH.cairo_point_to_point) in
   let r_opt = M.find_rectangle_at_user_point user dw in
 
-  r_opt |> Common.do_option (fun (tr, middle, r_englobing) ->
+  r_opt |> Option.iter (fun (tr, middle, r_englobing) ->
     (* coupling: similar code in right click handler in View_mainmap *)
     let line_opt = 
       M.find_line_in_rectangle_at_user_point user tr dw in
@@ -348,21 +348,21 @@ let motion_refresher ev w =
     );
 
     draw_englobing_rectangles_overlay ~dw (tr, middle, r_englobing);
-    Async.async_get_opt w.model |> Common.do_option (fun model ->
+    Async.async_get_opt w.model |> Option.iter (fun model ->
       draw_deps_files tr dw model;
-      entity_opt |> Common.do_option (fun _n -> w.current_node <- None);
-      entity_def_opt|>Common.do_option (fun n -> draw_deps_entities n dw model);
-      entity_use_opt|>Common.do_option (fun n -> draw_deps_entities n dw model);
+      entity_opt |> Option.iter (fun _n -> w.current_node <- None);
+      entity_def_opt|>Option.iter (fun n -> draw_deps_entities n dw model);
+      entity_use_opt|>Option.iter (fun n -> draw_deps_entities n dw model);
     );
   
     if w.settings.draw_searched_rectangles;
     then draw_searched_rectangles ~dw;
 
     !Controller.current_tooltip_refresher
-      |> Common.do_option GMain.Timeout.remove;
+      |> Option.iter GMain.Timeout.remove;
     Controller.current_tooltip_refresher := 
       Some (Gui.gmain_timeout_add ~ms:1000 ~callback:(fun _ ->
-        Async.async_get_opt w.model |> Common.do_option (fun model ->
+        Async.async_get_opt w.model |> Option.iter (fun model ->
           match entity_opt, model.g with
           | Some node, Some g ->
             draw_tooltip ~cr_overlay ~x ~y node g;
@@ -388,7 +388,7 @@ let motion_notify w ev =
   (* The motion code now takes time, so it's better do run it when the user
    * has finished moving his mouse, hence the use of gmain_idle_add below.
    *)
-  !Controller.current_motion_refresher |> Common.do_option GMain.Idle.remove;
+  !Controller.current_motion_refresher |> Option.iter GMain.Idle.remove;
   Controller.current_motion_refresher := 
     Some (Gui.gmain_idle_add ~prio:200 (fun () -> 
       let res = motion_refresher ev w in

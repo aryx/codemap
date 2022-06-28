@@ -281,7 +281,7 @@ let my_entry_completion_eff2 ~callback_selected ~callback_changed fn_idx =
     let s = entry#text in
     pr2 s;
     if s <> "" then begin
-      !current_timeout |> Common.do_option (fun x ->
+      !current_timeout |> Option.iter (fun x ->
         GMain.Timeout.remove x;
       );
       current_timeout :=
