@@ -126,7 +126,8 @@ let info_of_dotted_ident xs =
 (*****************************************************************************)
 
 (* try to better colorize identifiers, which can be many different things:
- * a field, a type, a function, a parameter, a local, a global, etc.
+ * a field, a type, a function, a parameter, a local, a global, a generic,
+ * etc.
 *)
 let visit_program
     (already_tagged, tag)
@@ -467,12 +468,13 @@ let visit_program
              else tag_id id (ConstructorMatch fake_no_use2)
          | PatId (id, _idinfo) ->
              tag_id id (Parameter Def)
+         | PatAs (_p1, (id, _idinfo)) ->
+             tag_id id (Parameter Def)
          | PatRecord (_, xs, _) ->
              xs |> List.iter (fun (name, _pat) ->
                let info = info_of_dotted_ident name in
                tag info (Entity (Field, (Use2 fake_no_use2)));
              )
-
          | _ -> ()
         );
         k x
@@ -493,6 +495,15 @@ let visit_program
          | _ -> ()
         );
         k t
+      );
+
+      V.ktparam = (fun (k, _) x ->
+        (match x with
+        | TP { tp_id; _ } ->
+           tag_id tp_id (Entity (Type, (Def2 fake_no_def2)))
+        | _ -> ()
+        );
+        k x
       );
 
     }
