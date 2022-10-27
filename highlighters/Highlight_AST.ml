@@ -443,7 +443,8 @@ let visit_program
         | Record (_, xs, _) ->
             xs |> List.iter (fun x ->
               match x with
-              | F ({s=DefStmt ({ name = EN (Id (id, _idinfo)); _}, _);_})->
+              | F ({s=DefStmt ({ name = EN name; _}, _);_})->
+                  let id = id_of_name name in
                   tag_id id (Entity (Field, (Use2 fake_no_use2)));
               | _ -> ()
             );
