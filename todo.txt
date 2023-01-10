@@ -1,5 +1,42 @@
 #-*- org -*-
 
+* Last last
+
+*** problem with generated layers by codegraph_build, get ofv float exn
+when trying to read the layer in codemap
+
+test: opam switch 4.12.0 ... make index ... cm .
+and see exn
+
+*** fix codemap on our typescript code
+thx to tree-sitter-typescript!
+
+*** use tree-sitter libs for OCaml!
+# update: with pfff integrated in semgrep, and osemgrep and releasing in OPAM,
+# this might become easier
+
+see Semgrep_envvars.ml
+=> need to switch to tree-sitter for parsing OCaml? link tree-sitter parsers
+with codemap?
+
+Textedit.{path = ...} (was in Output.ml)
+
+type t = private int (in Exit_code.mli)
+
+and foo = bar [@@deriving] (was in IL.ml)
+and xxx = zzz
+[@@deriving ]
+
+*** use tree-sitter libs in codemap! for TS/C++/...
+tree-sitter-langs? ocaml-tree-sitter-lang repo?
+so can also use codemap for C++ code!
+use https://github.com/returntocorp/ocaml-tree-sitter-languages
+
+someone from Facebook recently wanted to use ocaml-tree-sitter for Pyre :)
+
+*** weird bug on deep-semgrep/src/core/sig/Name.ml where if
+last line does not contain a newline then no display
+
 * Last
 
 *** use model-view-update to simplify the code?

@@ -259,17 +259,19 @@ let visit_program
                tag_id id BadSmell
              | [] -> ()
              )
-         | ImportFrom (_, DottedName xs, id, opt) ->
+         | ImportFrom (_, DottedName xs, ys) ->
+             
               tag_ids xs (Entity (Package, Use2 fake_no_use2));
               (* depend on language, Class in Scala, Module in OCaml *)
               let kind =  Class in
+              ys |> List.iter (fun (id, opt) ->
               (match opt with
               | None ->
                 tag_id id (Entity (kind, Def2 fake_no_def2))
               | Some (id2, _) ->
                 tag_id id (Entity (kind, Use2 fake_no_use2));
                 tag_id id2 (Entity (kind, Def2 fake_no_def2))
-             );
+             ));
               
          | G.Package (_, xs) ->
             tag_ids xs (Entity (Package, Def2 fake_no_def2))
