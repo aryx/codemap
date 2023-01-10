@@ -21,14 +21,9 @@
    pfff-lang_php pfff-lang_php-analyze
    pfff-lang_java pfff-lang_java-analyze
    pfff-lang_cpp pfff-lang_cpp-analyze
-   pfff-lang_csharp pfff-lang_csharp-analyze
    pfff-lang_ml pfff-lang_ml-analyze
    pfff-lang_nw pfff-lang_nw-analyze
-   pfff-lang_haskell pfff-lang_haskell-analyze
    pfff-lang_lisp pfff-lang_lisp-analyze
-   pfff-lang_erlang pfff-lang_erlang-analyze
-   pfff-lang_skip pfff-lang_skip-analyze
-   pfff-lang_rust pfff-lang_rust-analyze
    pfff-lang_html pfff-lang_html-analyze
    pfff-lang_text
 

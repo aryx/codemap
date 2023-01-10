@@ -178,7 +178,7 @@ let grep ~basedir str =
     -> xs
   | _ -> 
     raise (CmdError (status, (spf "CMD = %s, RESULT = %s" cmd
-                                (Common.dump (status, xs)))))
+                                (Dumper.dump (status, xs)))))
  
 
 let show ~basedir file commitid =
