@@ -10,5 +10,6 @@
    ; local deps
    h_version_control
    archi_code
+   layer_code
  )
 )
