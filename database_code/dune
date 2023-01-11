@@ -1,0 +1,12 @@
+; this used to be in pfff/h-program-lang
+
+(library
+ (public_name database_code)
+ (wrapped false)
+ (libraries
+    ; pfff deps
+    commons
+    pfff-h_program-lang
+ )
+)
+

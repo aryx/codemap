@@ -9,5 +9,6 @@
 
    ; local deps
    h_version_control
+   archi_code
  )
 )

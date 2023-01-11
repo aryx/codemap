@@ -1,0 +1,11 @@
+; this used to be in pfff/h-program-lang
+
+(library
+ (name archi_code)
+ (wrapped false)
+ (libraries
+    ; pfff deps
+    commons
+ )
+)
+(ocamllex archi_code_lexer)

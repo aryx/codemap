@@ -33,6 +33,7 @@
 
     ; now actually in codemap
     pfff-highlighters
+    database_code
 
     ; local deps
     h_program_visual
