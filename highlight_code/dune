@@ -1,0 +1,15 @@
+; this used to be in pfff/h-program-lang
+
+(library
+ (public_name highlight_code)
+ (wrapped false)
+ (libraries
+    ; pfff deps
+    commons
+    pfff-h_program-lang ; entity_code mostly
+
+    ; for layer_graph_code
+    ; pfff-graph_code
+ )
+)
+

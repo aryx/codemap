@@ -7,6 +7,9 @@
     ; pfff deps
     commons
     pfff-h_program-lang
+
+    ; now in codemap
+    highlight_code
  )
 )
 

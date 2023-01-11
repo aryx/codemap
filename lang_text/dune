@@ -6,6 +6,9 @@
 
    commons
    pfff-config pfff-h_program-lang
+
+   ; local deps
+   highlight_code
  )
  (preprocess (pps ppx_deriving.show))
 )

@@ -1,0 +1,10 @@
+; was in pfff/commons_core before, could be moved back there
+
+(library
+ (name codemap_utils)
+ (wrapped false)
+ (libraries
+    ; pfff deps
+    commons
+ )
+)
