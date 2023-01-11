@@ -6,9 +6,8 @@
    ocamlgraph
 
    ; pfff deps
-   commons commons_core commons_ocollection
+   commons
    pfff-config
-   pfff-commons-graph
    dyp
    ppx_deriving
    uucp uutf

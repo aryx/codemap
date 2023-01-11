@@ -5,7 +5,7 @@
    ounit2
 
    ; pfff deps
-   commons commons_core
+   commons
    pfff-config
 
  )

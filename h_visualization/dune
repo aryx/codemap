@@ -6,7 +6,7 @@
    yojson ocamlgraph
 
    commons
-   pfff-h_files-format pfff-commons-graph
+   pfff-h_files-format
  )
  (preprocess (pps ppx_deriving.show))
 )

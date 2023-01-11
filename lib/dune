@@ -37,6 +37,7 @@
     layer_code
 
     ; local deps
+    codemap_utils
     h_program_visual
  )
 )
