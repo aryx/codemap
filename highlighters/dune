@@ -16,6 +16,7 @@
    pfff-lang_scala
    pfff-lang_html
    pfff-lang_nw
+   pfff-lang_lisp
 
    ; generic!
    pfff-lang_GENERIC-naming ; for generic name resolver
