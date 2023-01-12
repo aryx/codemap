@@ -12,7 +12,8 @@
     dyp
     commons 
     pfff-h_visualization gui
-    pfff-h_program-lang pfff-graph_code  
+    pfff-h_program-lang
+    pfff-graph_code  
 
     pfff-lang_python
     pfff-lang_js

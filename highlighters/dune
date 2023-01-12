@@ -8,7 +8,6 @@
    commons
    pfff-config pfff-h_program-lang
    pfff-lang_GENERIC_base pfff-lang_GENERIC ; now in semgrep actually
-   pfff-graph_code
 
    ; now in codemap! local deps
    highlight_code

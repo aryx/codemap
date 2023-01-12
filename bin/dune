@@ -14,7 +14,7 @@
 
    ; codemap lib deps
    pfff-h_visualization gui
-   pfff-h_program-lang pfff-graph_code  
+   pfff-h_program-lang
    pfff-lang_python
    pfff-lang_js
    pfff-lang_php pfff-lang_php-analyze
