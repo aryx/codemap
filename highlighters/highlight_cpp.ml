@@ -16,7 +16,6 @@ open Common
 open Ast_cpp
 open Entity_code
 open Highlight_code
-module S = Scope_code
 module PI = Parse_info
 module Ast = Ast_cpp
 module V = Visitor_cpp
@@ -210,7 +209,7 @@ let visit_toplevel ~tag_hook _prefs (*db_opt *) (ast, toks) =
         V.kexpr =
           (fun (k, _) x ->
             match x with
-            | N (name, idinfo) -> (
+            | N (name) -> (
                 match name with
                 | _, _, IdIdent (s, ii) -> (
                     if
@@ -220,6 +219,7 @@ let visit_toplevel ~tag_hook _prefs (*db_opt *) (ast, toks) =
                       if s ==~ Parsing_hacks_lib.regexp_macro then
                         tag ii (Entity (Constant, Use2 fake_no_use2))
                       else
+                        (* TODO: use Highlight_AST for that instead
                         match idinfo.Ast.i_scope with
                         | S.NoScope -> ()
                         | S.Local -> tag ii (Local Use)
@@ -237,20 +237,25 @@ let visit_toplevel ~tag_hook _prefs (*db_opt *) (ast, toks) =
                         | S.LocalExn
                         | S.Closed ->
                             failwith "scope not handled")
+                         *)
+                        ())
                 | _ -> ())
             | Call (e, _args) ->
                 (match e with
-                | N (name, scope) -> (
+                | N (name) -> (
                     match name with
                     | _, _, IdIdent (s, ii) -> (
                         if Hashtbl.mem h_debug_functions s then
                           tag ii BuiltinCommentColor
                         else
+                          (* TODO: same than above, use Highlight_AST
                           match scope.i_scope with
                           | S.Local
                           | S.Param ->
                               tag ii PointerCall
                           | _ -> tag ii (Entity (Function, Use2 fake_no_use2)))
+                           *)
+                          ())
                     | _ -> ())
                 | DotAccess (_e, _, name) ->
                     Ast.ii_of_id_name name
