@@ -118,6 +118,6 @@ val tree_ex_wijk_1999 : (unit, int) tree
 val treemap_ex_ordered_2001 : (unit, unit) treemap
 (*e: signature tree and treemap examples *)
 
-val actions : unit -> Common.cmdline_actions
+val actions : unit -> Arg_helpers.cmdline_actions
 
 (*e: treemap.mli *)

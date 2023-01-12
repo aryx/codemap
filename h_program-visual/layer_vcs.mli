@@ -10,4 +10,4 @@ val gen_nbauthors_layer:
   skip_revs:Lib_vcs.versionid list ->
   Common2.path -> output:Common.filename -> unit
 
-val actions : unit -> Common.cmdline_actions
+val actions : unit -> Arg_helpers.cmdline_actions

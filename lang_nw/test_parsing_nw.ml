@@ -36,9 +36,9 @@ let test_dump_nw file =
 
 let actions () =
   [
-    ("-tokens_nw", "   <file>", Common.mk_action_1_arg test_tokens_nw);
-    ("-parse_nw", "   <file>", Common.mk_action_1_arg test_parse_nw);
+    ("-tokens_nw", "   <file>", Arg_helpers.mk_action_1_arg test_tokens_nw);
+    ("-parse_nw", "   <file>", Arg_helpers.mk_action_1_arg test_parse_nw);
 (*    
-    ("-dump_nw", "   <file>", Common.mk_action_1_arg test_dump_nw);
+    ("-dump_nw", "   <file>", Arg_helpers.mk_action_1_arg test_dump_nw);
  *)
   ]

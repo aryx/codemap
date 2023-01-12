@@ -49,7 +49,7 @@ let options () =
     "-verbose", Arg.Set verbose, 
     " ";
   ] @
-  Common.options_of_actions action (all_actions()) @
+  Arg_helpers.options_of_actions action (all_actions()) @
   Common2.cmdline_flags_devel () @
   Common2.cmdline_flags_verbose () @
   Common2.cmdline_flags_other () @
@@ -79,7 +79,7 @@ let main () =
       " [options] <file or dir> " ^ "\n" ^ "Options are:"
   in
   (* does side effect on many global flags *)
-  let args = Common.parse_options (options()) usage_msg Sys.argv in
+  let args = Arg_helpers.parse_options (options()) usage_msg Sys.argv in
 
   (* must be done after Arg.parse, because Common.profile is set by it *)
   Common.profile_code "Main total" (fun () -> 
@@ -89,8 +89,8 @@ let main () =
     (* --------------------------------------------------------- *)
     (* actions, useful to debug subpart *)
     (* --------------------------------------------------------- *)
-    | xs when List.mem !action (Common.action_list (all_actions())) -> 
-        Common.do_action !action xs (all_actions())
+    | xs when List.mem !action (Arg_helpers.action_list (all_actions())) -> 
+        Arg_helpers.do_action !action xs (all_actions())
 
     | _ when not (Common.null_string !action) -> 
         failwith ("unrecognized action or wrong params: " ^ !action)
@@ -105,7 +105,7 @@ let main () =
     (* empty entry *)
     (* --------------------------------------------------------- *)
     | [] -> 
-        Common.usage usage_msg (options()); 
+        Arg_helpers.usage usage_msg (options()); 
         failwith "too few arguments"
     )
   )

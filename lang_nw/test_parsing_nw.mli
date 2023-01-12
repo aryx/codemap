@@ -5,4 +5,4 @@ val test_tokens_nw : Common.filename -> unit
  * the command line, e.g. '$ pfff -parse_nw foo.nw will call the
  * test_parse_nw function.
  *)
-val actions : unit -> Common.cmdline_actions
+val actions : unit -> Arg_helpers.cmdline_actions

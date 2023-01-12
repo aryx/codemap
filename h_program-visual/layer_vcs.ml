@@ -245,12 +245,12 @@ let gen_age_layer ?(verbose=false) ~line_granularity ~skip_revs dir ~output =
 
 let actions () = [
   "-gen_nbauthors_layer", " <git dir> <layerfile>",
-  Common.mk_action_2_arg (fun dir output -> 
+  Arg_helpers.mk_action_2_arg (fun dir output -> 
     gen_nbauthors_layer ~skip_revs:[] dir ~output);
   "-gen_age_layer", " <git dir> <layerfile>",
-  Common.mk_action_2_arg (fun dir output -> 
+  Arg_helpers.mk_action_2_arg (fun dir output -> 
     gen_age_layer ~line_granularity:false ~skip_revs:[] dir ~output);
   "-gen_age_lines_layer", " <git dir> <layerfile>",
-  Common.mk_action_2_arg (fun dir output -> 
+  Arg_helpers.mk_action_2_arg (fun dir output -> 
     gen_age_layer ~line_granularity:true ~skip_revs:[] dir ~output);
 ]

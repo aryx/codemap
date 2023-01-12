@@ -1150,8 +1150,8 @@ let (treemap_ex_ordered_2001 : (unit, unit) treemap) =
 let actions () =
   [
     (*s: treemap actions *)
-    ("-test_squarify", "<>", Common.mk_action_0_arg test_squarify);
-    ("-test_orderify", "<>", Common.mk_action_0_arg test_orderify)
+    ("-test_squarify", "<>", Arg_helpers.mk_action_0_arg test_squarify);
+    ("-test_orderify", "<>", Arg_helpers.mk_action_0_arg test_orderify)
     (*e: treemap actions *);
   ]
 (*e: treemap.ml *)

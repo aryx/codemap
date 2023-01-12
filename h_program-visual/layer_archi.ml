@@ -32,5 +32,5 @@ let gen_layer _dir ~output =
 
 let actions () = [
   "-gen_archi_layer", " <dir> <layerfile>",
-  Common.mk_action_2_arg (fun dir output -> gen_layer dir ~output);
+  Arg_helpers.mk_action_2_arg (fun dir output -> gen_layer dir ~output);
 ]

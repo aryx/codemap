@@ -5,4 +5,4 @@ val test_tokens_html : Common.filename -> unit
  * the command line, e.g. '$ pfff -parse_html foo.html will call the
  * test_parse_html function.
  *)
-val actions : unit -> Common.cmdline_actions
+val actions : unit -> Arg_helpers.cmdline_actions

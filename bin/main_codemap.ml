@@ -578,15 +578,15 @@ let test_cairo () =
 let extra_actions () = [
  (*s: actions *)
    "-test_loc", " ",
-   Common.mk_action_n_arg (test_loc true);
+   Arg_helpers.mk_action_n_arg (test_loc true);
    "-test_loc2", " ",
-   Common.mk_action_n_arg (test_loc false);
+   Arg_helpers.mk_action_n_arg (test_loc false);
    "-test_cairo", " ",
-   Common.mk_action_0_arg (test_cairo);
+   Arg_helpers.mk_action_0_arg (test_cairo);
    "-test_commitid", " <id>",
-   Common.mk_action_1_arg (test_visual_commitid);
+   Arg_helpers.mk_action_1_arg (test_visual_commitid);
    "-test_treemap_dirs", " <id>",
-   Common.mk_action_0_arg (test_treemap_dirs);
+   Arg_helpers.mk_action_0_arg (test_treemap_dirs);
  (*e: actions *)
 ]
  
@@ -657,7 +657,7 @@ let options () = ([
     " ";
   (*e: options *)
   ] @
-  Common.options_of_actions action (all_actions()) @
+  Arg_helpers.options_of_actions action (all_actions()) @
   Common2.cmdline_flags_devel () @
   [
   "-version",   Arg.Unit (fun () -> 
@@ -677,7 +677,7 @@ let main () =
       (Filename.basename Sys.argv.(0))
       "https://github.com/facebook/pfff/wiki/Codemap"
   in
-  let args = Common.parse_options (options()) usage_msg Sys.argv in
+  let args = Arg_helpers.parse_options (options()) usage_msg Sys.argv in
 
   if Sys.file_exists !log_config_file
   then begin
@@ -693,8 +693,8 @@ let main () =
     (* --------------------------------------------------------- *)
     (* actions, useful to debug subpart *)
     (* --------------------------------------------------------- *)
-    | xs when List.mem !action (Common.action_list (all_actions())) -> 
-        Common.do_action !action xs (all_actions())
+    | xs when List.mem !action (Arg_helpers.action_list (all_actions())) -> 
+        Arg_helpers.do_action !action xs (all_actions())
 
     | _ when not (Common.null_string !action) -> 
         failwith ("unrecognized action or wrong params: " ^ !action)
