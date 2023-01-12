@@ -7,7 +7,6 @@
 
    ; pfff deps
    commons
-   pfff-config
    dyp
    ppx_deriving
    uucp uutf

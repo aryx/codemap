@@ -6,7 +6,7 @@
 
    ; pfff deps
    commons
-   pfff-config pfff-h_program-lang
+   pfff-h_program-lang
    pfff-lang_GENERIC_base pfff-lang_GENERIC ; now in semgrep actually
 
    ; now in codemap! local deps

@@ -6,7 +6,5 @@
 
    ; pfff deps
    commons
-   pfff-config
-
  )
 )

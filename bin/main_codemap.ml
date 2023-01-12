@@ -661,7 +661,7 @@ let options () = ([
   Common2.cmdline_flags_devel () @
   [
   "-version",   Arg.Unit (fun () -> 
-    pr2 (spf "CodeMap version: %s" Config_pfff.version);
+    pr2 (spf "CodeMap version: %s" "TODO: version codemap");
     exit 0;
   ), 
     " guess what";
