@@ -30,7 +30,7 @@ type program_and_tokens = Ast_nw.program * Lexer_nw.token list
 (* Lexing only *)
 (*****************************************************************************)
 
-let tokens2 file =
+let tokens file =
   Lexer_nw.reset ();
   let token lexbuf =
     match Lexer_nw.current_mode () with
@@ -41,8 +41,7 @@ let tokens2 file =
   in
   Parse_info.tokenize_all_and_adjust_pos file token TH.visitor_info_of_tok
     TH.is_eof
-
-let tokens a = Common.profile_code "Parse_nw.tokens" (fun () -> tokens2 a)
+[@@profiling]
 
 (*****************************************************************************)
 (* Fuzzy parsing *)
@@ -61,9 +60,8 @@ let parse_fuzzy file =
 (* Main entry point *)
 (*****************************************************************************)
 
-let parse2 filename =
+let parse filename =
   let stat = Parse_info.default_stat filename in
   let ast, toks = parse_fuzzy filename in
   ((ast, toks), stat)
-
-let parse a = Common.profile_code "Parse_nw.parse" (fun () -> parse2 a)
+[@@profiling]

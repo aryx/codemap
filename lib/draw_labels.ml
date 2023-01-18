@@ -272,7 +272,7 @@ and try_draw_label ~font_size_orig ~color ~alpha ~cr ~rect txt =
   aux ~font_size:font_size_orig ~step:1 
 
 let draw_treemap_rectangle_label_maybe ~cr ~zoom ~color rect =
-  Common.profile_code "View.draw_label_maybe" (fun () ->
+  Profiling.profile_code "View.draw_label_maybe" (fun () ->
     draw_treemap_rectangle_label_maybe2 ~cr ~zoom ~color rect)
 (*e: [[draw_treemap_rectangle_label_maybe]] *)
 

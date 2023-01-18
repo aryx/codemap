@@ -47,14 +47,14 @@ module Color = Simple_color
 
 let _hmemo_file_archi = Hashtbl.create 101
 let source_archi_of_filename ~root file = 
-  Common.profile_code "Treemap_pl.file_archi" (fun () ->
+  Profiling.profile_code "Treemap_pl.file_archi" (fun () ->
     Common.memoized _hmemo_file_archi file (fun () ->
       Archi_code_parse.source_archi_of_filename ~root file
   ))
 
 let _hmemo_file_type = Hashtbl.create 101
 let file_type_of_file file =
-  Common.profile_code "Treemap_pl.file_type" (fun () ->
+  Profiling.profile_code "Treemap_pl.file_type" (fun () ->
     Common.memoized _hmemo_file_type file (fun () ->
       File_type.file_type_of_file file
   ))
@@ -261,7 +261,7 @@ let treemap_file_size_hook2 ~root file =
 (* not sure this is needed anymore *)
 let _hmemo_file_size = Hashtbl.create 101
 let treemap_file_size_hook ~root file = 
-  Common.profile_code "Treemap_pl.file_size_hook" (fun () ->
+  Profiling.profile_code "Treemap_pl.file_size_hook" (fun () ->
     Common.memoized _hmemo_file_size file (fun () ->
       treemap_file_size_hook2 ~root file
   ))
@@ -297,5 +297,5 @@ let code_treemap2 ~filter_file paths =
     ~label_of_file:(fun (f, _intleaf (*, aref *)) -> f)
 
 let code_treemap ~filter_file a = 
-  Common.profile_code "Treemap_pl.code_treemap" (fun () ->
+  Profiling.profile_code "Treemap_pl.code_treemap" (fun () ->
     code_treemap2 ~filter_file a)

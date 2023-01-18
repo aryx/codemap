@@ -82,7 +82,7 @@ let main () =
   let args = Arg_helpers.parse_options (options()) usage_msg Sys.argv in
 
   (* must be done after Arg.parse, because Common.profile is set by it *)
-  Common.profile_code "Main total" (fun () -> 
+  Profiling.profile_code "Main total" (fun () -> 
 
     (match args with
    

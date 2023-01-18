@@ -82,7 +82,7 @@ let (change_organization :
       change_organization_dirs_to_subsystems reorg dir
   | _ -> failwith "have a mix of subsystem and dirs, wierd"
 
-let subsystem_of_dir2 (Dir dir) reorg =
+let subsystem_of_dir (Dir dir) reorg =
   let index = reverse_index reorg in
   let dirsplit = Common.split "/" dir in
   let index =
@@ -98,6 +98,4 @@ let subsystem_of_dir2 (Dir dir) reorg =
   | Not_found ->
       pr2 (spf "Cant find %s in reorganization information" dir);
       raise Not_found
-
-let subsystem_of_dir a b =
-  Common.profile_code "subsystem_of_dir" (fun () -> subsystem_of_dir2 a b)
+[@@profiling]

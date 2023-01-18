@@ -4,21 +4,26 @@
  (wrapped false)
  (libraries
 
-   ; pfff deps
    commons
    pfff-h_program-lang
-   pfff-lang_GENERIC_base pfff-lang_GENERIC ; now in semgrep actually
 
-   ; now in codemap! local deps
-   highlight_code
+   ast_generic ; now in semgrep
+   highlight_code ; now in codemap! local deps
 
    ; lang-specific
-   pfff-lang_ml
-   pfff-lang_js
-   pfff-lang_scala
+   parser_cpp.menhir parser_cpp.ast_generic
+   parser_go.menhir parser_go.ast_generic
+   parser_java.menhir parser_java.ast_generic
+   parser_python.menhir parser_python.ast_generic
+   parser_ocaml.menhir parser_ocaml.ast_generic
+   parser_php.menhir parser_php.ast_generic
+   parser_javascript.menhir parser_javascript.ast_generic
+   parser_scala.recursive_descent parser_scala.ast_generic
+   parser_ruby.dyp parser_ruby.ast_generic
+   parser_lisp.recursive_descent
+   ; now in codemap
    pfff-lang_html
    pfff-lang_nw
-   pfff-lang_lisp
 
    ; for highlight_php
    database_code

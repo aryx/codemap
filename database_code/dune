@@ -4,12 +4,17 @@
  (public_name database_code)
  (wrapped false)
  (libraries
-    ; pfff deps
-    commons
+    commons profiling
     pfff-h_program-lang
 
     ; now in codemap
     highlight_code
+ )
+ (preprocess
+   (pps
+      ppx_deriving.show
+      ppx_profiling
+   )
  )
 )
 

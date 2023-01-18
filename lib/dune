@@ -9,26 +9,23 @@
     cairo2-gtk
     
     ; pfff deps
-    dyp
     commons 
     pfff-h_visualization gui
     pfff-h_program-lang
-    pfff-graph_code  
+    graph_code  
 
-    pfff-lang_python
-    pfff-lang_js
-    pfff-lang_php pfff-lang_php-analyze
-    pfff-lang_ruby pfff-lang_ruby-analyze
+    parser_python.menhir
+    parser_javascript.menhir
+    parser_php.menhir
+    parser_ruby.dyp
+    parser_java.menhir
+    parser_cpp.menhir
+    parser_go.menhir
+    parser_ocaml.menhir
+    parser_lisp.recursive_descent
 
-    pfff-lang_java
-    pfff-lang_cpp
-    pfff-lang_go
-
-    pfff-lang_ml
+    ; now in codemap
     pfff-lang_nw
-
-    pfff-lang_lisp
-
     pfff-lang_html
     pfff-lang_text
 
@@ -41,4 +38,5 @@
     codemap_utils
     h_program_visual
  )
+ (preprocess (pps ppx_deriving.show ppx_profiling))
 )

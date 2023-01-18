@@ -285,7 +285,7 @@ type element_state = {
   excl : StringSet.t;
 }
 
-let parse2 file =
+let parse file =
   Common.with_open_infile file (fun chan ->
       let buf = Lexing.from_channel chan in
       let table = Parse_info.full_charpos_to_pos_large file in
@@ -582,8 +582,7 @@ let parse2 file =
       in
       ( Ast.Element (Tag ("__root__", Ast.fakeInfo ()), [], xs),
         !toks |> List.rev |> merge_cdataspecial_tokens ))
-
-let parse a = Common.profile_code "Parse_html.parse" (fun () -> parse2 a)
+[@@profiling]
 
 (*****************************************************************************)
 (* Other entry points *)

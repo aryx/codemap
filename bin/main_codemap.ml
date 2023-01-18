@@ -269,7 +269,7 @@ let treemap_generator ~filter_file =
 
 (*s: function [[build_model]] *)
 (* this is currently called in the background *)
-let build_model2 root dbfile_opt graphfile_opt =   
+let build_model root dbfile_opt graphfile_opt =   
 
   let db_opt = dbfile_opt |> Option.map Database_code.load_database in
   let files = 
@@ -299,10 +299,7 @@ let build_model2 root dbfile_opt graphfile_opt =
   }
   in
   model
-
-let build_model a b c = 
-  Common.profile_code "View.build_model" (fun () ->
-    build_model2 a b c)
+[@@profiling]
 (*e: function [[build_model]] *)
 
 (* could also to parse all json files and filter the one which do not parse *)
@@ -687,7 +684,7 @@ let main () =
 
     
   (* must be done after Arg.parse, because Common.profile is set by it *)
-  Common.profile_code "Main total" (fun () -> 
+  Profiling.profile_code "Main total" (fun () -> 
 
     (match args with
     (* --------------------------------------------------------- *)

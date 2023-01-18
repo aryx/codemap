@@ -3,13 +3,19 @@
  (wrapped false)
  (libraries
 
-   ; pfff deps
-   commons pfff-h_visualization
+   commons 
    pfff-h_program-lang
 
    ; local deps
+   pfff-h_visualization
    h_version_control
    archi_code
    layer_code
+ )
+ (preprocess
+   (pps
+      ppx_deriving.show
+      ppx_profiling
+   )
  )
 )

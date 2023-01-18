@@ -14,14 +14,16 @@
    ; codemap lib deps
    pfff-h_visualization gui
    pfff-h_program-lang
-   pfff-lang_python
-   pfff-lang_js
-   pfff-lang_php pfff-lang_php-analyze
-   pfff-lang_java
-   pfff-lang_cpp
-   pfff-lang_ml
+   parser_python.menhir
+   parser_javascript.menhir
+   parser_php.menhir
+   parser_java.menhir
+   parser_cpp.menhir
+   parser_ocaml.menhir
+   parser_lisp.recursive_descent
+
+   ; now in codemap
    pfff-lang_nw
-   pfff-lang_lisp
    pfff-lang_html
    pfff-lang_text
 
@@ -31,6 +33,8 @@
  )
  ; for ocamldebug
  (modes native byte)
+
+ (preprocess (pps ppx_deriving.show ppx_profiling))
 )
 
 

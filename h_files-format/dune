@@ -3,6 +3,12 @@
  (name pfff_h_files_format)
  (wrapped false)
  (libraries
-   commons
+   commons profiling
+ )
+ (preprocess
+   (pps
+      ppx_deriving.show
+      ppx_profiling
+   )
  )
 )

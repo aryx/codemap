@@ -81,7 +81,7 @@ let _hmemo_file = Hashtbl.create 101
 
 (* with directories with many files, this is useful *)
 let parse_cache parse_in extract file =
-  Common.profile_code "View.parse_cache" (fun () ->
+  Profiling.profile_code "View.parse_cache" (fun () ->
     let mtime = Common2.filemtime file in
     let recompute = 
       if Hashtbl.mem _hmemo_file file

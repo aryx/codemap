@@ -4,8 +4,13 @@
  (name archi_code)
  (wrapped false)
  (libraries
-    ; pfff deps
-    commons
+    commons profiling
+ )
+ (preprocess
+   (pps
+      ppx_deriving.show
+      ppx_profiling
+   )
  )
 )
 (ocamllex archi_code_lexer)

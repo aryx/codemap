@@ -65,7 +65,7 @@ let safe_fork () =
 (* src: harrop article on fork-based parallelism
  * returns a futur
  *)
-let invoke2 f x =
+let invoke f x =
   flush_all ();
   (* avoid duplicate output *)
   let input, output = Unix.pipe () in
@@ -156,8 +156,7 @@ let invoke2 f x =
             failwith
               "Bug in Parallel.invoke: child process appears to have exited \
                successfully but produced invalid output.")
-
-let invoke f x = Common.profile_code "Parallel.invoke" (fun () -> invoke2 f x)
+[@@profiling]
 
 let parallel_map f xs =
   (* create all the fork *)

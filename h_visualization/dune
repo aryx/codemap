@@ -5,8 +5,8 @@
  (libraries
    yojson ocamlgraph
 
-   commons
+   commons profiling
    pfff-h_files-format
  )
- (preprocess (pps ppx_deriving.show))
+ (preprocess (pps ppx_deriving.show ppx_profiling))
 )

@@ -171,7 +171,7 @@ let annotate2 ?(basedir="") ?(use_cache=false) ?(use_dash_C=true) filename =
   )
   
 let annotate ?basedir ?use_cache ?use_dash_C a = 
-  Common.profile_code "Git.annotate" (fun () -> 
+  Profiling.profile_code "Git.annotate" (fun () -> 
     annotate2 ?basedir ?use_cache ?use_dash_C a)
 
 (* ------------------------------------------------------------------------ *)
@@ -233,7 +233,7 @@ let date_file_creation2 ?(basedir="") file =
 
 
 let date_file_creation ?basedir a = 
-  Common.profile_code "Git.date_file" (fun() -> date_file_creation2 ?basedir a)
+  Profiling.profile_code "Git.date_file" (fun() -> date_file_creation2 ?basedir a)
 
 (*****************************************************************************)
 (* Repository operations *)

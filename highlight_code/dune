@@ -6,6 +6,6 @@
  (libraries
     ; pfff deps
     commons
-    entity_code
+    graph_code ; but really just entity_code
  )
 )

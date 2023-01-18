@@ -4,7 +4,12 @@
  (libraries
    ounit2
 
-   ; pfff deps
-   commons
+   commons profiling
+ )
+ (preprocess
+   (pps
+      ppx_deriving.show
+      ppx_profiling
+   )
  )
 )

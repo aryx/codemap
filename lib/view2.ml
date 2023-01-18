@@ -86,19 +86,17 @@ let assemble_layers cr_final dw =
 (* opti: don't 'paint dw;' painting is the computation
  * heavy function. expose() just copy the "canvas" layers.
  *)
-let expose2 da w _ev = 
+let expose da w _ev = 
   let dw = w.dw in
   let gwin = da#misc#window in
   let cr = Cairo_gtk.create gwin in
   assemble_layers cr dw;
   true
-
-let expose a b c = 
-  Common.profile_code "View.expose" (fun () -> expose2 a b c)
+[@@profiling]
 (*e: expose *)
 
 (*s: configure *)
-let configure2 w ev = 
+let configure w ev = 
   let dw = w.dw in
   let width = GdkEvent.Configure.width ev in
   let height = GdkEvent.Configure.height ev in
@@ -108,10 +106,7 @@ let configure2 w ev =
   dw.overlay <- Model2.new_surface ~alpha:true ~width ~height;
   View_mainmap.paint dw w.model;
   true
-
-
-let configure a b =
-  Common.profile_code "View.configure" (fun () -> configure2 a b)
+[@@profiling]
 (*e: configure *)
 
 (* ---------------------------------------------------------------------- *)

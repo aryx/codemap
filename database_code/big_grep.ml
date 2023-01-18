@@ -77,7 +77,7 @@ let naive_top_n_search2 ~top_n ~query xs =
   aux ~n:0 xs
 
 let naive_top_n_search ~top_n ~query idx =
-  Common.profile_code "Big_grep.naive_top_n" (fun () ->
+  Profiling.profile_code "Big_grep.naive_top_n" (fun () ->
       naive_top_n_search2 ~top_n ~query idx)
 
 (*****************************************************************************)
@@ -110,7 +110,7 @@ let build_index2 ?(case_sensitive = false) entities =
   { big_string = Buffer.contents buf; pos_to_entity = h; case_sensitive }
 
 let build_index ?case_sensitive a =
-  Common.profile_code "Big_grep.build_idx" (fun () ->
+  Profiling.profile_code "Big_grep.build_idx" (fun () ->
       build_index2 ?case_sensitive a)
 
 let find_position_marker_before start_pos str =
@@ -160,5 +160,5 @@ let top_n_search2 ~top_n ~query idx =
   aux ~n:0 ~pos:0
 
 let top_n_search ~top_n ~query idx =
-  Common.profile_code "Big_grep.top_n" (fun () ->
+  Profiling.profile_code "Big_grep.top_n" (fun () ->
       top_n_search2 ~top_n ~query idx)

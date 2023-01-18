@@ -95,7 +95,7 @@ let annotate2 ?(basedir="") filename =
   Array.of_list (dummy_annotation::annots)
 
 let annotate ?basedir a = 
-  Common.profile_code "Hg.annotate" (fun () -> annotate2 ?basedir a)
+  Profiling.profile_code "Hg.annotate" (fun () -> annotate2 ?basedir a)
 
 (* ------------------------------------------------------------------------ *)
 
@@ -155,7 +155,7 @@ let date_file_creation2 ?(basedir="") file =
 
 
 let date_file_creation ?basedir a = 
-  Common.profile_code "Hg.date_file" (fun() -> date_file_creation2 ?basedir a)
+  Profiling.profile_code "Hg.date_file" (fun() -> date_file_creation2 ?basedir a)
 
 (*****************************************************************************)
 (* Repository operations *)

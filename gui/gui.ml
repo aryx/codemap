@@ -273,7 +273,7 @@ let model_of_list conv l =
   let model = GTree.list_store cols in
   pr2 (spf "model_of_list: length= %d" (List.length l));
 
-  Common.profile_code "model_of_list" (fun () -> 
+  Profiling.profile_code "model_of_list" (fun () -> 
   List.iter
     (fun data ->
       let row = model#append () in

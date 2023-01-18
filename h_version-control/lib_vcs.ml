@@ -78,16 +78,11 @@ let parse_commit_patch xs =
 
 
 let special_vcs_dirs = [".git"; ".svn"; ".hg"; "CVS"; "_darcs"]
-let filter_vcs_dir2 dir =
+let filter_vcs_dir dir =
   (* dont care about VCS files *)
   let last = Filename.basename dir in
   not (List.mem last special_vcs_dirs)
-
-
-let filter_vcs_dir x = 
-  Common.profile_code "Lib_vcs.filter_dir" (fun () ->
-    filter_vcs_dir2 x
-  )
+[@@profiling]
 
 (* See man git-diff and the "diff-filter section".
  * Could be in git.ml, but this look quite generic.

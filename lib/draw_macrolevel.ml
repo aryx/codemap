@@ -53,7 +53,7 @@ let draw_treemap_rectangle2 ~cr ?(color=None) ?(alpha=1.) rect =
   ()
 
 let draw_treemap_rectangle ~cr ?color ?alpha a =
-  Common.profile_code "View.draw_treemap_rectangle" (fun () -> 
+  Profiling.profile_code "View.draw_treemap_rectangle" (fun () -> 
     draw_treemap_rectangle2 ~cr ?color ?alpha a)
 (*e: [[draw_treemap_rectangle]]() *)
 

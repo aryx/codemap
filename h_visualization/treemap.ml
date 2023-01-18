@@ -214,7 +214,7 @@ let treemap_of_tree2 ~size_of_leaf ~color_of_leaf ?(label_of_file = fun _ -> "")
 
 let treemap_of_tree ~size_of_leaf ~color_of_leaf ?label_of_file ?label_of_dir
     tree =
-  Common.profile_code "Treemap.treemap_of_tree" (fun () ->
+  Profiling.profile_code "Treemap.treemap_of_tree" (fun () ->
       treemap_of_tree2 ~size_of_leaf ~color_of_leaf ?label_of_file ?label_of_dir
         tree)
 
@@ -798,7 +798,7 @@ let render_treemap_algo2 ?(algo = Classic) ?(big_borders = false) treemap =
   List.rev !treemap_rects
 
 let render_treemap ?algo ?big_borders x =
-  Common.profile_code "Treemap.render_treemap" (fun () ->
+  Profiling.profile_code "Treemap.render_treemap" (fun () ->
       render_treemap_algo2 ?algo ?big_borders x)
 
 (*****************************************************************************)
@@ -918,7 +918,7 @@ let tree_of_dir3 ?(filter_file = fun _ -> true) ?(filter_dir = fun _ -> true)
   aux dir
 
 let tree_of_dir ?filter_file ?filter_dir ?sort ~file_hook a =
-  Common.profile_code "Treemap.tree_of_dir" (fun () ->
+  Profiling.profile_code "Treemap.tree_of_dir" (fun () ->
       tree_of_dir3 ?filter_file ?filter_dir ?sort ~file_hook a)
 
 let tree_of_dir_or_file ?filter_file ?filter_dir ?sort ~file_hook path =
@@ -997,7 +997,7 @@ let tree_of_dirs_or_files2 ?filter_file ?filter_dir ?sort ~file_hook paths =
       Node (root, nodes)
 
 let tree_of_dirs_or_files ?filter_file ?filter_dir ?sort ~file_hook x =
-  Common.profile_code "Treemap.tree_of_dirs_or_files" (fun () ->
+  Profiling.profile_code "Treemap.tree_of_dirs_or_files" (fun () ->
       tree_of_dirs_or_files2 ?filter_file ?filter_dir ?sort ~file_hook x)
 
 (* Some software, especially java have often a long chain

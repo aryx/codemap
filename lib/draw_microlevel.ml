@@ -290,7 +290,7 @@ let optimal_nb_columns ~nblines ~chars_per_column ~w ~h =
 (*e: [[optimal_nb_columns]] *)
 
 (*s: [[draw_column_bars]] *)
-let draw_column_bars2 cr layout r = 
+let draw_column_bars cr layout r = 
   for i = 1 to int_of_float (layout.split_nb_columns - 1.) do
     let i = float_of_int i in
       
@@ -308,9 +308,7 @@ let draw_column_bars2 cr layout r =
     Cairo.line_to cr (r.p.x + layout.width_per_column * i) r.q.y;
     Cairo.stroke cr ;
   done
-let draw_column_bars cr layout rect =
-  Common.profile_code "View.draw_bars" (fun () ->
-    draw_column_bars2 cr layout rect)
+[@@profiling]
 (*e: [[draw_column_bars]] *)
 
 
@@ -319,7 +317,7 @@ let draw_column_bars cr layout rect =
 (*****************************************************************************)
 
 (*s: [[draw_content]] *)
-let draw_content2 cr layout context tr =
+let draw_content cr layout context tr =
 
   let r = tr.T.tr_rect in
   let file = tr.T.tr_label in
@@ -416,15 +414,12 @@ let draw_content2 cr layout context tr =
     content = glyphs_opt;
     defs = (match glyphs_opt with None -> [] | Some x -> defs_of_glyphs x);
   }
-
-let draw_content cr layout context tr =
-  Common.profile_code "View.draw_content" (fun () ->
-    draw_content2 cr layout context tr)
+[@@profiling]
 (*e: [[draw_content]] *)
 
 
 (*s: [[draw_treemap_rectangle_content_maybe]] *)
-let draw_treemap_rectangle_content_maybe2 cr clipping context tr  =
+let draw_treemap_rectangle_content_maybe cr clipping context tr  =
   let r = tr.T.tr_rect in
 
   if F.intersection_rectangles r clipping = None
@@ -488,10 +483,8 @@ let draw_treemap_rectangle_content_maybe2 cr clipping context tr  =
       else None
     end
     else None
-  end
-let draw_treemap_rectangle_content_maybe cr clipping context rect = 
-  Common.profile_code "View.draw_content_maybe" (fun () ->
-    draw_treemap_rectangle_content_maybe2 cr clipping context rect)
+    end
+[@@profiling]
 (*e: [[draw_treemap_rectangle_content_maybe]] *)
 
 (*****************************************************************************)

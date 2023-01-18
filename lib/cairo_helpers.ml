@@ -59,16 +59,14 @@ let prepare_string s =
   Bytes.to_string buf
 
 (* TODO: fast enough with those of_string and to_string? *)
-let show_text2 cr s =
+let show_text cr s =
   try 
     let s = prepare_string s in
     Cairo.show_text cr s
   with Cairo.Error status ->
     let s2 = Cairo.status_to_string status in
     failwith ("Cairo pb: " ^ s2 ^ " s = " ^ s)
-
-let show_text a b = 
-  Common.profile_code "View.cairo_show_text" (fun () -> show_text2 a b)
+[@@profiling]
 
 (*
 let fake_text_extents = 
@@ -80,14 +78,14 @@ let fake_text_extents =
 *)
 
 let text_extents cr s = 
-  Common.profile_code "CairoH.cairo_text_extent" (fun () -> 
+  Profiling.profile_code "CairoH.cairo_text_extent" (fun () -> 
     (*if s = ""  then fake_text_extents else *)
     Cairo.text_extents cr s
   )
 
 (* just wrap it here so that we can profile it *)
 let set_font_size cr font_size =
-  Common.profile_code "CairoH.set_font_size" (fun () ->
+  Profiling.profile_code "CairoH.set_font_size" (fun () ->
     Cairo.set_font_size cr font_size
   )
 

@@ -249,7 +249,7 @@ let properties_of_json json =
 (* Reverse of json_of_entity_info; must follow same convention for the order
  * of the fields.
  *)
-let entity_of_json2 json =
+let entity_of_json json =
   match json with
   | J.Object
       [
@@ -274,11 +274,9 @@ let entity_of_json2 json =
         e_properties = properties_of_json properties;
       }
   | _ -> failwith "Bad json"
+[@@profiling]
 
-let entity_of_json a =
-  Common.profile_code "Db.entity_of_json" (fun () -> entity_of_json2 a)
-
-let database_of_json2 json =
+let database_of_json json =
   match json with
   | J.Object
       [
@@ -304,15 +302,13 @@ let database_of_json2 json =
         entities = db_entities |> List.map entity_of_json |> Array.of_list;
       }
   | _ -> failwith "Bad json"
-
-let database_of_json json =
-  Common.profile_code "Db.database_of_json" (fun () -> database_of_json2 json)
+[@@profiling]
 
 (*****************************************************************************)
 (* Load/Save *)
 (*****************************************************************************)
 
-let load_database2 file =
+let load_database file =
   pr2 (spf "loading database: %s" file);
   if File_type.is_json_filename file then
     (* This code is mostly obsolete. It's more efficient to use Marshall
@@ -320,13 +316,11 @@ let load_database2 file =
      * one wants to have a readable database.
      *)
     let json =
-      Common.profile_code "Json_in.load_json" (fun () -> J.load_json file)
+      Profiling.profile_code "Json_in.load_json" (fun () -> J.load_json file)
     in
     database_of_json json
   else Common2.get_value file
-
-let load_database file =
-  Common.profile_code "Db.load_db" (fun () -> load_database2 file)
+[@@profiling]
 
 (* We allow to save in JSON format because it may be useful to let
  * the user edit read the generated data.
@@ -495,7 +489,7 @@ let build_top_k_sorted_entities_per_file2 ~k xs =
   |> Common.hash_of_list
 
 let build_top_k_sorted_entities_per_file ~k xs =
-  Common.profile_code "Db.build_sorted_entities" (fun () ->
+  Profiling.profile_code "Db.build_sorted_entities" (fun () ->
       build_top_k_sorted_entities_per_file2 ~k xs)
 
 let mk_dir_entity dir n =
@@ -604,7 +598,7 @@ let files_and_dirs_and_sorted_entities_for_completion2
 
 let files_and_dirs_and_sorted_entities_for_completion
     ~threshold_too_many_entities a =
-  Common.profile_code "Db.sorted_entities" (fun () ->
+  Profiling.profile_code "Db.sorted_entities" (fun () ->
       files_and_dirs_and_sorted_entities_for_completion2
         ~threshold_too_many_entities a)
 

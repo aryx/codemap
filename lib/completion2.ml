@@ -114,7 +114,7 @@ let col_color_fg = column_list#add Gobject.Data.string
 let col_color_bg = column_list#add Gobject.Data.string
 
 
-let model_of_list_pair_string_with_icon2 xs =
+let model_of_list_pair_string_with_icon xs =
 
   (* old: I was using before a custom_list 
    * (see custom_list_generic.ml in lablgtk2/examples)
@@ -165,12 +165,7 @@ let model_of_list_pair_string_with_icon2 xs =
     Hashtbl.add store_id_to_entity id e;
   );
   model, store_id_to_entity
-
-
-let model_of_list_pair_string_with_icon a =
-  Common.profile_code "Completion2.model_of_list" (fun () ->
-    model_of_list_pair_string_with_icon2 a
-  )
+[@@profiling]
 
 let model_col_of_prefix prefix_or_suffix idx =
   let xs = 

@@ -129,5 +129,5 @@ let source_archi_of_filename3 ~root file =
     | _, _ -> categ1
 
 let source_archi_of_filename ~root f =
-  Common.profile_code "Archi.source_of_filename" (fun () ->
+  Profiling.profile_code "Archi.source_of_filename" (fun () ->
       source_archi_of_filename3 ~root f)

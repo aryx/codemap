@@ -223,7 +223,7 @@ let init_drawing   ?(width = 600) ?(height = 600) func layers paths root =
   let paths = List.map Common2.relative_to_absolute paths in
   let current_root = Common2.common_prefix_of_files_or_dirs paths in
   let treemap = 
-    Common.profile_code "Visual.building the treemap" (fun () -> 
+    Profiling.profile_code "Visual.building the treemap" (fun () -> 
       func paths
     ) 
   in
@@ -290,7 +290,7 @@ let context_of_drawing dw model = {
  * current solution: just find pixel by iterating over all the rectangles
  * and check if it's inside.
  *)
-let find_rectangle_at_user_point2 user dw =
+let find_rectangle_at_user_point user dw =
 
   let rects = dw.treemap in
   if List.length rects = 1
@@ -315,10 +315,7 @@ let find_rectangle_at_user_point2 user dw =
    | [] -> None
    | [x] -> Some (x, [], x)
    | _ -> Some (Common2.head_middle_tail matching_rects)
-
-let find_rectangle_at_user_point a b = 
-  Common.profile_code "Model.find_rectangle_at_point" (fun () ->
-    find_rectangle_at_user_point2 a b)
+[@@profiling]
 (*e: [[find_rectangle_at_user_point]]() *)
 
 

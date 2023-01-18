@@ -90,7 +90,7 @@ let annotate2 ?(basedir="") filename =
 
 
 let annotate ?basedir a = 
-  Common.profile_code "Cvs.annotate" (fun () -> annotate2 ?basedir a)
+  Profiling.profile_code "Cvs.annotate" (fun () -> annotate2 ?basedir a)
 
 (* ------------------------------------------------------------------------ *)
 let annotate_raw ?(basedir="") filename = 
@@ -219,7 +219,7 @@ let date_file_creation2 ?(basedir="") file =
       )
 
 let date_file_creation ?basedir a = 
-  Common.profile_code "cvs.date_file" (fun() -> date_file_creation2 ?basedir a)
+  Profiling.profile_code "cvs.date_file" (fun() -> date_file_creation2 ?basedir a)
 
 (*****************************************************************************)
 

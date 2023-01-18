@@ -126,7 +126,7 @@ let lazy_paint user_rect dw model () =
   (* call me again *)
   else true
 
-let paint2 dw model = 
+let paint dw model = 
   pr2 (spf "paint");
   
   !Ctl.paint_content_maybe_refresher |> Option.iter GMain.Idle.remove;
@@ -164,9 +164,7 @@ let paint2 dw model =
           res
         ));
   end
-
-let paint a b = 
-  Common.profile_code "View.paint" (fun () -> paint2 a b)
+[@@profiling]
 (*e: paint *)
 
 (*****************************************************************************)
