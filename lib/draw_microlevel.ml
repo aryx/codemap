@@ -101,7 +101,7 @@ let use_fancy_highlighting file =
     | FT.PL (FT.Go)
     | FT.PL (FT.Ruby)
     ) -> true
-  | (FT.Text "txt") when Common2.basename file =$= "info.txt" -> true
+  | (FT.Text "txt") when Common2.basename file = "info.txt" -> true
   | _ -> false
 
 (*****************************************************************************)
@@ -422,7 +422,7 @@ let draw_content cr layout context tr =
 let draw_treemap_rectangle_content_maybe cr clipping context tr  =
   let r = tr.T.tr_rect in
 
-  if F.intersection_rectangles r clipping = None
+  if F.intersection_rectangles r clipping =*= None
   then (* pr2 ("not drawing: " ^ file) *) None
   else begin
     let file = tr.T.tr_label in

@@ -353,7 +353,7 @@ let visit_program ~tag_hook _prefs (_program, toks) =
          | T.RBRACKET ii
          | T.LPAREN ii
          | T.RPAREN ii
-         | LPAREN_SEMGREP ii ->
+         | T.LPAREN_SEMGREP ii ->
              tag ii Punctuation
          | T.LPLUS ii -> tag ii Punctuation
          | T.LMINUS ii -> tag ii Punctuation

@@ -117,7 +117,7 @@ let lazy_paint user_rect dw model () =
         paint_content_maybe_rect ~user_rect dw model x;
   done;
   !Ctl._refresh_da ();
-  if !Ctl.current_rects_to_draw = []
+  if !Ctl.current_rects_to_draw =*= []
   then begin
     !Ctl.hook_finish_paint ();
     !Ctl._refresh_da ();

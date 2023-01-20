@@ -427,7 +427,7 @@ let (generate_patch:
            lines_to_add |> List.map (fun s -> s, -1) in
 
          indexed_lines |> Common2.map_flatten (fun (line, idx) ->
-           if idx = lineno 
+           if idx =|= lineno 
            then 
              (match edition_cmd with
              | PreAddAt _ -> lines_to_add_fake_indexed @ [line, idx]

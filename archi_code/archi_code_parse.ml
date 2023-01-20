@@ -53,7 +53,7 @@ let is_auto_generated file =
   (* Makefile.in *)
   | "in" -> Sys.file_exists (Common2.filename_of_dbe (d, b, "am"))
   | "c" ->
-      b =$= "y.tab"
+      b = "y.tab"
       || Sys.file_exists (Common2.filename_of_dbe (d, b, "y"))
       || Sys.file_exists (Common2.filename_of_dbe (d, b, "l"))
       ||

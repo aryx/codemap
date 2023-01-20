@@ -42,7 +42,7 @@ module Style = Style2
 
 let readable_txt_for_label txt current_root =
   let readable_txt = 
-    if current_root =$= txt (* when we are fully zoomed on one file *)
+    if current_root = txt (* when we are fully zoomed on one file *)
     then "root"
     else Common.readable ~root:current_root txt 
   in

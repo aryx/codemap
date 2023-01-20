@@ -191,7 +191,7 @@ let parse_special tag call_scan =
   let rec aux () =
     match call_scan Lexer_html.scan_special with
     | T.Lelementend (_tok, n) ->
-        if String.lowercase_ascii n =$= name then "" else "</" ^ n ^ aux ()
+        if String.lowercase_ascii n = name then "" else "</" ^ n ^ aux ()
     | T.EOF _ -> raise End_of_scan
     | T.CdataSpecial (tok, s) ->
         if !first_tok =*= None then first_tok := Some tok;
@@ -288,7 +288,7 @@ type element_state = {
 let parse file =
   Common.with_open_infile file (fun chan ->
       let buf = Lexing.from_channel chan in
-      let table = Parse_info.full_charpos_to_pos_large file in
+      let table = Parsing_helpers.full_charpos_to_pos_large file in
 
       let toks = ref [] in
       let call_scan scannerf =
@@ -304,7 +304,7 @@ let parse file =
                      (match ii.Parse_info.token with
                      | Parse_info.OriginTok pi ->
                          Parse_info.OriginTok
-                           (Parse_info.complete_token_location_large file table
+                           (Parsing_helpers.complete_token_location_large file table
                               pi)
                      | Parse_info.FakeTokStr _
                      | Parse_info.Ab
@@ -498,12 +498,12 @@ let parse file =
             skip_element call_scan;
             (* Search the element to close on the stack: *)
             let found =
-              Ast.str_of_tag name =$= Ast.str_of_tag !current.name
+              Ast.str_of_tag name = Ast.str_of_tag !current.name
               ||
               try
                 Stack.iter
                   (fun { name = old_name; _ } ->
-                    if Ast.str_of_tag name =$= Ast.str_of_tag old_name then
+                    if Ast.str_of_tag name = Ast.str_of_tag old_name then
                       raise Found;
                     match model_of ~dtd_hash old_name with
                     | Dtd.Essential_block, _ -> raise Not_found
@@ -522,7 +522,7 @@ let parse file =
                * them to the previous element as sub elements
                *)
               while
-                not (Ast.str_of_tag !current.name =$= Ast.str_of_tag name)
+                not (Ast.str_of_tag !current.name = Ast.str_of_tag name)
               do
                 let old_el = Stack.pop stack in
                 current :=

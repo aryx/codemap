@@ -254,7 +254,7 @@ let pos_of_ev ev =
 (*---------------------------------------------------------------------------*)
 
 let key_press_escape_quit key =
-  if GdkEvent.Key.keyval key = GdkKeysyms._Escape then
+  if GdkEvent.Key.keyval key =|= GdkKeysyms._Escape then
     GMain.Main.quit();
   false
 
@@ -427,7 +427,7 @@ let mk_right_click_menu_on_store view fpath =
     
   (* right click *)
   view#event#connect#button_press ~callback:(fun ev -> 
-    if GdkEvent.Button.button ev = 3 then begin
+    if GdkEvent.Button.button ev =|= 3 then begin
       pr2 "Right click";
       let (x,y) = pos_of_ev ev in
       (match view#get_path_at_pos ~x ~y with
@@ -569,7 +569,7 @@ let dialog_ask_generic ?width ~title fbuild fget_val  =
 
   w#event#connect#key_press ~callback:(fun ev -> 
     let k = GdkEvent.Key.keyval ev in
-    if GdkKeysyms._Return = k then begin (* enter = 65293 *)
+    if GdkKeysyms._Return =|= k then begin (* enter = 65293 *)
       res := Some (fget_val ());
       w#destroy ();
       true

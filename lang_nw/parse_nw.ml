@@ -39,7 +39,7 @@ let tokens file =
     | Lexer_nw.IN_VERB c -> Lexer_nw.verb c lexbuf
     | Lexer_nw.IN_NOWEB_CHUNK -> Lexer_nw.noweb lexbuf
   in
-  Parse_info.tokenize_all_and_adjust_pos file token TH.visitor_info_of_tok
+  Parsing_helpers.tokenize_all_and_adjust_pos file token TH.visitor_info_of_tok
     TH.is_eof
 [@@profiling]
 
@@ -61,7 +61,7 @@ let parse_fuzzy file =
 (*****************************************************************************)
 
 let parse filename =
-  let stat = Parse_info.default_stat filename in
+  let stat = Parsing_stat.default_stat filename in
   let ast, toks = parse_fuzzy filename in
   ((ast, toks), stat)
 [@@profiling]

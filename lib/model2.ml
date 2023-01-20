@@ -293,7 +293,7 @@ let context_of_drawing dw model = {
 let find_rectangle_at_user_point user dw =
 
   let rects = dw.treemap in
-  if List.length rects = 1
+  if List.length rects =|= 1
   then 
     (* we are fully zommed, this treemap will have tr_depth = 1 but we return
      * it *)
@@ -336,7 +336,7 @@ let find_glyph_in_rectangle_at_user_point user r dw =
       else
         let glyphs = glyphs.(line) in
         (* find the best one *)
-        glyphs |> List.rev |> Common.find_opt (fun glyph ->
+        glyphs |> List.rev |> List.find_opt (fun glyph ->
           let pos = glyph.pos in
           user.Figures.x >= pos.Figures.x
         )
@@ -348,7 +348,7 @@ let find_glyph_in_rectangle_at_user_point user r dw =
 (*****************************************************************************)
 
 let match_short_vs_node (str, short_kind) node =
-  Graph_code.shortname_of_node node =$= str &&
+  Graph_code.shortname_of_node node = str &&
   Database_code.matching_def_short_kind_kind short_kind (snd node)
 
 (* when in a file we have both the prototype (forward decl) and
@@ -394,10 +394,10 @@ let find_use_entity_at_line_and_glyph_opt line glyph tr dw model =
       in
       find_def_entity_at_line_opt line_def tr dw model >>= (fun node ->
         let uses = Graph_code.succ node Graph_code.Use g in
-        uses |> Common.find_opt (fun node ->
+        uses |> List.find_opt (fun node ->
           let s = Graph_code.shortname_of_node node in
           let categ =  glyph.categ ||| Highlight_code.Normal in
-          glyph.str =$= s &&
+          glyph.str = s &&
           Database_code.matching_use_categ_kind categ (snd node)
         )
       )
@@ -487,7 +487,7 @@ let lines_where_used_node node startl microlevel =
       let xs = glypys.(line) in
       if xs |> List.exists (fun glyph ->
         let categ =  glyph.categ ||| Highlight_code.Normal in
-        glyph.str =$= s &&
+        glyph.str = s &&
         Database_code.matching_use_categ_kind categ (snd node)
       )
       then Common.push (Line line) res

@@ -13,8 +13,8 @@ let with_tmp_directory f =
     )
       (fun () ->
       (* yep, rm -rf, I'm not scared *)
-        Common.command2 (spf "rm -rf %s/.git" tmp_dir);
-        Common.command2 (spf "rm -rf %s/.hg" tmp_dir);
+        Sys.command (spf "rm -rf %s/.git" tmp_dir) |> ignore;
+        Sys.command (spf "rm -rf %s/.hg" tmp_dir) |> ignore;
       )
   )
 

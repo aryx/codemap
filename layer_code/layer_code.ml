@@ -532,10 +532,10 @@ let rec layer_ofv__ =
         | _ ->
             OCamlx.record_undefined_elements _loc sexp
               [
-                (!title_field = None, "title");
-                (!description_field = None, "description");
-                (!files_field = None, "files");
-                (!kinds_field = None, "kinds");
+                (!title_field =*= None, "title");
+                (!description_field =*= None, "description");
+                (!files_field =*= None, "files");
+                (!kinds_field =*= None, "kinds");
               ])
   | sexp -> OCamlx.record_list_instead_atom _loc sexp
 
@@ -598,8 +598,8 @@ and file_info_ofv__ =
         | _ ->
             OCamlx.record_undefined_elements _loc sexp
               [
-                (!micro_level_field = None, "micro_level");
-                (!macro_level_field = None, "macro_level");
+                (!micro_level_field =*= None, "micro_level");
+                (!macro_level_field =*= None, "macro_level");
               ])
   | sexp -> OCamlx.record_list_instead_atom _loc sexp
 

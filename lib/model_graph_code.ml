@@ -31,7 +31,7 @@ module Db = Database_code
 let is_prefix prefix str =
   (* todo: have better than that? *)
   try 
-    String.sub str 0 (String.length prefix) =$= prefix
+    String.sub str 0 (String.length prefix) = prefix
   with Invalid_argument _ -> false
   
 

@@ -127,11 +127,11 @@ let visit_toplevel ~tag_hook _prefs (*db_opt *) (ast, toks) =
       :: T.TCommentSpace _ii4
       :: T.TOBrace _ii5
       :: xs
-      when PI.col_of_info ii = 0 ->
+      when PI.col_of_info ii =|= 0 ->
         tag ii3 (Entity (Class, Def2 fake_no_def2));
         aux_toks xs (* heuristic for function definitions *)
     | t1 :: xs
-      when t1 |> TH.info_of_tok |> PI.col_of_info = 0 && TH.is_not_comment t1 ->
+      when t1 |> TH.info_of_tok |> PI.col_of_info =|= 0 && TH.is_not_comment t1 ->
         let line_t1 = TH.line_of_tok t1 in
         let rec find_ident_paren xs =
           match xs with
@@ -143,7 +143,7 @@ let visit_toplevel ~tag_hook _prefs (*db_opt *) (ast, toks) =
           | [] -> ()
         in
         let same_line =
-          t1 :: xs |> Common2.take_while (fun t -> TH.line_of_tok t = line_t1)
+          t1 :: xs |> Common2.take_while (fun t -> TH.line_of_tok t =|= line_t1)
         in
         find_ident_paren same_line;
         aux_toks xs

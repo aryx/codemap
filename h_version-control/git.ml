@@ -81,7 +81,7 @@ let cleanup_cache_files dir =
     files |> List.iter (fun file -> 
       assert(Common2.filesuffix file = ext);
       pr2 file;
-      Common.command2(spf "rm -f %s" file);
+      Sys.command (spf "rm -f %s" file) |> ignore;
     ));
   ()
 

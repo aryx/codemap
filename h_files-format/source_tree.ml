@@ -37,7 +37,10 @@ let (load_tree_reorganization : Common.filename -> tree_reorganization) =
 let debug_source_tree = false
 
 let change_organization_dirs_to_subsystems reorg basedir =
-  let cmd s = if debug_source_tree then pr2 s else Common.command2 s in
+  let cmd s = 
+    if debug_source_tree 
+    then pr2 s 
+    else Sys.command s |> ignore in
   reorg
   |> List.iter (fun (SubSystem sub, dirs) ->
          if not debug_source_tree then Common2.mkdir (spf "%s/%s" basedir sub);
@@ -49,7 +52,10 @@ let change_organization_dirs_to_subsystems reorg basedir =
   ()
 
 let change_organization_subsystems_to_dirs reorg basedir =
-  let cmd s = if debug_source_tree then pr2 s else Common.command2 s in
+  let cmd s = 
+    if debug_source_tree 
+    then pr2 s 
+    else Sys.command s |> ignore in
   reorg
   |> List.iter (fun (SubSystem sub, dirs) ->
          dirs
@@ -92,7 +98,7 @@ let subsystem_of_dir (Dir dir) reorg =
     index
     |> List.find (fun (dirsplit2, _sub) ->
            let len = List.length dirsplit2 in
-           Common2.take_safe len dirsplit = dirsplit2)
+           Common2.take_safe len dirsplit =*= dirsplit2)
     |> snd
   with
   | Not_found ->

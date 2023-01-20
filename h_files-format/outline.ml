@@ -20,7 +20,8 @@ let root_title = "__ROOT__"
 (* Helpers, accessors *)
 (*****************************************************************************)
 
-let is_root_node node = String.length node.stars = 0 && node.title = root_title
+let is_root_node node = 
+  String.length node.stars =|= 0 && node.title = root_title
 
 let extract_outline_line ?(outline_regexp = outline_default_regexp) s =
   if s =~ outline_regexp then matched2 s

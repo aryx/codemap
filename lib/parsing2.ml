@@ -43,8 +43,8 @@ module Flag = Flag_visual
  *)
 type ast = 
   (* functional *)
-  | ML  of (Ast_ml.program, Parser_ml.token) Parse_info.parsing_result
-  | Scala of (AST_scala.program, Parser_scala.token) Parse_info.parsing_result
+  | ML  of (Ast_ml.program, Parser_ml.token) Parsing_result.t
+  | Scala of (AST_scala.program, Parser_scala.token) Parsing_result.t
   | Lisp of Parse_lisp.program_and_tokens
 (*
   | Hs  of Parse_hs.program_and_tokens
@@ -54,24 +54,24 @@ type ast =
 
   (* web *)
   | Html of Parse_html.program_and_tokens
-  | Js  of (Ast_js.a_program, Parser_js.token) Parse_info.parsing_result
-  | Php of (Cst_php.program, Parser_php.token) Parse_info.parsing_result
+  | Js  of (Ast_js.a_program, Parser_js.token) Parsing_result.t
+  | Php of (Cst_php.program, Parser_php.token) Parsing_result.t
 
   (* system *)
-  | Cpp of (Ast_cpp.program, Parser_cpp.token) Parse_info.parsing_result
-  | Go of (Ast_go.program, Parser_go.token) Parse_info.parsing_result
+  | Cpp of (Ast_cpp.program, Parser_cpp.token) Parsing_result.t
+  | Go of (Ast_go.program, Parser_go.token) Parsing_result.t
 (*
   | Rust of Parse_rust.program_and_tokens
  *)
 
   (* mainstream *)
-  | Java of (Ast_java.program, Parser_java.token) Parse_info.parsing_result
+  | Java of (Ast_java.program, Parser_java.token) Parsing_result.t
 (*
   | Csharp of Parse_csharp.program_and_tokens
 *)
   (* scripting *)
-  | Python of (AST_python.program, Parser_python.token) Parse_info.parsing_result
-  | Ruby of (Ast_ruby.program, Parser_ruby.token) Parse_info.parsing_result
+  | Python of (AST_python.program, Parser_python.token) Parsing_result.t
+  | Ruby of (Ast_ruby.program, Parser_ruby.token) Parsing_result.t
 
   (* documentation *)
   | Noweb of Parse_nw.program_and_tokens
@@ -116,7 +116,7 @@ let use_arity_of_use_count n =
   | _ when n > 20   -> LotsOfUse
   | _ when n >= 10  -> MultiUse
   | _ when n >= 2   -> SomeUse
-  | _ when n = 1    -> UniqueUse
+  | _ when n =|= 1    -> UniqueUse
   | _               -> NoUse
 
 let rewrite_categ_using_entities s categ file entities =
@@ -135,7 +135,7 @@ let rewrite_categ_using_entities s categ file entities =
          * 
          * update: TODO use Model2.readable_to_absolute_filename_under_root ?
          *)
-        Filename.basename e.Db.e_file =$= Filename.basename file &&
+        Filename.basename e.Db.e_file = Filename.basename file &&
         (* some file have both a function and class with the same name *)
         Database_code.matching_def_short_kind_kind e_kind e.Db.e_kind 
       )
@@ -230,7 +230,7 @@ let tokens_with_categ_of_file file hentities =
             Php (Parse_php.parse file)
           ))
          (function  
-          | Php {PI. ast; tokens; _} -> [ast, tokens] 
+          | Php {Parsing_result. ast; tokens; _} -> [ast, tokens] 
           | _ -> raise Impossible));
          highlight_visit = (fun ~tag_hook prefs (ast, toks) ->
           Highlight_php.visit_program ~tag:tag_hook prefs hentities 
@@ -248,7 +248,7 @@ let tokens_with_categ_of_file file hentities =
              ML (Parse_ml.parse file)
          ))
          (function 
-         | ML {PI. ast; tokens; _} -> [ast, tokens] 
+         | ML {Parsing_result. ast; tokens; _} -> [ast, tokens] 
          | _ -> raise Impossible));
         highlight_visit = (fun ~tag_hook prefs (ast, toks) -> 
           Highlight_ml.visit_program ~tag_hook prefs file (ast, toks));
@@ -263,7 +263,7 @@ let tokens_with_categ_of_file file hentities =
              Scala (Parse_scala.parse file)
          ))
          (function 
-         | Scala {PI. ast; tokens; _} -> [ast, tokens] 
+         | Scala {Parsing_result. ast; tokens; _} -> [ast, tokens] 
          | _ -> raise Impossible));
         highlight_visit = (fun ~tag_hook prefs (ast, toks) -> 
           Highlight_scala.visit_program ~tag_hook prefs file (ast, toks));
@@ -305,7 +305,7 @@ let tokens_with_categ_of_file file hentities =
              Python (Parse_python.parse file))
          )
          (function 
-         | Python {PI. ast; tokens; _} -> [Some ast, tokens] 
+         | Python {Parsing_result. ast; tokens; _} -> [Some ast, tokens] 
          | _ -> raise Impossible
          ));
         highlight_visit = (fun ~tag_hook prefs (ast, toks) -> 
@@ -320,7 +320,7 @@ let tokens_with_categ_of_file file hentities =
              Ruby (Parse_ruby.parse file))
          )
          (function 
-         | Ruby {PI. ast; tokens; _} -> [Some ast, tokens] 
+         | Ruby {Parsing_result. ast; tokens; _} -> [Some ast, tokens] 
          | _ -> raise Impossible
          ));
         highlight_visit = (fun ~tag_hook prefs (ast, toks) -> 
@@ -367,7 +367,7 @@ let tokens_with_categ_of_file file hentities =
         { parse = (parse_cache 
          (fun file -> Java (Parse_java.parse file))
           (function 
-          | Java {PI. ast; tokens; _} -> [ast, tokens] 
+          | Java {Parsing_result. ast; tokens; _} -> [ast, tokens] 
           | _ -> raise Impossible));
         highlight_visit = Highlight_java.visit_toplevel;
         info_of_tok = Token_helpers_java.info_of_tok;
@@ -388,7 +388,7 @@ let tokens_with_categ_of_file file hentities =
          ))
          
          (function 
-         | Cpp {PI. ast; tokens; _} -> [ast, tokens]
+         | Cpp {Parsing_result. ast; tokens; _} -> [ast, tokens]
          | _ -> raise Impossible));
         highlight_visit = Highlight_cpp.visit_toplevel;
         info_of_tok = Token_helpers_cpp.info_of_tok;
@@ -400,7 +400,7 @@ let tokens_with_categ_of_file file hentities =
         { parse = (parse_cache 
          (fun file -> Go (Parse_go.parse file))
           (function 
-          | Go {PI. ast; tokens; _} -> [ast, tokens] 
+          | Go {Parsing_result. ast; tokens; _} -> [ast, tokens] 
           | _ -> raise Impossible));
         highlight_visit = Highlight_go.visit_program;
         info_of_tok = Token_helpers_go.info_of_tok;
@@ -438,7 +438,7 @@ let tokens_with_categ_of_file file hentities =
               Js (Parse_js.parse file))
           )
          (function 
-         | Js {PI. ast; tokens; _} -> [ast, tokens] 
+         | Js {Parsing_result. ast; tokens; _} -> [ast, tokens] 
          | _ -> raise Impossible
          ));
         highlight_visit = Highlight_js.visit_program;
@@ -470,7 +470,7 @@ let tokens_with_categ_of_file file hentities =
    * # -*- org   indication.
    * very pad and code-overlay specific.
    *)
-  | FT.Text ("txt") when Common2.basename file =$= "info.txt" ->
+  | FT.Text ("txt") when Common2.basename file = "info.txt" ->
       let org = Org_mode.parse file in
       Org_mode.highlight org
 

@@ -32,7 +32,8 @@ let xaxis_label xpos s =
 
 (*****************************************************************************)
 (* communicating with a pipe with R seems harder so use R batch mode *)
-let jgraph_program file = Common.command2 (spf "jgraph %s > %s.ps" file file)
+let jgraph_program file =
+  Sys.command (spf "jgraph %s > %s.ps" file file) |> ignore
 
 let gv_command file =
   let _status = Unix.system (spf "gv %s.ps &" file) in

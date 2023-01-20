@@ -67,7 +67,7 @@ let naive_top_n_search2 ~top_n ~query xs =
   let re = Str.regexp (".*" ^ query) in
 
   let rec aux ~n xs =
-    if n = top_n then []
+    if n =|= top_n then []
     else
       match xs with
       | [] -> []
@@ -145,7 +145,7 @@ let top_n_search2 ~top_n ~query idx =
   in
 
   let rec aux ~n ~pos =
-    if n = top_n then []
+    if n =|= top_n then []
     else
       try
         let new_pos = Str.search_forward re idx.big_string pos in

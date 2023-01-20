@@ -76,7 +76,7 @@ let visit_toplevel ~tag_hook _prefs (_toplevel, toks) =
      * based on the few tokens around and the column information.
      *)
     | T.TOParen ii1 :: T.TIdent (s2, _ii2) :: T.TIdent (_s3, ii3) :: xs
-      when PI.col_of_info ii1 = 0 ->
+      when PI.col_of_info ii1 =|= 0 ->
         (match s2 with
         | "setq"
         | "defvar" ->
@@ -91,7 +91,7 @@ let visit_toplevel ~tag_hook _prefs (_toplevel, toks) =
       :: T.TOParen _iibis
       :: T.TIdent (_s3, ii3)
       :: xs
-      when PI.col_of_info ii1 = 0 ->
+      when PI.col_of_info ii1 =|= 0 ->
         (match s2 with
         | "define" -> tag ii3 (Entity (Function, Def2 NoUse))
         | _ -> ());

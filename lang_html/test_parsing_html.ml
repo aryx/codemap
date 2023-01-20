@@ -33,7 +33,7 @@ let test_parse_html xs =
            ()
          with
          | Parse_info.Parsing_error info ->
-             pr2 (Parse_info.error_message_info info));
+             pr2 (Parsing_helpers.error_message_info info));
   ()
 
 (*

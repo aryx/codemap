@@ -39,7 +39,7 @@ let choose_layer ~root layer_title_opt w =
         layer, 
         match layer_title_opt with
         | None -> false
-        | Some title -> title =$= layer.L.title
+        | Some title -> title = layer.L.title
       ))
   in
   w.dw <- 

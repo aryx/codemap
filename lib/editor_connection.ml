@@ -36,15 +36,15 @@ let efunsclient_path = ref "efunsclient"
 
 (* you need to have done a M-x server-start first *)
 let run_emacsclient ~file ~line =
-  Common.command2 (spf "%s -n %s" !emacsclient_path file);
-  Common.command2 (spf 
+  Sys.command (spf "%s -n %s" !emacsclient_path file) |> ignore;
+  Sys.command (spf 
     "%s -e '(with-current-buffer (window-buffer (selected-window)) (goto-line %d))'"
-    !emacsclient_path line);
+    !emacsclient_path line) |> ignore;
   ()
 
 (* you need to have done a M-x server_start first *)
 let run_efunsclient ~file ~line =
-  Common.command2 (spf "%s %s -line %d" !efunsclient_path file line)
+  Sys.command (spf "%s %s -line %d" !efunsclient_path file line) |> ignore
 
 (*e: emacs configuration *)
 

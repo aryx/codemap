@@ -387,7 +387,7 @@ let main_action xs =
   let filter_files_skip_list = Skip_code.filter_files skip_list ~root in
   let filter_file = (fun file -> 
     !filter file && 
-    (skip_list = [] || fst (filter_files_skip_list [file]) <> []))
+    (skip_list =*= [] || fst (filter_files_skip_list [file]) <> []))
   in
 
   let treemap_func = treemap_generator ~filter_file in
@@ -448,7 +448,7 @@ let test_loc print_top30 xs =
   in
   let filter_files_skip_list = Skip_code.filter_files skip_list ~root in
   let filter_file = (fun file -> 
-    !filter file && (skip_list = [] || fst (filter_files_skip_list [file]) <> []))
+    !filter file && (skip_list =*= [] || fst (filter_files_skip_list [file]) <> []))
   in
   let treemap = Treemap_pl.code_treemap ~filter_file xs in
 

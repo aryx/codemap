@@ -283,7 +283,7 @@ and verbatim = parse
 
 and verb c = parse
   | _ as c2 {
-      if c = c2 then begin
+      if c =$= c2 then begin
         pop_mode ();
         TEndVerbatim (tokinfo lexbuf)
       end else (TVerbatimLine (spf "%c" c, tokinfo lexbuf))

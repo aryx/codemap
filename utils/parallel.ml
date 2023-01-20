@@ -39,16 +39,16 @@ let string_of_signal signal_number =
 
 let check_status ((pid, process_status) : int * Unix.process_status) =
   match process_status with
-  | WEXITED 0 -> ()
-  | WEXITED exit_code ->
+  | Unix.WEXITED 0 -> ()
+  | Unix.WEXITED exit_code ->
       let msg = spf "process %i exited with code %i" pid exit_code in
       failwith msg
-  | WSIGNALED signal_number ->
+  | Unix.WSIGNALED signal_number ->
       let msg =
         spf "process %i was killed by %s" pid (string_of_signal signal_number)
       in
       failwith msg
-  | WSTOPPED signal_number ->
+  | Unix.WSTOPPED signal_number ->
       let msg =
         spf "process %i was stopped by %s" pid (string_of_signal signal_number)
       in
@@ -184,7 +184,7 @@ type 'a jobs = 'a job list
  * I use it for now to //ize the code coverage computation for PHP.
  *)
 let map_jobs ~tasks xs =
-  if tasks = 1 then List.map (fun job -> job ()) xs
+  if tasks =|= 1 then List.map (fun job -> job ()) xs
   else
     let xxs = Common2.pack_safe tasks xs in
     xxs
@@ -207,7 +207,7 @@ let map_jobs ~tasks xs =
  * Thx to Michal burger for the initial idea.
  *)
 let map_batch_jobs ~tasks xs =
-  if tasks = 1 then List.map (fun job -> job ()) xs
+  if tasks =|= 1 then List.map (fun job -> job ()) xs
   else
     (* todo? a double pack ? because the initial pack/chunks can
      * be computationaly "inbalanced".

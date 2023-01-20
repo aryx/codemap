@@ -166,21 +166,21 @@ let visit_program
      *  a far more regular-syntax (that's what they were designed for)
     *)
     | T.Tlet(ii)::T.TLowerIdent(_s, ii3)::T.TEq _ii5::xs
-      when PI.col_of_info ii = 0 ->
+      when PI.col_of_info ii =|= 0 ->
 
         if not (Hashtbl.mem already_tagged ii3) && lexer_based_tagger
         then tag ii3 (Entity (Global, (Def2 NoUse)));
         aux_toks xs;
 
     | T.Tlet(ii)::T.TLowerIdent(_s, ii3)::xs
-      when PI.col_of_info ii = 0 ->
+      when PI.col_of_info ii =|= 0 ->
 
         if not (Hashtbl.mem already_tagged ii3) && lexer_based_tagger
         then tag ii3 (Entity (Function, (Def2 NoUse)));
         aux_toks xs;
 
     | (T.Tval(ii)|T.Texternal(ii))::T.TLowerIdent(_s, ii3)::xs
-      when PI.col_of_info ii = 0 ->
+      when PI.col_of_info ii =|= 0 ->
 
         if not (Hashtbl.mem already_tagged ii3) && lexer_based_tagger
         then tag ii3 (FunctionDecl NoUse);
@@ -189,21 +189,21 @@ let visit_program
     | T.Tlet(ii)::
       T.Trec(_ii)::
       T.TLowerIdent(_s, ii3)::xs
-      when PI.col_of_info ii = 0 ->
+      when PI.col_of_info ii =|= 0 ->
 
         if not (Hashtbl.mem already_tagged ii3) && lexer_based_tagger
         then tag ii3 (Entity (Function, (Def2 NoUse)));
         aux_toks xs;
 
     | T.Tand(ii)::T.TLowerIdent(_s, ii3)::xs
-      when PI.col_of_info ii = 0 ->
+      when PI.col_of_info ii =|= 0 ->
 
         if not (Hashtbl.mem already_tagged ii3) && lexer_based_tagger
         then tag ii3 (Entity (Function, (Def2 NoUse)));
         aux_toks xs;
 
     | T.Ttype(ii)::T.TLowerIdent(_s, ii3)::xs
-      when PI.col_of_info ii = 0 ->
+      when PI.col_of_info ii =|= 0 ->
 
         if not (Hashtbl.mem already_tagged ii3) && lexer_based_tagger
         then tag ii3 (Entity (Type, Def2 NoUse));
@@ -273,7 +273,7 @@ let visit_program
 
         (* grammar rules in ocamlyacc *)
     | T.TLowerIdent (_s, ii1)::T.TColon _::xs
-      when PI.col_of_info ii1 = 0 ->
+      when PI.col_of_info ii1 =|= 0 ->
         tag ii1 GrammarRule;
         aux_toks xs
 
