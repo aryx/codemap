@@ -24,6 +24,9 @@ module E = Entity_code
 (* Prelude *)
 (*****************************************************************************)
 (* Syntax highlighting for Python code for codemap (and now also efuns)
+ *
+ * TODO: switch to Highlight_AST instead because there is no more
+ * Resolve_python.ml and so most identifiers (T.NAME) don't have a tag.
 *)
 
 (*****************************************************************************)
@@ -68,15 +71,31 @@ let visit_program ~tag_hook _prefs (program, toks) =
 
   let lexer_based_tagger = program = None in
 
-  (* TODO???? program |> Option.iter Resolve_python.resolve; *)
-
   
   (* -------------------------------------------------------------------- *)
   (* AST phase 1 *)
   (* -------------------------------------------------------------------- *)
   (* try to better colorize identifiers which can be many different things
-   * e.g. a field, a type, a function, a parameter, etc
+   * e.g. a field, a type, a function, a parameter, etc.
+   *
+   * TODO: this code was assuming the resolved ref has been set by
+   * a Resolve_python module, but this module was deprecated in favor
+   * of doing naming resolution in a generic way in Naming_AST in semgrep
+   * and then leveraged in Highlight_AST.ml.
+   * So most of the code below is dead and we should switch to using
+   * Highlight_AST for Python too.
+   * See highlight_js.ml code:
+   *    let gen = Js_to_generic.program ast in
+   *    Naming_AST.resolve Lang.Js gen;
+   *    Highlight_AST.visit_program
+   *    (already_tagged, tag)
+   *     gen;
    *)
+  (* TODO: Resolve_python got removed from semgrep libs,
+   *  because it's deprecated because we should use Highlight_AST instead.
+   * old: program |> Option.iter Resolve_python.resolve;
+   *)
+
   let in_class = ref false in
   let in_type = ref false in
   let in_decorator = ref false in
@@ -399,7 +418,14 @@ let visit_program ~tag_hook _prefs (program, toks) =
              | "__package__"
              | "__name__" ->
                  tag_if_not_tagged ii CppOther
-             | _ -> tag_if_not_tagged ii Error)
+             | _ ->
+                 (* TODO: commented because it generates too many red
+                      tag_if_not_tagged ii Error)
+                    This is because we don't have anymore resolve_python.ml
+                    but we should switch to calling Highlight_AST! like
+                    in highlight_js.ml
+                 *)
+                ())
          (* keywords  *)
          | T.DEF ii
          | T.LAMBDA ii ->

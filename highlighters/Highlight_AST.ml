@@ -58,7 +58,7 @@ let h_builtin_modules = Common.hashset_of_list [
 let fake_no_def2 = NoUse
 let fake_no_use2 = (NoInfoPlace, UniqueDef, MultiUse)
 
-let info_of_name ((_s, info), _nameinfo) = info
+let _info_of_name ((_s, info), _nameinfo) = info
 
 let id_of_name = function
   | Id (id, _) -> id
@@ -109,11 +109,6 @@ let kind_of_ty ty =
         _ }); _}, _) ->
       Entity (Global, def2)
   | _ -> Entity (Constant, def2)
-
-let last_id xs =
-  match List.rev xs with
-  | x::_xs -> x
-  | [] -> failwith "last_id: empty list of idents"
 
 (* TODO: should not need if AST_generic was cleaner *)
 let info_of_dotted_ident xs =
@@ -367,7 +362,7 @@ let visit_program
                  | G.Parameter -> (Parameter Use)
                  | G.Global -> Entity (Global, Use2 fake_no_use2)
                  | G.EnclosedVar -> Entity (Global, Use2 fake_no_use2)
-                 | G.ImportedEntity _ | G.ResolvedName _ -> Entity (Global, Use2 fake_no_use2)
+                 | G.ImportedEntity _ | G.GlobalName _ -> Entity (Global, Use2 fake_no_use2)
                  | G.ImportedModule _ -> Entity (Module, Use2 fake_no_use2)
                  | G.TypeName -> Entity (Type, Use2 fake_no_use2)
                  | G.Macro -> Entity (Macro, Use2 fake_no_use2)
