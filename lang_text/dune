@@ -5,7 +5,7 @@
  (libraries
 
    commons
-   pfff-h_program-lang
+   lib_parsing
 
    ; local deps
    highlight_code

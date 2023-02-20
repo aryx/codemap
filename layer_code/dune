@@ -6,7 +6,7 @@
  (libraries
     ; pfff deps
     commons
-    pfff-h_program-lang
+    lib_parsing
  )
 )
 

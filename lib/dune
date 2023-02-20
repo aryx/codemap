@@ -11,7 +11,7 @@
     ; pfff deps
     commons 
     pfff-h_visualization gui
-    pfff-h_program-lang
+    lib_parsing
     graph_code  
 
     parser_python.menhir
@@ -38,5 +38,5 @@
     codemap_utils
     h_program_visual
  )
- (preprocess (pps ppx_deriving.show ppx_profiling))
+ (preprocess (pps ppx_deriving.show profiling.ppx))
 )

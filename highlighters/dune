@@ -5,7 +5,7 @@
  (libraries
 
    commons
-   pfff-h_program-lang
+   lib_parsing
 
    ast_generic ; now in semgrep
    highlight_code ; now in codemap! local deps

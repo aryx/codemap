@@ -13,7 +13,7 @@
 
    ; codemap lib deps
    pfff-h_visualization gui
-   pfff-h_program-lang
+   lib_parsing
    parser_python.menhir
    parser_javascript.menhir
    parser_php.menhir
@@ -34,7 +34,7 @@
  ; for ocamldebug
  (modes native byte)
 
- (preprocess (pps ppx_deriving.show ppx_profiling))
+ (preprocess (pps ppx_deriving.show profiling.ppx))
 )
 
 

@@ -382,7 +382,7 @@ let visit_program
 
         (* pad specific *)
         | Call ({ e = N (Id ((("=~", _)), _idinfo)); _},
-                (_, [_arg1; Arg ({ e = L (G.String (_, info)); _})], _)) ->
+                (_, [_arg1; Arg ({ e = L (G.String (_, (_, info), _)); _})], _)) ->
             tag info Regexp;
             k x
         (* ocaml specific *)

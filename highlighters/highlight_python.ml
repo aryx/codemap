@@ -112,7 +112,9 @@ let visit_program ~tag_hook _prefs (program, toks) =
         V.kexpr =
           (fun (k, _) x ->
             match x with
-            | Name (name, ctx, resolved) ->
+            | Name (_name, _ctx) ->
+               (* old: when there was a Resolved_python.ml and a resolved field *)
+               (*
                 (match !resolved with
                 | _ when !in_type -> (
                     match fst name with
@@ -159,10 +161,11 @@ let visit_program ~tag_hook _prefs (program, toks) =
             tag_name name (Entity (kind, (Use2 fake_no_use2)))
             *)
                     ());
+                *)
                 k x
             | Call (f, (_, args, _)) ->
                 (match f with
-                | Name (name, _ctx, _resolved) ->
+                | Name (name, _ctx) ->
                     let kind = E.Function in
                     tag_name name (Entity (kind, use2))
                 | AST_python.Attribute (_e, _t, name, _ctx) ->
@@ -234,7 +237,7 @@ let visit_program ~tag_hook _prefs (program, toks) =
                 eopt
                 |> Option.iter (fun e ->
                        match e with
-                       | Name (name, _ctx, _res) -> tag_name name (Local Def)
+                       | Name (name, _ctx) -> tag_name name (Local Def)
                        (* todo: tuples? *)
                        | _ -> ());
                 k x
