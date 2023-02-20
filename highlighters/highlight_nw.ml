@@ -52,7 +52,7 @@ let tag_all_tok_trees_with ~tag categ trees =
  * AST or its list of tokens. The tokens are easier for tagging keywords,
  * number and basic entities. The AST is better for other things.
  *)
-let visit_program ~tag_hook _prefs (trees, toks) =
+let visit_program ~tag_hook _prefs _file (trees, toks) =
   let already_tagged = Hashtbl.create 101 in
   let tag ii categ =
     tag_hook ii categ;

@@ -82,7 +82,7 @@ let builtin_functions =
  * to figure out what kind of ident it is.
  *)
 
-let visit_program ~tag_hook _prefs (_program, toks) =
+let visit_program ~tag_hook _prefs _file (_program, toks) =
   let already_tagged = Hashtbl.create 101 in
   let tag ii categ =
     tag_hook ii categ;

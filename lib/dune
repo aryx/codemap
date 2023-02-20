@@ -21,7 +21,7 @@
     parser_java.menhir
     parser_cpp.menhir
     parser_go.menhir
-    parser_ocaml.menhir
+    parser_ocaml.menhir parser_ocaml.tree_sitter
     parser_lisp.recursive_descent
 
     ; now in codemap

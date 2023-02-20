@@ -3,6 +3,7 @@
  (name pfff_highlighters)
  (wrapped false)
  (libraries
+   fpath
 
    commons
    lib_parsing
@@ -15,7 +16,7 @@
    parser_go.menhir parser_go.ast_generic
    parser_java.menhir parser_java.ast_generic
    parser_python.menhir parser_python.ast_generic
-   parser_ocaml.menhir parser_ocaml.ast_generic
+   parser_ocaml.menhir parser_ocaml.ast_generic parser_ocaml.tree_sitter
    parser_php.menhir parser_php.ast_generic
    parser_javascript.menhir parser_javascript.ast_generic
    parser_scala.recursive_descent parser_scala.ast_generic

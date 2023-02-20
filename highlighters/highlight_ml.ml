@@ -94,7 +94,7 @@ let visit_program
   in
 
   let is_lex_or_yacc_file =
-    match File_type.file_type_of_file file with
+    match File_type.file_type_of_file (Fpath.to_string file) with
     | FT.PL (FT.OCaml ("mll" | "mly" | "dyp")) -> true
     | _ -> false
   in

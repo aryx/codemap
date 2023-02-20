@@ -35,7 +35,7 @@ let fake_no_use2 = (NoInfoPlace, UniqueDef, MultiUse)
 (* Code highlighter *)
 (*****************************************************************************)
 
-let visit_program ~tag_hook _prefs (ast, toks) =
+let visit_program ~tag_hook _prefs _file (ast, toks) =
 
   let already_tagged = Hashtbl.create 101 in
   let tag = (fun ii categ ->

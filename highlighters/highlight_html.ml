@@ -38,7 +38,7 @@ let fake_no_use2 = (NoInfoPlace, UniqueDef, MultiUse)
  * number and basic entities. The Ast is better for tagging idents
  * to figure out what kind of ident it is.
  *)
-let visit_toplevel ~tag_hook _prefs (toplevel, toks) =
+let visit_toplevel ~tag_hook _prefs _file (toplevel, toks) =
   let already_tagged = Hashtbl.create 101 in
   let tag ii categ =
     tag_hook ii categ;

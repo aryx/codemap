@@ -4,6 +4,6 @@ val visit_program:
   tag_hook:
     (Parse_info.t -> Highlight_code.category -> unit) ->
   Highlight_code.highlighter_preferences ->
-  Common.filename ->
+  Fpath.t ->
   AST_scala.program * Parser_scala.token list ->
   unit

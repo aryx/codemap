@@ -45,7 +45,7 @@ let fake_no_use2 = (NoInfoPlace, UniqueDef, MultiUse)
  * to figure out what kind of ident it is.
  *)
 
-let visit_toplevel ~tag_hook _prefs (ast, toks) =
+let visit_toplevel ~tag_hook _prefs _file (ast, toks) =
   let already_tagged = Hashtbl.create 101 in
   let tag ii categ =
     tag_hook ii categ;

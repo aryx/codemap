@@ -49,7 +49,7 @@ let fake_no_use2 = (NoInfoPlace, UniqueDef, MultiUse)
 (* Code highlighter *)
 (*****************************************************************************)
 
-let visit_toplevel ~tag_hook _prefs (*db_opt *) (ast, toks) =
+let visit_toplevel ~tag_hook _prefs _file (*db_opt *) (ast, toks) =
   let already_tagged = Hashtbl.create 101 in
   let tag ii categ =
     tag_hook ii categ;

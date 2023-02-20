@@ -26,7 +26,7 @@ module T = Parser_lisp
 (* Code highlighter *)
 (*****************************************************************************)
 
-let visit_toplevel ~tag_hook _prefs (_toplevel, toks) =
+let visit_toplevel ~tag_hook _prefs _file (_toplevel, toks) =
   let already_tagged = Hashtbl.create 101 in
   let tag ii categ =
     tag_hook ii categ;
