@@ -15,3 +15,9 @@ type ('ast, 'token) t = {
                    'ast * 'token list -> unit);
   info_of_tok:('token -> Parse_info.t);
 }
+
+val rust: 
+  (AST_generic.program, Parse_info.t * Parse_languages.origin_info) t
+
+val jsonnet: 
+  (AST_generic.program, Parse_info.t * Parse_languages.origin_info) t

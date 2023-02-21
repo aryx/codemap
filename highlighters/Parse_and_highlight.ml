@@ -23,6 +23,7 @@ module HC = Highlight_code
 (*****************************************************************************)
 
 type ('ast, 'token) t = {
+  (* TODO: return just 'a * 'token list *)
   parse: (Common.filename -> ('ast * 'token list) list);
   highlight:(tag_hook:(Parse_info.t -> HC.category -> unit) ->
                    Highlight_code.highlighter_preferences ->
@@ -38,4 +39,18 @@ type ('ast, 'token) t = {
 (*****************************************************************************)
 (* Entry points *)
 (*****************************************************************************)
+let rust = {
+  parse = (fun file -> let (ast, toks) = Parse_languages.parse_rust file in
+        [ast, toks]);
+  highlight = (fun ~tag_hook prefs file (ast, toks) -> 
+        Highlight_AST.visit_for_highlight ~tag_hook prefs file (ast, toks));
+  info_of_tok = (fun (x, _origin) -> x);
+}
 
+let jsonnet = {
+  parse = (fun file -> let (ast, toks) = Parse_languages.parse_jsonnet file in
+        [ast, toks]);
+  highlight = (fun ~tag_hook prefs file (ast, toks) -> 
+        Highlight_AST.visit_for_highlight ~tag_hook prefs file (ast, toks));
+  info_of_tok = (fun (x, _origin) -> x);
+}
