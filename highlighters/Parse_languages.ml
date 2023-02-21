@@ -104,6 +104,8 @@ let extract_infos_raw_tree file (raw : unit Tree_sitter_run.Raw_tree.t) : (Parse
 (*****************************************************************************)
 (* Tree-sitter only *)
 (*****************************************************************************)
+(* LATER: factorize common code in all those parse_xxx *)
+
 let parse_rust file =
   let res = Parse_rust_tree_sitter.parse file in
   let tokens = 
@@ -123,7 +125,6 @@ let parse_rust file =
   in
   ast, tokens
 
-(* LATER: factorize code with parse_rust *)
 let parse_jsonnet file =
   let res = Parse_jsonnet_tree_sitter.parse file in
   let tokens = 
@@ -143,6 +144,75 @@ let parse_jsonnet file =
     | None -> []
   in
   ast, tokens
+
+let parse_lisp file =
+  let res = Parse_clojure_tree_sitter.parse file in
+  let tokens = 
+    let res = Tree_sitter_clojure.Parse.file file in
+    match res.Tree_sitter_run.Parsing_result.program with
+    | None -> []
+    | Some cst ->
+       let raw = Tree_sitter_clojure.Boilerplate.map_source () cst in
+       extract_infos_raw_tree file raw
+  in
+  let ast = 
+    match res.Tree_sitter_run.Parsing_result.program with
+    | Some ast -> 
+        Naming_AST.resolve Lang.Lisp ast;
+        ast
+    | None -> []
+  in
+  ast, tokens
+
+let parse_bash file =
+  let res = Parse_bash_tree_sitter.parse file in
+  let tokens = 
+    let res = Tree_sitter_bash.Parse.file file in
+    match res.Tree_sitter_run.Parsing_result.program with
+    | None -> []
+    | Some _cst ->
+        failwith "XXX"
+(* TODO
+       let raw = Tree_sitter_bash.Boilerplate.map_document () cst in
+       extract_infos_raw_tree file raw
+*)
+  in
+  let ast = 
+    match res.Tree_sitter_run.Parsing_result.program with
+    | Some ast -> 
+        let gen = Bash_to_generic.program ast in
+        Naming_AST.resolve Lang.Bash gen;
+        gen
+    | None -> []
+  in
+  ast, tokens
+
+let parse_dockerfile file =
+  let res = Parse_dockerfile_tree_sitter.parse file in
+  let tokens = 
+    let res = Tree_sitter_dockerfile.Parse.file file in
+    match res.Tree_sitter_run.Parsing_result.program with
+    | None -> []
+    | Some _cst ->
+        failwith "XXX"
+(* TODO
+       let raw = Tree_sitter_dockerfile.Boilerplate.map_document () cst in
+       extract_infos_raw_tree file raw
+*)
+  in
+  let ast = 
+    match res.Tree_sitter_run.Parsing_result.program with
+    | Some ast -> 
+        let gen = Dockerfile_to_generic.program ast in
+        Naming_AST.resolve Lang.Bash gen;
+        gen
+    | None -> []
+  in
+  ast, tokens
+
+let parse_yaml _file =
+  failwith "TODO"
+
 
 (*****************************************************************************)
 (* Tree-sitter or pfff *)

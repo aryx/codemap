@@ -24,6 +24,10 @@
    parser_lisp.recursive_descent
    parser_rust.ast_generic
    parser_jsonnet.tree_sitter parser_jsonnet.ast_generic
+   parser_bash.tree_sitter parser_bash.ast_generic
+   parser_dockerfile.tree_sitter
+   parser_lisp.tree_sitter
+
    ; now in codemap
    pfff-lang_html
    pfff-lang_nw

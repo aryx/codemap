@@ -100,7 +100,8 @@ let use_fancy_highlighting file =
     | FT.PL (FT.Web (FT.TypeScript))
     | FT.PL (FT.Go)
     | FT.PL (FT.Ruby)
-    | FT.Config FT.Jsonnet
+    | FT.PL (FT.Script _)
+    | FT.Config (FT.Makefile | FT.Dockerfile | FT.Jsonnet | FT.Sexp | FT.Yaml)
     ) -> true
   | (FT.Text "txt") when Common2.basename file = "info.txt" -> true
   | _ -> false

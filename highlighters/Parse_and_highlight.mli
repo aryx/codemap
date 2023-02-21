@@ -21,3 +21,15 @@ val rust:
 
 val jsonnet: 
   (AST_generic.program, Parse_info.t * Parse_languages.origin_info) t
+
+val yaml: 
+  (AST_generic.program, Parse_info.t * Parse_languages.origin_info) t
+
+val bash: 
+  (AST_generic.program, Parse_info.t * Parse_languages.origin_info) t
+
+val dockerfile: 
+  (AST_generic.program, Parse_info.t * Parse_languages.origin_info) t
+
+val lisp: 
+  (AST_generic.program, Parse_info.t * Parse_languages.origin_info) t

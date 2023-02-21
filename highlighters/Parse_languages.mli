@@ -15,3 +15,16 @@ val parse_rust:
 
 val parse_jsonnet:
   Common.filename -> AST_generic.program * (Parse_info.t * origin_info) list
+
+val parse_yaml:
+  Common.filename -> AST_generic.program * (Parse_info.t * origin_info) list
+
+val parse_bash:
+  Common.filename -> AST_generic.program * (Parse_info.t * origin_info) list
+
+val parse_dockerfile:
+  Common.filename -> AST_generic.program * (Parse_info.t * origin_info) list
+
+val parse_lisp:
+  Common.filename -> AST_generic.program * (Parse_info.t * origin_info) list
+

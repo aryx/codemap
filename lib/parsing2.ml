@@ -43,7 +43,15 @@ module PH = Parse_and_highlight
  * highlight_AST.ml, should we also memoized the (named) generic AST?
  *)
 type ast = 
-  (* generic, which is used currently for: Rust, Jsonnet *)
+  (* generic, which is used currently for: 
+   * - Rust
+   * - Jsonnet
+   * - Yaml
+   * - TODO Bash 
+   * - TODO Docker
+   * - Lisp/Scheme/Clojure/Sexp (but currently use Raw_tree so no
+   *   great highlighting for now)
+  *)
   | Generic of (AST_generic.program * (Parse_info.t * Parse_languages.origin_info) list)
 (* old: was just lexer in old pfff
   | Csharp of Parse_csharp.program_and_tokens
@@ -54,7 +62,6 @@ type ast =
   (* functional *)
   | ML  of (Ast_ml.program, Parser_ml.token) Parsing_result.t
   | Scala of (AST_scala.program, Parser_scala.token) Parsing_result.t
-  | Lisp of Parse_lisp.program_and_tokens
 
   (* web *)
   | Html of Parse_html.program_and_tokens
@@ -305,6 +312,38 @@ let tokens_with_categ_of_file file hentities =
       tokens_with_categ_of_file_helper ph_with_cache
         file prefs hentities
 
+  | FT.Config (FT.Yaml) ->
+      let ph_with_cache = 
+        { PH.yaml with parse = (parse_cache 
+              (fun file -> Generic (PH.yaml.parse file))
+              (function Generic (ast, toks) -> ast, toks | _ -> raise Impossible))} in
+      tokens_with_categ_of_file_helper ph_with_cache
+        file prefs hentities
+
+  | FT.Config (FT.Dockerfile) ->
+      let ph_with_cache = 
+        { PH.dockerfile with parse = (parse_cache 
+              (fun file -> Generic (PH.dockerfile.parse file))
+              (function Generic (ast, toks) -> ast, toks | _ -> raise Impossible))} in
+      tokens_with_categ_of_file_helper ph_with_cache
+        file prefs hentities
+
+  | FT.PL (FT.Lisp _) | FT.Config (FT.Sexp) ->
+      let ph_with_cache = 
+        { PH.lisp with parse = (parse_cache 
+              (fun file -> Generic (PH.lisp.parse file))
+              (function Generic (ast, toks) -> ast, toks | _ -> raise Impossible))} in
+      tokens_with_categ_of_file_helper ph_with_cache
+        file prefs hentities
+
+  | FT.PL (FT.Script _) ->
+      let ph_with_cache = 
+        { PH.bash with parse = (parse_cache 
+              (fun file -> Generic (PH.bash.parse file))
+              (function Generic (ast, toks) -> ast, toks | _ -> raise Impossible))} in
+      tokens_with_categ_of_file_helper ph_with_cache
+        file prefs hentities
+
 (*
   | FT.PL (FT.Csharp) ->
       tokens_with_categ_of_file_helper 
@@ -380,18 +419,6 @@ let tokens_with_categ_of_file file hentities =
           | _ -> raise Impossible));
         highlight = Highlight_go.visit_program;
         info_of_tok = Token_helpers_go.info_of_tok;
-        }
-        file prefs hentities
-
-  | FT.PL (FT.Lisp _) ->
-      tokens_with_categ_of_file_helper 
-        { parse = (parse_cache 
-         (fun file -> Lisp (Parse_lisp.parse file |> fst))
-         (function
-         |  Lisp (ast, toks) -> (Common2.some ast, toks)
-         | _ -> raise Impossible));
-        highlight = Highlight_lisp.visit_toplevel;
-        info_of_tok = Parser_lisp.info_of_tok;
         }
         file prefs hentities
 

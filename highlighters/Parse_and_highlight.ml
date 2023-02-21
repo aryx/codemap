@@ -67,3 +67,31 @@ let jsonnet = {
   ));
   info_of_tok = (fun (x, _origin) -> x);
 }
+
+let lisp = {
+  parse = Parse_languages.parse_lisp;
+  highlight = (fun ~tag_hook prefs file (ast, toks) -> 
+        Highlight_AST.visit_for_highlight ~tag_hook prefs file (ast, toks));
+  info_of_tok = (fun (x, _origin) -> x);
+}
+
+let yaml = {
+  parse = Parse_languages.parse_yaml;
+  highlight = (fun ~tag_hook prefs file (ast, toks) -> 
+        Highlight_AST.visit_for_highlight ~tag_hook prefs file (ast, toks));
+  info_of_tok = (fun (x, _origin) -> x);
+}
+
+let bash = {
+  parse = Parse_languages.parse_bash;
+  highlight = (fun ~tag_hook prefs file (ast, toks) -> 
+        Highlight_AST.visit_for_highlight ~tag_hook prefs file (ast, toks));
+  info_of_tok = (fun (x, _origin) -> x);
+}
+
+let dockerfile = {
+  parse = Parse_languages.parse_dockerfile;
+  highlight = (fun ~tag_hook prefs file (ast, toks) -> 
+        Highlight_AST.visit_for_highlight ~tag_hook prefs file (ast, toks));
+  info_of_tok = (fun (x, _origin) -> x);
+}
