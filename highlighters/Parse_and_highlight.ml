@@ -13,6 +13,8 @@
  * license.txt for more details.
 *)
 module HC = Highlight_code
+module PI = Parse_info
+module PL = Parse_languages
 
 (*****************************************************************************)
 (* Prelude *)
@@ -23,7 +25,6 @@ module HC = Highlight_code
 (*****************************************************************************)
 
 type ('ast, 'token) t = {
-  (* TODO: return just 'a * 'token list *)
   parse: (Common.filename -> ('ast * 'token list));
   highlight:(tag_hook:(Parse_info.t -> HC.category -> unit) ->
                    Highlight_code.highlighter_preferences ->
@@ -49,6 +50,18 @@ let rust = {
 let jsonnet = {
   parse = Parse_languages.parse_jsonnet;
   highlight = (fun ~tag_hook prefs file (ast, toks) -> 
-        Highlight_AST.visit_for_highlight ~tag_hook prefs file (ast, toks));
+     Highlight_AST.visit_for_highlight ~tag_hook prefs file (ast, toks);
+     (* small customization for tokens which are not currently in the
+      * generic AST and so could not be tagged in Highlight_AST (but
+      * are in the tree-sitter CST).
+      *)
+     toks |> List.iter (fun (info, origin) ->
+       let s = PI.str_of_info info in
+       (match s, origin with
+       | "then", PL.InCST -> tag_hook info HC.KeywordConditional
+       | "local", PL.InCST -> tag_hook info HC.Keyword
+       | _else_ -> ()
+       )
+  ));
   info_of_tok = (fun (x, _origin) -> x);
 }
