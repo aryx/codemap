@@ -43,15 +43,20 @@ module PH = Parse_and_highlight
  * highlight_AST.ml, should we also memoized the (named) generic AST?
  *)
 type ast = 
+  (* generic *)
+  | Generic of (AST_generic.program * Parse_info.t list)
+(* old: was just lexer in old pfff
+  | Rust of Parse_rust.program_and_tokens
+  | Csharp of Parse_csharp.program_and_tokens
+  | Hs  of Parse_hs.program_and_tokens
+  | Erlang of Parse_erlang.program_and_tokens
+  | Skip  of Parse_skip.program_and_tokens
+*)
+
   (* functional *)
   | ML  of (Ast_ml.program, Parser_ml.token) Parsing_result.t
   | Scala of (AST_scala.program, Parser_scala.token) Parsing_result.t
   | Lisp of Parse_lisp.program_and_tokens
-(*
-  | Hs  of Parse_hs.program_and_tokens
-  | Erlang of Parse_erlang.program_and_tokens
-  | Skip  of Parse_skip.program_and_tokens
- *)
 
   (* web *)
   | Html of Parse_html.program_and_tokens
@@ -61,15 +66,10 @@ type ast =
   (* system *)
   | Cpp of (Ast_cpp.program, Parser_cpp.token) Parsing_result.t
   | Go of (Ast_go.program, Parser_go.token) Parsing_result.t
-(*
-  | Rust of Parse_rust.program_and_tokens
- *)
 
   (* mainstream *)
   | Java of (Ast_java.program, Parser_java.token) Parsing_result.t
-(*
-  | Csharp of Parse_csharp.program_and_tokens
-*)
+
   (* scripting *)
   | Python of (AST_python.program, Parser_python.token) Parsing_result.t
   | Ruby of (Ast_ruby.program, Parser_ruby.token) Parsing_result.t
@@ -264,33 +264,6 @@ let tokens_with_categ_of_file file hentities =
         }
         file prefs hentities
 
-(*
-  | FT.PL (FT.Skip) ->
-      tokens_with_categ_of_file_helper 
-        { parse = (parse_cache (fun file -> 
-           Common.save_excursion Flag_parsing.error_recovery true (fun()->
-             Skip (Parse_skip.parse file |> fst))
-         )
-         (function 
-         | Skip (astopt, toks) -> [astopt, toks] 
-         | _ -> raise Impossible));
-        highlight = (fun ~tag_hook prefs (ast, toks) -> 
-          Highlight_skip.visit_program ~tag_hook prefs (ast, toks));
-        info_of_tok = Token_helpers_skip.info_of_tok;
-        }
-        file prefs hentities
-
-  | FT.PL (FT.Haskell _) ->
-      tokens_with_categ_of_file_helper 
-        { parse = (parse_cache 
-         (fun file -> Hs (Parse_hs.parse file |> fst))
-         (function Hs (ast, toks) -> [ast, toks] | _ -> raise Impossible));
-        highlight = (fun ~tag_hook prefs (ast, toks) -> 
-          Highlight_hs.visit_program ~tag_hook prefs (ast, toks));
-        info_of_tok = Parser_hs.info_of_tok;
-        }
-        file prefs hentities
- *)
   | FT.PL (FT.Python) ->
       tokens_with_categ_of_file_helper 
         { parse = (parse_cache (fun file -> 
@@ -322,7 +295,44 @@ let tokens_with_categ_of_file file hentities =
         }
         file prefs hentities
 
+  | FT.PL (FT.Rust) ->
+      tokens_with_categ_of_file_helper 
+        { parse = (parse_cache 
+         (fun file -> 
+              Generic (Parse_languages.parse_rust file))
+         (function Generic (ast, toks) -> [ast, toks] | _ -> raise Impossible));
+        highlight = (fun ~tag_hook prefs file (ast, toks) -> 
+          Highlight_AST.visit_for_highlight ~tag_hook prefs file (ast, toks));
+        info_of_tok = (fun x -> x);
+        }
+        file prefs hentities
+
 (*
+  | FT.PL (FT.Skip) ->
+      tokens_with_categ_of_file_helper 
+        { parse = (parse_cache (fun file -> 
+           Common.save_excursion Flag_parsing.error_recovery true (fun()->
+             Skip (Parse_skip.parse file |> fst))
+         )
+         (function 
+         | Skip (astopt, toks) -> [astopt, toks] 
+         | _ -> raise Impossible));
+        highlight = (fun ~tag_hook prefs (ast, toks) -> 
+          Highlight_skip.visit_program ~tag_hook prefs (ast, toks));
+        info_of_tok = Token_helpers_skip.info_of_tok;
+        }
+        file prefs hentities
+
+  | FT.PL (FT.Haskell _) ->
+      tokens_with_categ_of_file_helper 
+        { parse = (parse_cache 
+         (fun file -> Hs (Parse_hs.parse file |> fst))
+         (function Hs (ast, toks) -> [ast, toks] | _ -> raise Impossible));
+        highlight = (fun ~tag_hook prefs (ast, toks) -> 
+          Highlight_hs.visit_program ~tag_hook prefs (ast, toks));
+        info_of_tok = Parser_hs.info_of_tok;
+        }
+        file prefs hentities
   | FT.PL (FT.Csharp) ->
       tokens_with_categ_of_file_helper 
         { parse = (parse_cache 

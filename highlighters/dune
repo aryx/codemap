@@ -22,6 +22,7 @@
    parser_scala.recursive_descent parser_scala.ast_generic
    parser_ruby.dyp parser_ruby.ast_generic
    parser_lisp.recursive_descent
+   parser_rust.ast_generic
    ; now in codemap
    pfff-lang_html
    pfff-lang_nw

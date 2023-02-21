@@ -509,3 +509,15 @@ let visit_program
   let v = V.mk_visitor hooks in
   v (Pr ast);
   ()
+
+(*****************************************************************************)
+(* Entry point *)
+(*****************************************************************************)
+
+(* TODO: go through the tokens too, especially the infos not in the CST
+ * which should be spaces or comments to color specially.
+ *)
+let visit_for_highlight ~tag_hook _prefs _file (ast, _tokens) =
+  let already_tagged = Hashtbl.create 101 in
+  visit_program (already_tagged, tag_hook) ast;
+  ()
