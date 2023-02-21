@@ -3,7 +3,7 @@
  * info computed with Naming_AST.ml
  *)
 val visit_program:
-  (Parse_info.t, 'a) Hashtbl.t (* already_tagged hash *) *
+  (Parse_info.t, bool) Hashtbl.t (* already_tagged hash *) *
   (Parse_info.t -> Highlight_code.category -> unit) (* tag_hook *) ->
   AST_generic.program -> unit
 

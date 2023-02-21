@@ -136,7 +136,10 @@ let visit_program (already_tagged, tag) ast =
      * (e.g., a Method use vs a Field use)
     *)
     if not (Hashtbl.mem already_tagged ii)
-    then tag ii categ
+    then begin 
+        Hashtbl.replace already_tagged ii true;
+        tag ii categ
+    end
   in
   let tag_ids xs categ =
     xs |> List.iter (fun id -> tag_id id categ)
@@ -491,6 +494,15 @@ let visit_program (already_tagged, tag) ast =
             k x
 *)
 
+        | Comprehension (_, (_, (_e, xs), _)) ->
+            xs |> List.iter (function
+              | CompFor (tfor, _, tin, _) ->
+                   tag tfor KeywordLoop;
+                   tag tin KeywordLoop;
+              | CompIf (tif, _) ->
+                    tag tif KeywordConditional
+            );
+            k x
         | _ -> k x
       );
 

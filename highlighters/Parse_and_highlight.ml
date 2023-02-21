@@ -59,7 +59,9 @@ let jsonnet = {
        let s = PI.str_of_info info in
        (match s, origin with
        | "then", PL.InCST -> tag_hook info HC.KeywordConditional
+       | "error", PL.InCST -> tag_hook info HC.KeywordExn
        | "local", PL.InCST -> tag_hook info HC.Keyword
+       | "tailstrict", PL.InCST -> tag_hook info HC.Attribute
        | _else_ -> ()
        )
   ));
