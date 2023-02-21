@@ -39,7 +39,7 @@ module PH = Parse_and_highlight
 
 (* This type is needed if we want to use a single hashtbl to memoize
  * all the parsed file.
- * Now that a few language highlighters rely on the generic AST and
+ * Now that a few language highlighters rely internaly on a generic AST and
  * highlight_AST.ml, should we also memoized the (named) generic AST?
  *)
 type ast = 
