@@ -110,6 +110,27 @@ let parse_rust file =
   in
   ast, tokens
 
+(* LATER: factorize code with parse_rust *)
+let parse_jsonnet file =
+  let res = Parse_jsonnet_tree_sitter.parse file in
+  let tokens = 
+    let res = Tree_sitter_jsonnet.Parse.file file in
+    match res.Tree_sitter_run.Parsing_result.program with
+    | None -> []
+    | Some cst ->
+       let raw = Tree_sitter_jsonnet.Boilerplate.map_document () cst in
+       extract_infos_raw_tree file raw
+  in
+  let ast = 
+    match res.Tree_sitter_run.Parsing_result.program with
+    | Some ast -> 
+        let gen = Jsonnet_to_generic.program ast in
+        Naming_AST.resolve Lang.Jsonnet gen;
+        gen
+    | None -> []
+  in
+  ast, tokens
+
 (*****************************************************************************)
 (* Tree-sitter or pfff *)
 (*****************************************************************************)

@@ -163,7 +163,8 @@ let filters = [
   (* pad-specific: ocaml related files *)
   "pfff", (fun file ->
     match FT.file_type_of_file file with
-    | FT.PL (FT.OCaml _ | FT.Prolog _) | FT.Config FT.Makefile -> 
+    | FT.PL (FT.OCaml _ | FT.Prolog _) 
+    | FT.Config (FT.Makefile | FT.Jsonnet) -> 
         not ( 
                 (* file =~ ".*commons/" || *)
                 (* file =~ ".*external/" || *)

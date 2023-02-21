@@ -5,3 +5,5 @@ val parse_ocaml:
 val parse_rust:
   Common.filename -> AST_generic.program * Parse_info.t list
 
+val parse_jsonnet:
+  Common.filename -> AST_generic.program * Parse_info.t list
