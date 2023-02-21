@@ -290,27 +290,19 @@ let tokens_with_categ_of_file file hentities =
         file prefs hentities
 
   | FT.PL (FT.Rust) ->
-      tokens_with_categ_of_file_helper 
-        { parse = (parse_cache 
-         (fun file -> 
-              Generic (Parse_languages.parse_rust file))
-         (function Generic (ast, toks) -> ast, toks | _ -> raise Impossible));
-        highlight = (fun ~tag_hook prefs file (ast, toks) -> 
-          Highlight_AST.visit_for_highlight ~tag_hook prefs file (ast, toks));
-        info_of_tok = (fun (x, _origin) -> x);
-        }
+      let ph_with_cache = 
+        { PH.rust with parse = (parse_cache 
+              (fun file -> Generic (PH.rust.parse file))
+              (function Generic (ast, toks) -> ast, toks | _ -> raise Impossible))} in
+      tokens_with_categ_of_file_helper ph_with_cache
         file prefs hentities
 
   | FT.Config (FT.Jsonnet) ->
-      tokens_with_categ_of_file_helper 
-        { parse = (parse_cache 
-         (fun file -> 
-              Generic (Parse_languages.parse_jsonnet file))
-         (function Generic (ast, toks) -> ast, toks | _ -> raise Impossible));
-        highlight = (fun ~tag_hook prefs file (ast, toks) -> 
-          Highlight_AST.visit_for_highlight ~tag_hook prefs file (ast, toks));
-        info_of_tok = (fun (x, _origin) -> x);
-        }
+      let ph_with_cache = 
+        { PH.jsonnet with parse = (parse_cache 
+              (fun file -> Generic (PH.jsonnet.parse file))
+              (function Generic (ast, toks) -> ast, toks | _ -> raise Impossible))} in
+      tokens_with_categ_of_file_helper ph_with_cache
         file prefs hentities
 
 (*
