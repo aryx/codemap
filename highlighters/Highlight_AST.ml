@@ -1,6 +1,6 @@
 (* Yoann Padioleau
  *
- * Copyright (C) 2020-2022 R2C
+ * Copyright (C) 2020-2023 r2c
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public License
@@ -23,9 +23,6 @@ module H = AST_generic_helpers
 module PI = Parse_info
 module V = Visitor_AST
 
-(* TODO: ugly, because of ambiguous G.Param in AST_generic *)
-[@@@warning "-42"]
-
 (*****************************************************************************)
 (* Prelude *)
 (*****************************************************************************)
@@ -39,7 +36,7 @@ module V = Visitor_AST
  * history:
  *  - generalized from highlight_ml.ml and highlight_js.ml
  *  - extended for Highlight_scala.ml
- *
+ *  - extended for Rust to not just colorize identifiers but everything
 *)
 
 (*****************************************************************************)
@@ -123,11 +120,9 @@ let info_of_dotted_ident xs =
 (* try to better colorize identifiers, which can be many different things:
  * a field, a type, a function, a parameter, a local, a global, a generic,
  * etc.
+ * update: now colorize everything.
 *)
-let visit_program
-    (already_tagged, tag)
-    ast
-  =
+let visit_program (already_tagged, tag) ast =
 
   let tag_id (_s, ii) categ =
     (* so treat the most specific in the enclosing code and then
@@ -138,12 +133,12 @@ let visit_program
     if not (Hashtbl.mem already_tagged ii)
     then tag ii categ
   in
+  let tag_ids xs categ =
+    xs |> List.iter (fun id -> tag_id id categ)
+  in
   let _tag_if_not_tagged ii categ =
     if not (Hashtbl.mem already_tagged ii)
     then tag ii categ
-  in
-  let tag_ids xs categ =
-    xs |> List.iter (fun id -> tag_id id categ)
   in
 
   (* ocaml specific *)
@@ -241,9 +236,14 @@ let visit_program
                  k x
                );
       *)
+      V.kfunction_definition = (fun (k, _) x ->
+          tag (snd x.fkind) Keyword;
+          k x
+      );
       V.kdir = (fun (k, _) x ->
         (match x.d with
-         | ImportAll (_, DottedName xs, _) ->
+         | ImportAll (tk, DottedName xs, _) ->
+              tag tk KeywordModule;
              (match List.rev xs with
              | id::xs ->
                 tag_ids xs (Entity (Package, Use2 fake_no_use2));
@@ -254,8 +254,8 @@ let visit_program
                tag_id id BadSmell
              | [] -> ()
              )
-         | ImportFrom (_, DottedName xs, ys) ->
-             
+         | ImportFrom (tk, DottedName xs, ys) ->
+              tag tk KeywordModule;
               tag_ids xs (Entity (Package, Use2 fake_no_use2));
               (* depend on language, Class in Scala, Module in OCaml *)
               let kind =  Class in
@@ -268,7 +268,8 @@ let visit_program
                 tag_id id2 (Entity (kind, Def2 fake_no_def2))
              ));
               
-         | G.Package (_, xs) ->
+         | G.Package (tk, xs) ->
+            tag tk KeywordModule;
             tag_ids xs (Entity (Package, Def2 fake_no_def2))
          | _-> ()
         );
@@ -330,15 +331,46 @@ let visit_program
 
       V.kstmt = (fun (k, _) x ->
         match x.s with
-        | Try (_try_tok, _e (*, tok_with*), _match_cases, _finally) ->
-            (*tag tok_with (KeywordExn); *)
-            (*k (Try (try_tok, e, tok_with, []));*)
+        | Try (tk, _e (*, tok_with*), _match_cases, _finally) ->
+            tag tk KeywordExn;
             Common.save_excursion in_try_with true (fun () ->
               k x
             )
+        | If (tk, _, _, _) | While (tk, _, _) | Switch (tk, _, _) ->
+            tag tk KeywordConditional;
+            k x
+        | For (tk, header, _) ->
+            tag tk KeywordLoop;
+            (match header with
+            | ForEach (_, tk, _) -> tag tk KeywordLoop
+            | ForClassic _ | MultiForEach _ | ForIn _ | ForEllipsis _ -> () 
+            );
+            k x
+        | Return (tk, _, _) ->
+            tag tk Keyword;
+            k x
+        | Break (tk, _, _) | Continue (tk, _, _) ->
+            tag tk Keyword;
+            k x
         | _ -> k x
       );
-
+      V.klit = (fun (_k, _) x ->
+        match x with
+        | Bool (_, tk) -> tag tk Boolean
+        | Int (_, tk) | Float (_, tk) | Imag (_, tk) | Ratio (_, tk) ->
+            tag tk Number
+        | Char (_, tk) -> tag tk String
+        | String (l, (_, tk), r) -> 
+              tag l String;
+              tag tk String;
+              tag r String
+        | Regexp ((l, (_, tk), r), _opt) -> 
+              tag l Regexp;
+              tag tk Regexp;
+              tag r Regexp
+        | Atom (_, (_, tk)) -> tag tk Atom
+        | Unit tk | Null tk | Undefined tk -> tag tk Null
+      );
       V.kexpr = (fun (k, _) x ->
         match x.e with
         (* 
@@ -503,6 +535,21 @@ let visit_program
         );
         k x
       );
+      V.kattr = (fun (k, _) x ->
+        match x with
+        | KeywordAttr (kind, tk) ->
+           (match kind with
+           | Public | Private | Protected -> tag tk KeywordObject
+           | _else_ -> tag tk Keyword
+           );
+           k x
+        | NamedAttr (tk, _, _) ->
+           tag tk Attribute;
+           k x
+        | OtherAttribute _ ->
+           k x
+       
+      );
 
     }
   in
@@ -517,7 +564,20 @@ let visit_program
 (* TODO: go through the tokens too, especially the infos not in the CST
  * which should be spaces or comments to color specially.
  *)
-let visit_for_highlight ~tag_hook _prefs _file (ast, _tokens) =
+let visit_for_highlight ~tag_hook _prefs _file (ast, tokens) =
   let already_tagged = Hashtbl.create 101 in
   visit_program (already_tagged, tag_hook) ast;
+  tokens |> List.iter (fun tk ->
+    let str = PI.str_of_info tk in
+    match str with
+    | "[" | "]" -> tag_hook tk Punctuation
+    | "." -> tag_hook tk Punctuation
+    | s when s =~ "^[;:,(){}<>=]+$" -> 
+        tag_hook tk Punctuation
+    (* we could guard with language. Note that 'else'
+     * is not in the generic AST, hence this special case
+     *)
+    | "else" -> tag_hook tk KeywordConditional
+    | _ -> ()
+  );
   ()
