@@ -161,14 +161,9 @@ let tokens_with_categ_of_file_helper
   {PH.parse; highlight; info_of_tok} file prefs hentities =
   
   if !Flag.verbose_visual then pr2 (spf "Parsing: %s" file);
-  let ast2 = parse file in
+  let (ast, toks) = parse file in
 
   if !Flag.verbose_visual then pr2 (spf "Highlighting: %s" file);
-  (* todo: ast2 should not be a list, should just be (ast, toks)
-   * but right now only a few parsers will satisfy this interface
-   *)
-  ast2 |> List.map (fun (ast, toks) ->
-
     let h = Hashtbl.create 101 in
 
     (* computing the token attributes *)
@@ -186,7 +181,7 @@ let tokens_with_categ_of_file_helper
           rewrite_categ_using_entities s categ file hentities
         ) in
         Some (s, categ,{ Common2.l = PI.line_of_info info; c = PI.col_of_info info; })
-    )) |> List.flatten
+    )
 
 (*****************************************************************************)
 (* Main entry point *)
@@ -222,7 +217,7 @@ let tokens_with_categ_of_file file hentities =
             Php (Parse_php.parse file)
           ))
          (function  
-          | Php {Parsing_result. ast; tokens; _} -> [ast, tokens] 
+          | Php {Parsing_result. ast; tokens; _} -> (ast, tokens)
           | _ -> raise Impossible));
          highlight = (fun ~tag_hook prefs _file (ast, toks) ->
           Highlight_php.visit_program ~tag:tag_hook prefs hentities 
@@ -239,7 +234,7 @@ let tokens_with_categ_of_file file hentities =
              ML (Parse_languages.parse_ocaml file)
          )
          (function 
-         | ML {Parsing_result. ast; tokens; _} -> [ast, tokens] 
+         | ML {Parsing_result. ast; tokens; _} -> (ast, tokens)
          | _ -> raise Impossible));
         highlight = (fun ~tag_hook prefs file (ast, toks) -> 
           Highlight_ml.visit_program ~tag_hook prefs file (ast, toks));
@@ -254,7 +249,7 @@ let tokens_with_categ_of_file file hentities =
              Scala (Parse_scala.parse file)
          ))
          (function 
-         | Scala {Parsing_result. ast; tokens; _} -> [ast, tokens] 
+         | Scala {Parsing_result. ast; tokens; _} -> (ast, tokens)
          | _ -> raise Impossible));
         highlight = (fun ~tag_hook prefs file (ast, toks) -> 
           Highlight_scala.visit_program ~tag_hook prefs file (ast, toks));
@@ -269,7 +264,7 @@ let tokens_with_categ_of_file file hentities =
              Python (Parse_python.parse file))
          )
          (function 
-         | Python {Parsing_result. ast; tokens; _} -> [Some ast, tokens] 
+         | Python {Parsing_result. ast; tokens; _} -> (Some ast, tokens)
          | _ -> raise Impossible
          ));
         highlight = (fun ~tag_hook prefs _file (ast, toks) -> 
@@ -285,7 +280,7 @@ let tokens_with_categ_of_file file hentities =
              Ruby (Parse_ruby.parse file))
          )
          (function 
-         | Ruby {Parsing_result. ast; tokens; _} -> [Some ast, tokens] 
+         | Ruby {Parsing_result. ast; tokens; _} -> (Some ast, tokens)
          | _ -> raise Impossible
          ));
         highlight = (fun ~tag_hook prefs _file (ast, toks) -> 
@@ -299,7 +294,7 @@ let tokens_with_categ_of_file file hentities =
         { parse = (parse_cache 
          (fun file -> 
               Generic (Parse_languages.parse_rust file))
-         (function Generic (ast, toks) -> [ast, toks] | _ -> raise Impossible));
+         (function Generic (ast, toks) -> ast, toks | _ -> raise Impossible));
         highlight = (fun ~tag_hook prefs file (ast, toks) -> 
           Highlight_AST.visit_for_highlight ~tag_hook prefs file (ast, toks));
         info_of_tok = (fun (x, _origin) -> x);
@@ -311,7 +306,7 @@ let tokens_with_categ_of_file file hentities =
         { parse = (parse_cache 
          (fun file -> 
               Generic (Parse_languages.parse_jsonnet file))
-         (function Generic (ast, toks) -> [ast, toks] | _ -> raise Impossible));
+         (function Generic (ast, toks) -> ast, toks | _ -> raise Impossible));
         highlight = (fun ~tag_hook prefs file (ast, toks) -> 
           Highlight_AST.visit_for_highlight ~tag_hook prefs file (ast, toks));
         info_of_tok = (fun (x, _origin) -> x);
@@ -356,7 +351,7 @@ let tokens_with_categ_of_file file hentities =
         { parse = (parse_cache 
          (fun file -> Java (Parse_java.parse file))
           (function 
-          | Java {Parsing_result. ast; tokens; _} -> [ast, tokens] 
+          | Java {Parsing_result. ast; tokens; _} -> (ast, tokens)
           | _ -> raise Impossible));
         highlight = Highlight_java.visit_toplevel;
         info_of_tok = Token_helpers_java.info_of_tok;
@@ -377,7 +372,7 @@ let tokens_with_categ_of_file file hentities =
          ))
          
          (function 
-         | Cpp {Parsing_result. ast; tokens; _} -> [ast, tokens]
+         | Cpp {Parsing_result. ast; tokens; _} -> (ast, tokens)
          | _ -> raise Impossible));
         highlight = Highlight_cpp.visit_toplevel;
         info_of_tok = Token_helpers_cpp.info_of_tok;
@@ -389,7 +384,7 @@ let tokens_with_categ_of_file file hentities =
         { parse = (parse_cache 
          (fun file -> Go (Parse_go.parse file))
           (function 
-          | Go {Parsing_result. ast; tokens; _} -> [ast, tokens] 
+          | Go {Parsing_result. ast; tokens; _} -> (ast, tokens)
           | _ -> raise Impossible));
         highlight = Highlight_go.visit_program;
         info_of_tok = Token_helpers_go.info_of_tok;
@@ -401,7 +396,7 @@ let tokens_with_categ_of_file file hentities =
         { parse = (parse_cache 
          (fun file -> Lisp (Parse_lisp.parse file |> fst))
          (function
-         |  Lisp (ast, toks) -> [Common2.some ast, toks]
+         |  Lisp (ast, toks) -> (Common2.some ast, toks)
          | _ -> raise Impossible));
         highlight = Highlight_lisp.visit_toplevel;
         info_of_tok = Parser_lisp.info_of_tok;
@@ -412,7 +407,7 @@ let tokens_with_categ_of_file file hentities =
       tokens_with_categ_of_file_helper 
         { parse = (parse_cache 
          (fun file -> Noweb (Parse_nw.parse file |> fst))
-         (function Noweb x -> [x] | _ -> raise Impossible));
+         (function Noweb x -> x | _ -> raise Impossible));
         highlight = Highlight_nw.visit_program;
         info_of_tok = Token_helpers_nw.info_of_tok;
         }
@@ -427,7 +422,7 @@ let tokens_with_categ_of_file file hentities =
               Js (Parse_js.parse file))
           )
          (function 
-         | Js {Parsing_result. ast; tokens; _} -> [ast, tokens] 
+         | Js {Parsing_result. ast; tokens; _} -> ast, tokens
          | _ -> raise Impossible
          ));
         highlight = Highlight_js.visit_program;
@@ -444,7 +439,7 @@ let tokens_with_categ_of_file file hentities =
         { parse = (parse_cache 
           (fun file -> Html (Parse_html.parse file))
           (function 
-          | Html (ast, toks) -> [ast, toks] 
+          | Html (ast, toks) -> ast, toks
           | _ -> raise Impossible));
         highlight = Highlight_html.visit_toplevel;
         info_of_tok = Token_helpers_html.info_of_tok;

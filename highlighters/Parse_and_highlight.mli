@@ -1,6 +1,6 @@
 
 type ('ast, 'token) t = {
-  parse: (Common.filename -> ('ast * 'token list) list);
+  parse: (Common.filename -> ('ast * 'token list));
 
   (* The highlight function is provided as a visitor. 
    * note: there is no guarantee in which order the hooks are called as
