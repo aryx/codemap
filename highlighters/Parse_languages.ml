@@ -25,6 +25,7 @@ module PI = Parse_info
 (*****************************************************************************)
 (* Types *)
 (*****************************************************************************)
+(* TODO: this should probably be in a different file *)
 type origin_info =
   (* those were extracted from the tree-sitter Concrete Syntax Tree (CST) *)
   | InCST
