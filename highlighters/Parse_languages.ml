@@ -23,6 +23,18 @@ module PI = Parse_info
 (* TODO: factorize with semgrep/src/parsing/Parse_target.ml at some point *)
 
 (*****************************************************************************)
+(* Types *)
+(*****************************************************************************)
+type origin_info =
+  (* those were extracted from the tree-sitter Concrete Syntax Tree (CST) *)
+  | InCST
+  (* those are all the ranges in the file that do not correspond to
+   * an info in the CST (e.g., space, comments), that is the
+   * tokens from the extra: field in tree-sitter grammars 
+   *)
+  | Extra
+
+(*****************************************************************************)
 (* Helpers *)
 (*****************************************************************************)
 (* mostly a copy-paste of semgrep/libs/ast_generic/Raw_tree.visit *)
@@ -44,7 +56,7 @@ let visit ~v_token ~v_any x =
  * by looking at ranges of the file in env not covered by the Parse_info.t
  * we got from the CST.
  *)
-let add_extra_infos file (infos : Parse_info.t list) : Parse_info.t list =
+let add_extra_infos file (infos : Parse_info.t list) : (Parse_info.t * origin_info) list =
   let bigstr = Common.read_file file in
   let max = String.length bigstr in
   let conv = Parsing_helpers.full_charpos_to_pos_large file in
@@ -57,11 +69,11 @@ let add_extra_infos file (infos : Parse_info.t list) : Parse_info.t list =
           let (line, column) = conv current in
           let str = String.sub bigstr current (max - current) in
           let loc = { PI.file; line; column; charpos = current; str } in
-          [PI.mk_info_of_loc loc]
+          [PI.mk_info_of_loc loc, Extra]
        else []
     | x::xs ->
       if PI.is_fake x
-      then (* filter it? *) aux current xs
+      then (* filter fake tokens *) aux current xs
       else
         let loc = PI.unsafe_token_location_of_info x in
         (match current <=> loc.PI.charpos with
@@ -69,9 +81,9 @@ let add_extra_infos file (infos : Parse_info.t list) : Parse_info.t list =
          let (line, column) = conv current in
          let str = String.sub bigstr current (loc.PI.charpos - current) in
          let loc2 = { PI.file; line; column; charpos = current; str } in
-         (PI.mk_info_of_loc loc2)::aux (loc.PI.charpos) (x::xs)
+         (PI.mk_info_of_loc loc2, Extra)::aux (loc.PI.charpos) (x::xs)
       | Equal ->
-         x::(aux (loc.PI.charpos + String.length loc.PI.str) xs)
+         (x, InCST)::(aux (loc.PI.charpos + String.length loc.PI.str) xs)
       | Sup ->
          raise Common.Impossible
       )
@@ -82,7 +94,7 @@ let add_extra_infos file (infos : Parse_info.t list) : Parse_info.t list =
  * where Left = comes from CST and Right = extra not in CST 
  * (e.g., space/comments)
  *)
-let extract_infos_raw_tree file (raw : unit Tree_sitter_run.Raw_tree.t) : Parse_info.t list =
+let extract_infos_raw_tree file (raw : unit Tree_sitter_run.Raw_tree.t) : (Parse_info.t * origin_info) list =
   let infos = ref [] in
   let env = { H.file; conv = H.line_col_to_pos file; extra = () } in
   visit ~v_token:(fun tok -> Common.push (H.token env tok) infos) ~v_any:(fun _ -> ()) raw;

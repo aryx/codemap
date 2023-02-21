@@ -44,7 +44,7 @@ module PH = Parse_and_highlight
  *)
 type ast = 
   (* generic, which is used currently for: Rust, Jsonnet *)
-  | Generic of (AST_generic.program * Parse_info.t list)
+  | Generic of (AST_generic.program * (Parse_info.t * Parse_languages.origin_info) list)
 (* old: was just lexer in old pfff
   | Csharp of Parse_csharp.program_and_tokens
   | Hs  of Parse_hs.program_and_tokens
@@ -302,7 +302,7 @@ let tokens_with_categ_of_file file hentities =
          (function Generic (ast, toks) -> [ast, toks] | _ -> raise Impossible));
         highlight = (fun ~tag_hook prefs file (ast, toks) -> 
           Highlight_AST.visit_for_highlight ~tag_hook prefs file (ast, toks));
-        info_of_tok = (fun x -> x);
+        info_of_tok = (fun (x, _origin) -> x);
         }
         file prefs hentities
 
@@ -314,7 +314,7 @@ let tokens_with_categ_of_file file hentities =
          (function Generic (ast, toks) -> [ast, toks] | _ -> raise Impossible));
         highlight = (fun ~tag_hook prefs file (ast, toks) -> 
           Highlight_AST.visit_for_highlight ~tag_hook prefs file (ast, toks));
-        info_of_tok = (fun x -> x);
+        info_of_tok = (fun (x, _origin) -> x);
         }
         file prefs hentities
 

@@ -123,6 +123,11 @@ let info_of_dotted_ident xs =
  * update: now colorize everything.
 *)
 let visit_program (already_tagged, tag) ast =
+  let tag ii categ =
+    if PI.is_fake ii
+    then ()
+    else tag ii categ
+  in
 
   let tag_id (_s, ii) categ =
     (* so treat the most specific in the enclosing code and then
@@ -567,17 +572,21 @@ let visit_program (already_tagged, tag) ast =
 let visit_for_highlight ~tag_hook _prefs _file (ast, tokens) =
   let already_tagged = Hashtbl.create 101 in
   visit_program (already_tagged, tag_hook) ast;
-  tokens |> List.iter (fun tk ->
-    let str = PI.str_of_info tk in
-    match str with
-    | "[" | "]" -> tag_hook tk Punctuation
-    | "." -> tag_hook tk Punctuation
-    | s when s =~ "^[;:,(){}<>=]+$" -> 
+  tokens |> List.iter (fun (tk, origin) ->
+    match origin with
+    | Parse_languages.Extra -> tag_hook tk Comment
+    | Parse_languages.InCST ->
+      let str = PI.str_of_info tk in
+      (match str with
+      | "[" | "]" -> tag_hook tk Punctuation
+      | "." -> tag_hook tk Punctuation
+      | s when s =~ "^[;:,(){}<>=]+$" -> 
         tag_hook tk Punctuation
-    (* we could guard with language. Note that 'else'
-     * is not in the generic AST, hence this special case
-     *)
-    | "else" -> tag_hook tk KeywordConditional
-    | _ -> ()
+      (* we could guard with language. Note that 'else'
+       * is not in the generic AST, hence this special case
+       *)
+      | "else" -> tag_hook tk KeywordConditional
+      | _else_ -> ()
+      )
   );
   ()
