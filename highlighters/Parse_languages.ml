@@ -170,12 +170,9 @@ let parse_bash file =
     let res = Tree_sitter_bash.Parse.file file in
     match res.Tree_sitter_run.Parsing_result.program with
     | None -> []
-    | Some _cst ->
-        failwith "XXX"
-(* TODO
-       let raw = Tree_sitter_bash.Boilerplate.map_document () cst in
+    | Some cst ->
+       let raw = Tree_sitter_bash.Boilerplate.map_program () cst in
        extract_infos_raw_tree file raw
-*)
   in
   let ast = 
     match res.Tree_sitter_run.Parsing_result.program with

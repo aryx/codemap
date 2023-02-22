@@ -75,22 +75,29 @@ let lisp = {
   info_of_tok = (fun (x, _origin) -> x);
 }
 
-let yaml = {
-  parse = Parse_languages.parse_yaml;
-  highlight = (fun ~tag_hook prefs file (ast, toks) -> 
-        Highlight_AST.visit_for_highlight ~tag_hook prefs file (ast, toks));
-  info_of_tok = (fun (x, _origin) -> x);
-}
-
 let bash = {
   parse = Parse_languages.parse_bash;
   highlight = (fun ~tag_hook prefs file (ast, toks) -> 
-        Highlight_AST.visit_for_highlight ~tag_hook prefs file (ast, toks));
+        Highlight_AST.visit_for_highlight ~tag_hook prefs file (ast, toks);
+     toks |> List.iter (fun (info, origin) ->
+       let s = PI.str_of_info info in
+       (match s, origin with
+       | ("then" | "fi"), PL.InCST -> tag_hook info HC.KeywordConditional
+       | _else_ -> ()
+       )));
   info_of_tok = (fun (x, _origin) -> x);
 }
 
 let dockerfile = {
   parse = Parse_languages.parse_dockerfile;
+  highlight = (fun ~tag_hook prefs file (ast, toks) -> 
+        Highlight_AST.visit_for_highlight ~tag_hook prefs file (ast, toks));
+  info_of_tok = (fun (x, _origin) -> x);
+}
+
+(* TODO *)
+let yaml = {
+  parse = Parse_languages.parse_yaml;
   highlight = (fun ~tag_hook prefs file (ast, toks) -> 
         Highlight_AST.visit_for_highlight ~tag_hook prefs file (ast, toks));
   info_of_tok = (fun (x, _origin) -> x);
