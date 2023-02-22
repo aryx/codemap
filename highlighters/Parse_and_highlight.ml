@@ -75,6 +75,9 @@ let lisp = {
   info_of_tok = (fun (x, _origin) -> x);
 }
 
+(* TODO: the highlighter is not great because almost everything is encoded as
+ * a string in the generic AST translation. Maybe worth starting from AST_bash instead?
+ *)
 let bash = {
   parse = Parse_languages.parse_bash;
   highlight = (fun ~tag_hook prefs file (ast, toks) -> 
