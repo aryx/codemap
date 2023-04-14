@@ -153,16 +153,17 @@ let visit_program (already_tagged, tag) ast =
   let in_let = ref false in
   let in_try_with = ref false in
 
-  let hooks =
-    { V.default_visitor with
+  let visitor =
+    object
+      inherit [_] AST_generic.iter_no_id_info as super
 
-      V.kdef = (fun (k, _) x ->
+      method! visit_definition env x =
         match x with
         | ({ name = EN (Id (id, _)); attrs; _}, def) ->
             (match def with
              | Signature ty ->
                  tag_id id (kind_of_ty ty);
-                 k x
+                 super#visit_definition env x
 
              | ModuleDef { mbody = body } ->
                  tag_id id (Entity (E.Module, Def2 fake_no_def2));
@@ -172,11 +173,11 @@ let visit_program (already_tagged, tag) ast =
                       tag info (Entity (Module, Use2 fake_no_use2));
                   | _ -> ()
                  );
-                 k x
+                 super#visit_definition env x
 
              | TypeDef { tbody = G.Exception _ } ->
                  tag_id id (Entity (E.Exception, Def2 fake_no_def2));
-                 k x
+                 super#visit_definition env x
              | TypeDef { tbody = kind } ->
                  tag_id id (Entity (E.Type, Def2 fake_no_def2));
                  (* todo: ty_params *)
@@ -195,7 +196,7 @@ let visit_program (already_tagged, tag) ast =
                       );
                   | _ -> ()
                  );
-                 k x
+                 super#visit_definition env x
 
              | VarDef { vinit = Some body; vtype = _ }  ->
                  (if not !in_let
@@ -203,11 +204,11 @@ let visit_program (already_tagged, tag) ast =
                   else tag_id id (Local Def)
                  );
                  Common.save_excursion in_let true (fun () ->
-                   k x
+                   super#visit_definition env x
                  )
 
              | VarDef { vinit = None; vtype = _ }  ->
-                  k x
+                  super#visit_definition env x
 
              | FuncDef _ ->
                  (if not !in_let
@@ -215,7 +216,7 @@ let visit_program (already_tagged, tag) ast =
                   else tag_id id (Local Def)
                  );
                  Common.save_excursion in_let true (fun () ->
-                   k x
+                   super#visit_definition env x
                  )
              | ClassDef _ ->
                  let kind = 
@@ -224,14 +225,14 @@ let visit_program (already_tagged, tag) ast =
                       else Class
                  in
                  tag_id id (Entity (kind, (Def2 NoUse)));
-                 k x
+                 super#visit_definition env x
              | FieldDefColon _ | MacroDef _ | UseOuterDecl _
              | OtherDef _ | EnumEntryDef _ ->
-                  k x
+                  super#visit_definition env x
 
             )
-        | _ -> k x
-      );
+        | _ -> super#visit_definition env x
+
       (* JS
                V.kprop = (fun (k,_) x ->
                  (match x with
@@ -244,11 +245,11 @@ let visit_program (already_tagged, tag) ast =
                  k x
                );
       *)
-      V.kfunction_definition = (fun (k, _) x ->
+      method! visit_function_definition env x =
           tag (snd x.fkind) Keyword;
-          k x
-      );
-      V.kdir = (fun (k, _) x ->
+          super#visit_function_definition env x
+
+      method! visit_directive env x =
         (match x.d with
          | ImportAll (tk, DottedName xs, _) ->
               tag tk KeywordModule;
@@ -279,27 +280,25 @@ let visit_program (already_tagged, tag) ast =
          | G.Package (tk, xs) ->
             tag tk KeywordModule;
             tag_ids xs (Entity (Package, Def2 fake_no_def2))
-         | _-> ()
+         | _ -> ()
         );
-        k x
-      );
+        super#visit_directive env x
 
-      V.kname = (fun (k, _) x ->
+      method! visit_name env x =
         (match x with
         | IdQualified { name_middle = Some (QDots xs); _} ->
            tag_ids (List.map fst xs) (Entity (Module, Use2 fake_no_use2))
         | _ -> ()
         );
-        k x
-      );
+        super#visit_name env x
 
-      V.kparam = (fun (k, _) x ->
+      method! visit_parameter env x =
         (match x with
          | ParamPattern (PatId (id, _idinfo)) ->
              tag_id id (Parameter Def);
              (* less: let kpattern do its job? *)
          | ParamPattern _ -> ()
-         | Param p | ParamRest (_, p) | ParamHashSplat (_, p) ->
+         | Param p | ParamRest (_, p) | ParamHashSplat (_, p) | ParamReceiver p ->
              (match p.pname with
               | Some id ->
                   tag_id id (Parameter Def);
@@ -307,9 +306,7 @@ let visit_program (already_tagged, tag) ast =
              )
          | ParamEllipsis _ | OtherParam _ -> ()
         );
-        k x
-      );
-
+        super#visit_parameter env x
 (*
     V.kargument = (fun (k, _) x ->
       (match x with
@@ -337,32 +334,32 @@ let visit_program (already_tagged, tag) ast =
     );
 *)
 
-      V.kstmt = (fun (k, _) x ->
+      method! visit_stmt env x =
         match x.s with
         | Try (tk, _e (*, tok_with*), _match_cases, _finally) ->
             tag tk KeywordExn;
             Common.save_excursion in_try_with true (fun () ->
-              k x
+              super#visit_stmt env x
             )
         | If (tk, _, _, _) | While (tk, _, _) | Switch (tk, _, _) ->
             tag tk KeywordConditional;
-            k x
+            super#visit_stmt env x
         | For (tk, header, _) ->
             tag tk KeywordLoop;
             (match header with
             | ForEach (_, tk, _) -> tag tk KeywordLoop
             | ForClassic _ | MultiForEach _ | ForIn _ | ForEllipsis _ -> () 
             );
-            k x
+            super#visit_stmt env x
         | Return (tk, _, _) ->
             tag tk Keyword;
-            k x
+            super#visit_stmt env x
         | Break (tk, _, _) | Continue (tk, _, _) ->
             tag tk Keyword;
-            k x
-        | _ -> k x
-      );
-      V.klit = (fun (_k, _) x ->
+            super#visit_stmt env x
+        | _ -> super#visit_stmt env x
+
+      method! visit_literal _env x =
         match x with
         | Bool (_, tk) -> tag tk Boolean
         | Int (_, tk) | Float (_, tk) | Imag (_, tk) | Ratio (_, tk) ->
@@ -378,8 +375,8 @@ let visit_program (already_tagged, tag) ast =
               tag r Regexp
         | Atom (_, (_, tk)) -> tag tk Atom
         | Unit tk | Null tk | Undefined tk -> tag tk Null
-      );
-      V.kexpr = (fun (k, _) x ->
+
+      method! visit_expr env x =
         match x.e with
         (* 
               | Apply (Id (name, {contents = Global _ | NotResolved}), _) ->
@@ -411,33 +408,33 @@ let visit_program (already_tagged, tag) ast =
               | None -> Normal
             in
             tag_id id categ;
-            k x
+            super#visit_expr env x
 
         | IdSpecial (kind, info) ->
             (match kind with
              | Eval -> tag info BadSmell
              | _ -> tag info Builtin
             );
-            k x
+            super#visit_expr env x
 
         (* pad specific *)
         | Call ({ e = N (Id ((("=~", _)), _idinfo)); _},
                 (_, [_arg1; Arg ({ e = L (G.String (_, (_, info), _)); _})], _)) ->
             tag info Regexp;
-            k x
+            super#visit_expr env x
         (* ocaml specific *)
         | Call ({ e = N (Id ((("ref", info)), _idinfo)); _}, _args) ->
             tag info UseOfRef;
-            k x
+            super#visit_expr env x
 
 
         | Call ({ e = DotAccess (_, _, (FN (Id (id, _)))); _}, _) ->
             tag_id id (Entity (Method, (Use2 fake_no_use2)));
-            k x
+            super#visit_expr env x
 
         | Call ({ e = N (Id (id, _idinfo)); _}, _args) ->
             tag_id id (Entity (Function, (Use2 fake_no_use2)));
-            k x
+            super#visit_expr env x
         | Call ({e = N (IdQualified 
                     { name_last = (id, None);
                       name_middle = qu; _}); _}, _args)->
@@ -448,13 +445,13 @@ let visit_program (already_tagged, tag) ast =
              | _ ->
                  tag_id id (Entity (Function, (Use2 fake_no_use2)));
             );
-            k x
+            super#visit_expr env x
 
         (* disambiguate "with" which can be used for match, try, or record *)
 (* TODO now a stmt
         | MatchPattern (_e1, (*tok_with,*) _match_cases) ->
             (*tag tok_with (KeywordConditional); *)
-            k x
+            super#visit_expr env x
 *)
 
         (* JS TODO
@@ -471,11 +468,11 @@ let visit_program (already_tagged, tag) ast =
 
              | _ -> tag_id id (Entity (Field, (Use2 fake_no_use2)))
             );
-            k x
+            super#visit_expr env x
         | G.Constructor (name, _eopt) ->
             let id = id_of_name name in
             tag_id id (Entity (Constructor,(Use2 fake_no_use2)));
-            k x
+            super#visit_expr env x
 
         | Record (_, xs, _) ->
             xs |> List.iter (fun x ->
@@ -485,13 +482,13 @@ let visit_program (already_tagged, tag) ast =
                   tag_id id (Entity (Field, (Use2 fake_no_use2)));
               | _ -> ()
             );
-            k x
+            super#visit_expr env x
         (* coupling: with how record with qualified name in ml_to_generic.ml *)
 (* TODO encoded differently now
         | OtherExpr (OE_RecordFieldName, (Di name)::_) ->
             let info = info_of_dotted_ident name in
             tag info (Entity (Field, (Use2 fake_no_use2)));
-            k x
+            super#visit_expr env x
 *)
 
         | Comprehension (_, (_, (_e, xs), _)) ->
@@ -502,11 +499,10 @@ let visit_program (already_tagged, tag) ast =
               | CompIf (tif, _) ->
                     tag tif KeywordConditional
             );
-            k x
-        | _ -> k x
-      );
+            super#visit_expr env x
+        | _ -> super#visit_expr env x
 
-      V.kpattern = (fun (k, _) x ->
+      method! visit_pattern env x =
         (match x with
          | PatConstructor (name, _popt) ->
              let id = id_of_name name in
@@ -524,10 +520,9 @@ let visit_program (already_tagged, tag) ast =
              )
          | _ -> ()
         );
-        k x
-      );
+        super#visit_pattern env x
 
-      V.ktype_ = (fun (k, _) t ->
+      method! visit_type_ env t =
         (match t.t with
          | TyN (name) ->
              let id = id_of_name name in
@@ -541,37 +536,33 @@ let visit_program (already_tagged, tag) ast =
              tag_id id TypeVoid;
          | _ -> ()
         );
-        k t
-      );
+        super#visit_type_ env t
 
-      V.ktparam = (fun (k, _) x ->
+      method! visit_type_parameter env x =
         (match x with
         | TP { tp_id; _ } ->
            tag_id tp_id (Entity (Type, (Def2 fake_no_def2)))
         | _ -> ()
         );
-        k x
-      );
-      V.kattr = (fun (k, _) x ->
+        super#visit_type_parameter env x
+      
+      method! visit_attribute env x =
         match x with
         | KeywordAttr (kind, tk) ->
            (match kind with
            | Public | Private | Protected -> tag tk KeywordObject
            | _else_ -> tag tk Keyword
            );
-           k x
+           super#visit_attribute env x
         | NamedAttr (tk, _, _) ->
            tag tk Attribute;
-           k x
+           super#visit_attribute env x
         | OtherAttribute _ ->
-           k x
-       
-      );
+           super#visit_attribute env x
 
-    }
+    end
   in
-  let v = V.mk_visitor hooks in
-  v (Pr ast);
+  visitor#visit_any () (Pr ast);
   ()
 
 (*****************************************************************************)

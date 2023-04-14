@@ -310,7 +310,7 @@ let database_of_json json =
 
 let load_database file =
   pr2 (spf "loading database: %s" file);
-  if File_type.is_json_filename file then
+  if File_type.is_json_filename (Fpath.v file) then
     (* This code is mostly obsolete. It's more efficient to use Marshall
      * to store big database. This should be used only when
      * one wants to have a readable database.
@@ -329,7 +329,7 @@ let load_database file =
  * marshall is probably better. Only biniou could be a valid alternative.
  *)
 let save_database database file =
-  if File_type.is_json_filename file then
+  if File_type.is_json_filename (Fpath.v file) then
     database |> json_of_database
     |> J.string_of_json ~compact:false ~recursive:false ~allow_nan:true
     |> Common.write_file ~file

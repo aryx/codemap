@@ -28,7 +28,7 @@ module V = Visitor_html
 let find_html_files_of_dir_or_files xs =
   Common.files_of_dir_or_files_no_vcs_nofilter xs
   |> List.filter (fun filename ->
-         let ftype = File_type.file_type_of_file filename in
+         let ftype = File_type.file_type_of_file (Fpath.v filename) in
          match ftype with
          | File_type.PL (File_type.Web File_type.Html) -> true
          | _ -> false)

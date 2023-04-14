@@ -262,7 +262,7 @@ let visit_toplevel ~tag_hook _prefs _file (*db_opt *) (ast, toks) =
                     |> List.iter (fun ii ->
                            let file = PI.file_of_info ii in
                            if
-                             File_type.file_type_of_file file
+                             File_type.file_type_of_file (Fpath.v file)
                              =*= File_type.PL (File_type.C "c")
                            then tag ii PointerCall
                            else tag ii (Entity (Method, Use2 fake_no_use2)))

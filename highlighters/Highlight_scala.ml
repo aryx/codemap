@@ -261,6 +261,7 @@ let visit_program
             )
 *)
       | T.Nl _ | T.Space _ | T.NEWLINE _ | T.NEWLINES _ -> ()
+      | T.INDENT _ | T.DEDENT _ -> ()
       | T.Unknown ii -> tag ii Error
       | T.EOF _ii-> ()
 
@@ -277,6 +278,7 @@ let visit_program
       | T.T_INTERPOLATED_STRING (_, ii) ->
           tag ii String
       | T.T_DOLLAR_LBRACE ii -> tag ii Punctuation
+      | T.QUOTE ii -> tag ii Punctuation
 
       (* keywords *)
 

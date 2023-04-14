@@ -174,7 +174,7 @@ let color_of_webpl_type kind =
 let anamorphic_diviser_of_file ~root file =
 
   (* both should be memoized *)
-  let ftype = file_type_of_file file in
+  let ftype = file_type_of_file (Fpath.v file) in
   let archi = source_archi_of_filename ~root file in
 
   match ftype with

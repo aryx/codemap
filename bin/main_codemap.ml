@@ -162,7 +162,7 @@ let action = ref ""
 let filters = [
   (* pad-specific: ocaml related files *)
   "pfff", (fun file ->
-    match FT.file_type_of_file file with
+    match FT.file_type_of_file (Fpath.v file) with
     | FT.PL (FT.OCaml _ | FT.Prolog _) 
     | FT.Config (FT.Makefile | FT.Jsonnet) -> 
         not ( 
@@ -172,42 +172,42 @@ let filters = [
     | _ -> false
   );
   "xix", (fun file ->
-    match FT.file_type_of_file file with
+    match FT.file_type_of_file (Fpath.v file) with
     | FT.PL ((FT.OCaml _) | (FT.C _ | FT.Asm)) | FT.Config FT.Makefile -> true
     | _ -> false
   );
 
   "ocaml", (fun file ->
-    match File_type.file_type_of_file file with
+    match File_type.file_type_of_file (Fpath.v file) with
     | FT.PL (FT.OCaml _) | FT.Config (FT.Makefile)  -> true
     | _ -> false
   );
   "mli", (fun file ->
-    match File_type.file_type_of_file file with
+    match File_type.file_type_of_file (Fpath.v file) with
     | FT.PL (FT.OCaml "mli") | FT.Config (FT.Makefile)   -> 
       not (file =~ ".*/commons/")
     | _ -> false
   );
   "nw", (fun file -> 
-    match FT.file_type_of_file file with
+    match FT.file_type_of_file (Fpath.v file) with
     | FT.Text "nw" -> true | _ -> false
   );
   "doc", (fun file -> 
-    match FT.file_type_of_file file with
+    match FT.file_type_of_file (Fpath.v file) with
     | FT.Text _ -> true | _ -> false
   );
 
   (* other languages *)
   "php", (fun file ->
-    match File_type.file_type_of_file file with
+    match File_type.file_type_of_file (Fpath.v file) with
     | FT.PL (FT.Web (FT.Php _)) -> true  | _ -> false
   );
   "js", (fun file ->
-    match File_type.file_type_of_file file with
+    match File_type.file_type_of_file (Fpath.v file) with
     | FT.PL (FT.Web (FT.Js)) -> true  | _ -> false
   );
   "config", (fun file ->
-    match File_type.file_type_of_file file with
+    match File_type.file_type_of_file (Fpath.v file) with
     | FT.Config (FT.Yaml | FT.Json) -> true  | _ -> false
   );
 
@@ -216,7 +216,7 @@ let filters = [
       (* TODO: also add possible pfff_macros.h when there *)
       Parse_cpp.init_defs !Flag_parsing_cpp.macros_h
     );
-    match FT.file_type_of_file file with
+    match FT.file_type_of_file (Fpath.v file) with
     | FT.PL (FT.C _ | FT.Cplusplus _) -> true 
     | FT.PL FT.Asm -> true
     | _ -> false
@@ -224,7 +224,7 @@ let filters = [
 
   (* exotic languages *)
   "exotic", (fun file -> 
-    match FT.file_type_of_file file with
+    match FT.file_type_of_file (Fpath.v file) with
     | FT.PL (FT.Opa | FT.Rust)  -> true
 (*    | FT.PL (FT.Web (_)) -> true *)
     | _ -> false
@@ -232,7 +232,7 @@ let filters = [
 
   (* general categories *)
   "pl", (fun file ->
-    match File_type.file_type_of_file file with
+    match File_type.file_type_of_file (Fpath.v file) with
     | FT.PL _ -> true  | _ -> false
   );
 ]
@@ -381,14 +381,14 @@ let main_action xs =
     if Sys.file_exists skip_file
     then begin
       pr2 (spf "Using skip file: %s" skip_file);
-      Skip_code.load skip_file
+      Skip_code.load (Fpath.v skip_file)
     end
     else []
   in
-  let filter_files_skip_list = Skip_code.filter_files skip_list ~root in
+  let filter_files_skip_list = Skip_code.filter_files skip_list ~root:(Fpath.v root) in
   let filter_file = (fun file -> 
     !filter file && 
-    (skip_list =*= [] || fst (filter_files_skip_list [file]) <> []))
+    (skip_list =*= [] || fst (filter_files_skip_list [Fpath.v file]) <> []))
   in
 
   let treemap_func = treemap_generator ~filter_file in
@@ -443,13 +443,13 @@ let test_loc print_top30 xs =
     if Sys.file_exists skip_file
     then begin
       pr2 (spf "Using skip file: %s" skip_file);
-      Skip_code.load skip_file
+      Skip_code.load (Fpath.v skip_file)
     end
     else []
   in
-  let filter_files_skip_list = Skip_code.filter_files skip_list ~root in
+  let filter_files_skip_list = Skip_code.filter_files skip_list ~root:(Fpath.v root) in
   let filter_file = (fun file -> 
-    !filter file && (skip_list =*= [] || fst (filter_files_skip_list [file]) <> []))
+    !filter file && (skip_list =*= [] || fst (filter_files_skip_list [Fpath.v file]) <> []))
   in
   let treemap = Treemap_pl.code_treemap ~filter_file xs in
 

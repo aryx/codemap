@@ -30,7 +30,7 @@ type program_and_tokens = Ast_nw.program * Lexer_nw.token list
 (* Lexing only *)
 (*****************************************************************************)
 
-let tokens file =
+let tokens input_source =
   Lexer_nw.reset ();
   let token lexbuf =
     match Lexer_nw.current_mode () with
@@ -39,7 +39,7 @@ let tokens file =
     | Lexer_nw.IN_VERB c -> Lexer_nw.verb c lexbuf
     | Lexer_nw.IN_NOWEB_CHUNK -> Lexer_nw.noweb lexbuf
   in
-  Parsing_helpers.tokenize_all_and_adjust_pos file token TH.visitor_info_of_tok
+  Parsing_helpers.tokenize_all_and_adjust_pos input_source token TH.visitor_info_of_tok
     TH.is_eof
 [@@profiling]
 
@@ -48,7 +48,7 @@ let tokens file =
 (*****************************************************************************)
 
 let parse_fuzzy file =
-  let toks = tokens file in
+  let toks = tokens (Parsing_helpers.file file) in
   let trees =
     Lib_ast_fuzzy.mk_trees
       { Lib_ast_fuzzy.tokf = TH.info_of_tok; kind = TH.token_kind_of_tok }

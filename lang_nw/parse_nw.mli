@@ -6,4 +6,4 @@ val parse : Common.filename -> program_and_tokens * Parsing_stat.t
 val parse_fuzzy : Common.filename -> Ast_fuzzy.tree list * Lexer_nw.token list
 
 (* internal *)
-val tokens : Common.filename -> Lexer_nw.token list
+val tokens : Parsing_helpers.input_source -> Lexer_nw.token list

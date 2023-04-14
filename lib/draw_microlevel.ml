@@ -78,7 +78,7 @@ let is_big_file_with_few_lines ~nblines file =
 
 (* coupling: with parsing2.ml, todo move in parsing2.ml? *)
 let use_fancy_highlighting file =
-  match FT.file_type_of_file file with
+  match FT.file_type_of_file (Fpath.v file) with
   | ( FT.PL (FT.Web (FT.Php _))
     | FT.PL (FT.Web (FT.Js))
     | FT.PL (FT.Web (FT.Html))
@@ -190,7 +190,7 @@ let glyphs_of_file ~font_size ~font_size_real model_async file
   (* real position is set later in draw_content *)
   let pos = { Figures.x = 0.; y = 0. } in
 
-  match FT.file_type_of_file file with
+  match FT.file_type_of_file (Fpath.v file) with
   | _ when use_fancy_highlighting file ->
      logger#info "fancy highlighting for %s" file;
 
@@ -434,7 +434,7 @@ let draw_treemap_rectangle_content_maybe cr clipping context tr  =
      * it confuses cairo which then can confuse computation done in gtk
      * idle callbacks
      *)
-    if Common2.lfile_exists_eff file && File_type.is_textual_file file
+    if Common2.lfile_exists_eff file && File_type.is_textual_file (Fpath.v file)
     then begin
       let w = F.rect_width r in
       let h = F.rect_height r in

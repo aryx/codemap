@@ -198,7 +198,7 @@ let tokens_with_categ_of_file_helper
  * also in Draw_microlevel.draw_contents2.
  *)
 let tokens_with_categ_of_file file hentities = 
-  let ftype = FT.file_type_of_file file in
+  let ftype = FT.file_type_of_file (Fpath.v file) in
   let prefs = Highlight_code.default_highlighter_preferences in
   
   match ftype with
@@ -399,7 +399,7 @@ let tokens_with_categ_of_file file hentities =
            Check_variables_cpp.check_and_annotate_program
              ast;
 *)
-           Cpp (Parse_cpp.parse file)
+           Cpp (Parse_cpp.parse (Fpath.v file))
          ))
          
          (function 
