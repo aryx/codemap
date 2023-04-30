@@ -170,7 +170,7 @@ and kind = string
  * current file.
  *)
 type layers_with_index = {
-  root : Common.dirname;
+  root : Common.filename;
   layers : (layer * bool (* is active *)) list;
   micro_index : (filename, (int, color) Hashtbl.t) Hashtbl.t;
   macro_index : (filename, (float * color) list) Hashtbl.t;
@@ -656,8 +656,8 @@ let simple_layer_of_parse_infos ~root ~title ?(description = "") xs kinds =
   let files_and_lines =
     xs
     |> List.map (fun (tok, kind) ->
-           let file = Parse_info.file_of_info tok in
-           let line = Parse_info.line_of_info tok in
+           let file = Tok.file_of_tok tok in
+           let line = Tok.line_of_tok tok in
            let file' = Common2.relative_to_absolute file in
            (Common.readable ~root file', (line, kind)))
   in

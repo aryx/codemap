@@ -6,7 +6,7 @@ val _refresh_legend: (unit -> unit) ref
 val _go_back: (Model2.world -> unit) ref
 val _go_dirs_or_file: 
   (?current_grep_query: (string, Model2.line) Hashtbl.t option ->
-    Model2.world -> Common.path list -> unit
+    Model2.world -> Common.filename list -> unit
   ) ref
 
 val _statusbar_addtext: (string -> unit) ref

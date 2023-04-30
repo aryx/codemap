@@ -20,7 +20,6 @@ module Flag = Flag_parsing
 module Ast = Ast_html
 module TH = Token_helpers_html
 module T = Parser_html
-module PI = Parse_info
 module Dtd = Dtd_simple
 
 (* While porting the original html parser to return an AST with line
@@ -131,17 +130,17 @@ let parse_atts call_scan =
             | T.EOF _ -> raise End_of_scan
             | T.Relement ii ->
                 if !Flag.exn_when_lexical_error then
-                  raise (Parse_info.Parsing_error ii)
+                  raise (Parsing_error.Syntax_error ii)
                 else (* Illegal *)
                   ([], false)
             | T.Relement_empty ii ->
                 if !Flag.exn_when_lexical_error then
-                  raise (Parse_info.Parsing_error ii)
+                  raise (Parsing_error.Syntax_error ii)
                 else (* Illegal *)
                   ([], true)
             | t ->
                 if !Flag.exn_when_lexical_error then
-                  raise (Parse_info.Parsing_error (TH.info_of_tok t))
+                  raise (Parsing_error.Syntax_error (TH.info_of_tok t))
                 else
                   (* Illegal *)
                   parse_atts_lookahead (skip_space false call_scan))
@@ -170,7 +169,7 @@ let parse_atts call_scan =
     | T.EOF _ -> raise End_of_scan
     | t ->
         if !Flag.exn_when_lexical_error then
-          raise (Parse_info.Parsing_error (TH.info_of_tok t))
+          raise (Parsing_error.Syntax_error (TH.info_of_tok t))
         else (* Illegal *)
           parse_atts_lookahead (skip_space false call_scan)
   in
@@ -198,7 +197,7 @@ let parse_special tag call_scan =
         s ^ aux ()
     | t ->
         if !Flag.exn_when_lexical_error then
-          raise (Parse_info.Parsing_error (TH.info_of_tok t))
+          raise (Parsing_error.Syntax_error (TH.info_of_tok t))
         else (* Illegal *)
           aux ()
   in
@@ -206,7 +205,7 @@ let parse_special tag call_scan =
   let info =
     match !first_tok with
     | None -> Ast.fakeInfo ()
-    | Some tok -> PI.rewrap_str s tok
+    | Some tok -> Tok.rewrap_str s tok
   in
   (s, info)
 
@@ -222,7 +221,7 @@ let rec merge_cdataspecial_tokens xs =
   | [] -> []
   | T.CdataSpecial (tok, s1) :: T.CdataSpecial (_tok, s2) :: rest ->
       let str = s1 ^ s2 in
-      let tok = PI.rewrap_str str tok in
+      let tok = Tok.rewrap_str str tok in
       merge_cdataspecial_tokens (T.CdataSpecial (tok, str) :: rest)
   | x :: xs -> x :: merge_cdataspecial_tokens xs
 
@@ -288,7 +287,7 @@ type element_state = {
 let parse file =
   Common.with_open_infile file (fun chan ->
       let buf = Lexing.from_channel chan in
-      let table = Parsing_helpers.full_charpos_to_pos_large file in
+      let table = Pos.full_charpos_to_pos_large file in
 
       let toks = ref [] in
       let call_scan scannerf =
@@ -297,20 +296,15 @@ let parse file =
         let tok =
           tok
           |> TH.visitor_info_of_tok (fun ii ->
-                 {
-                   ii with
-                   Parse_info.token =
-                     (* could assert pinfo.filename = file ? *)
-                     (match ii.Parse_info.token with
-                     | Parse_info.OriginTok pi ->
-                         Parse_info.OriginTok
-                           (Parsing_helpers.complete_token_location_large file table
-                              pi)
-                     | Parse_info.FakeTokStr _
-                     | Parse_info.Ab
-                     | Parse_info.ExpandedTok _ ->
+               (* could assert pinfo.filename = file ? *)
+               (match ii with
+                | Tok.OriginTok pi ->
+                         Tok.OriginTok (Tok.complete_location file table pi)
+                | Tok.FakeTokStr _
+                | Tok.Ab
+                | Tok.ExpandedTok _ ->
                          raise Impossible);
-                 })
+               )
         in
         Common.push tok toks;
         tok
@@ -390,7 +384,7 @@ let parse file =
                     ( Tag ("--", info),
                       [
                         ( Attr ("contents", Ast.fakeInfo ()),
-                          Val (PI.str_of_info info, Ast.fakeInfo ()) );
+                          Val (Tok.content_of_tok info, Ast.fakeInfo ()) );
                       ],
                       [] )
                   :: !current.subs;
@@ -405,7 +399,7 @@ let parse file =
                     ( Tag ("!", info),
                       [
                         ( Attr ("contents", Ast.fakeInfo ()),
-                          Val (PI.str_of_info info, Ast.fakeInfo ()) );
+                          Val (Tok.content_of_tok info, Ast.fakeInfo ()) );
                       ],
                       [] )
                   :: !current.subs;
@@ -420,7 +414,7 @@ let parse file =
                     ( Tag ("?", info),
                       [
                         ( Attr ("contents", Ast.fakeInfo ()),
-                          Val (PI.str_of_info info, Ast.fakeInfo ()) );
+                          Val (Tok.content_of_tok info, Ast.fakeInfo ()) );
                       ],
                       [] )
                   :: !current.subs;

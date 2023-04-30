@@ -4,7 +4,7 @@
 val tokens_with_categ_of_file:
   Common.filename ->
   (string, Database_code.entity) Hashtbl.t ->
-  (string * Highlight_code.category option * Common2.filepos) list
+  (string * Highlight_code.category option * Pos.linecol) list
 
 (* helpers *)
 val use_arity_of_use_count: 

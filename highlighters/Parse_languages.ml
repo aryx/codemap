@@ -15,7 +15,6 @@
 open Common2 (* <=> *)
 module R = Tree_sitter_run.Raw_tree
 module H = Parse_tree_sitter_helpers
-module PI = Parse_info
 
 (*****************************************************************************)
 (* Prelude *)
@@ -57,10 +56,10 @@ let visit ~v_token ~v_any x =
  * by looking at ranges of the file in env not covered by the Parse_info.t
  * we got from the CST.
  *)
-let add_extra_infos file (infos : Parse_info.t list) : (Parse_info.t * origin_info) list =
+let add_extra_infos file (infos : Tok.t list) : (Tok.t * origin_info) list =
   let bigstr = Common.read_file file in
   let max = String.length bigstr in
-  let conv = Parsing_helpers.full_charpos_to_pos_large file in
+  let conv = Pos.full_charpos_to_pos_large file in
 
   let rec aux current xs =
     match xs with
@@ -69,22 +68,23 @@ let add_extra_infos file (infos : Parse_info.t list) : (Parse_info.t * origin_in
        then 
           let (line, column) = conv current in
           let str = String.sub bigstr current (max - current) in
-          let loc = { PI.file; line; column; charpos = current; str } in
-          [PI.mk_info_of_loc loc, Extra]
+          let loc = { Tok.pos = { Pos.file; line; column; charpos = current}; str } in
+          [Tok.tok_of_loc loc, Extra]
        else []
     | x::xs ->
-      if PI.is_fake x
+      if Tok.is_fake x
       then (* filter fake tokens *) aux current xs
       else
-        let loc = PI.unsafe_token_location_of_info x in
-        (match current <=> loc.PI.charpos with
+        let loc = Tok.unsafe_loc_of_tok x in
+        (match current <=> loc.pos.charpos with
         | Inf ->
          let (line, column) = conv current in
-         let str = String.sub bigstr current (loc.PI.charpos - current) in
-         let loc2 = { PI.file; line; column; charpos = current; str } in
-         (PI.mk_info_of_loc loc2, Extra)::aux (loc.PI.charpos) (x::xs)
+         let str = String.sub bigstr current (loc.pos.charpos - current) in
+         let loc2 = { Tok.pos = { Pos.file; line; column; charpos = current; };
+                      str } in
+         (Tok.tok_of_loc loc2, Extra)::aux (loc.pos.charpos) (x::xs)
       | Equal ->
-         (x, InCST)::(aux (loc.PI.charpos + String.length loc.PI.str) xs)
+         (x, InCST)::(aux (loc.pos.charpos + String.length loc.str) xs)
       | Sup ->
          raise Common.Impossible
       )
@@ -95,7 +95,7 @@ let add_extra_infos file (infos : Parse_info.t list) : (Parse_info.t * origin_in
  * where Left = comes from CST and Right = extra not in CST 
  * (e.g., space/comments)
  *)
-let extract_infos_raw_tree file (raw : unit Tree_sitter_run.Raw_tree.t) : (Parse_info.t * origin_info) list =
+let extract_infos_raw_tree file (raw : unit Tree_sitter_run.Raw_tree.t) : (Tok.t * origin_info) list =
   let infos = ref [] in
   let env = { H.file; conv = H.line_col_to_pos file; extra = () } in
   visit ~v_token:(fun tok -> Common.push (H.token env tok) infos) ~v_any:(fun _ -> ()) raw;
@@ -125,8 +125,8 @@ let parse_rust file =
   in
   ast, tokens
 
-let parse_jsonnet file =
-  let res = Parse_jsonnet_tree_sitter.parse file in
+let parse_jsonnet ( file : Common.filename) =
+  let res = Parse_jsonnet_tree_sitter.parse (Fpath.v file) in
   let tokens = 
     let res = Tree_sitter_jsonnet.Parse.file file in
     match res.Tree_sitter_run.Parsing_result.program with

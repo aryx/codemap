@@ -19,7 +19,6 @@ open Common
 
 open Highlight_code
 module FT = File_type
-module PI = Parse_info
 module HC = Highlight_code
 module Db = Database_code
 module Flag = Flag_visual
@@ -52,7 +51,7 @@ type ast =
    * - Lisp/Scheme/Clojure/Sexp (but currently use Raw_tree so no
    *   great highlighting for now)
   *)
-  | Generic of (AST_generic.program * (Parse_info.t * Parse_languages.origin_info) list)
+  | Generic of (AST_generic.program * (Tok.t * Parse_languages.origin_info) list)
 (* old: was just lexer in old pfff
   | Csharp of Parse_csharp.program_and_tokens
   | Hs  of Parse_hs.program_and_tokens
@@ -180,14 +179,14 @@ let tokens_with_categ_of_file_helper
     (* getting the text *)
     toks |> Common.map_filter (fun tok -> 
       let info = info_of_tok tok in
-      let s = PI.str_of_info info in
-      if not (PI.is_origintok info)
+      let s = Tok.content_of_tok info in
+      if not (Tok.is_origintok info)
       then None
       else 
         let categ = Common2.hfind_option info h |> Common2.fmap (fun categ ->
           rewrite_categ_using_entities s categ file hentities
         ) in
-        Some (s, categ,{ Common2.l = PI.line_of_info info; c = PI.col_of_info info; })
+        Some (s, categ,{ Pos.l = Tok.line_of_tok info; c = Tok.col_of_tok info; })
     )
 
 (*****************************************************************************)

@@ -34,24 +34,24 @@
 /*(* Tokens *)*/
 /*(*************************************************************************)*/
 
-%token <Ast_html.info> TComment  /*(* <!-- ... --> *)*/
-%token <Ast_html.info> TDoctype  /*(* <! ... > *)*/
-%token <Ast_html.info> TPi       /*(* <? ... ?> or >  *)*/
+%token <Tok.t> TComment  /*(* <!-- ... --> *)*/
+%token <Tok.t> TDoctype  /*(* <! ... > *)*/
+%token <Tok.t> TPi       /*(* <? ... ?> or >  *)*/
 
-%token <Ast_html.info * string>   Lelement
-%token <Ast_html.info * string>   Lelementend
-%token <Ast_html.info> Relement  /*(* > *)*/
-%token <Ast_html.info> Relement_empty   /*(* />, for XML compat *)*/
-%token <Ast_html.info * string> Cdata
-%token <Ast_html.info * string> CdataSpecial
-%token <Ast_html.info * string> Space
-%token <Ast_html.info * string> Name
-%token <Ast_html.info> Eq
-%token <Ast_html.info * string> Literal
-%token <Ast_html.info> Other
+%token <Tok.t * string>   Lelement
+%token <Tok.t * string>   Lelementend
+%token <Tok.t> Relement  /*(* > *)*/
+%token <Tok.t> Relement_empty   /*(* />, for XML compat *)*/
+%token <Tok.t * string> Cdata
+%token <Tok.t * string> CdataSpecial
+%token <Tok.t * string> Space
+%token <Tok.t * string> Name
+%token <Tok.t> Eq
+%token <Tok.t * string> Literal
+%token <Tok.t> Other
 
 /*(*-----------------------------------------*)*/
-%token <Ast_html.info> EOF
+%token <Tok.t> EOF
 
 /*(*************************************************************************)*/
 /*(* Rules type declaration *)*/

@@ -13,8 +13,6 @@
  * license.txt for more details.
  *)
 
-module PI = Parse_info
-
 (*****************************************************************************)
 (* Prelude *)
 (*****************************************************************************)
@@ -82,12 +80,7 @@ module PI = Parse_info
 (* Tokens/info *)
 (*****************************************************************************)
 
-type pinfo = Parse_info.token_origin
-
-type info = Parse_info.t
-and tok = info
-and 'a wrap = 'a * info
-(* with tarzan *)
+type 'a wrap = 'a * Tok.t
 
 (*****************************************************************************)
 (* HTML raw version *)
@@ -413,7 +406,7 @@ type any = HtmlTree of html_tree
 (*****************************************************************************)
 
 let fakeInfo ?(next_to = None) ?(str = "") () =
-  { PI.token = PI.FakeTokStr (str, next_to); transfo = PI.NoTransfo }
+  Tok.FakeTokStr (str, next_to)
 
 let str_of_tag (Tag (s, _)) = s
 

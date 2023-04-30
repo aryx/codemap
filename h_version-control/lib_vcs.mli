@@ -33,4 +33,4 @@ val dummy_annotation : line_annotation
 val parse_commit_patch: string list -> commit_patch
 val parse_file_status: string -> file_commit_status * Common.filename
 
-val filter_vcs_dir: Common.dirname -> bool
+val filter_vcs_dir: Common.filename (* a dir *) -> bool

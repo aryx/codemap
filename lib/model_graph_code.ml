@@ -94,7 +94,7 @@ let build_entities_of_file g =
   g |> G.iter_nodes (fun n ->
     try 
       let info = G.nodeinfo n g in
-      let file = info.G.pos.Parse_info.file in
+      let file = info.G.pos.pos.file in
       (* old: let line = info.G.pos.Parse_info.line in *)
       Hashtbl.add h file n;
     with Not_found -> ()

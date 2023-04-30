@@ -11,7 +11,7 @@ type entity = {
   e_name : string;
   e_fullname : string; (* can be empty *)
   e_file : Common.filename;
-  e_pos : Common2.filepos;
+  e_pos : Pos.linecol;
   mutable e_number_external_users : int;
   mutable e_good_examples_of_use : entity_id list;
   e_properties : property list;
@@ -26,7 +26,7 @@ type entity = {
  * JSON file). Only root is in absolute path format.
  *)
 type database = {
-  root : Common.dirname;
+  root : Common.filename;
   (* the int are for the total number of times this file or dir is
    * externally referenced.
    *)
@@ -50,10 +50,10 @@ val merge_databases : database -> database -> database
 
 (* build database helpers *)
 val alldirs_and_parent_dirs_of_relative_dirs :
-  Common.dirname list -> Common.dirname list
+  Common.filename (* dir *) list -> Common.filename (* a dir *) list
 
 val files_and_dirs_database_from_files :
-  root:Common.dirname -> Common.filename list -> database
+  root:Common.filename -> Common.filename list -> database
 
 val adjust_method_or_field_external_users : verbose:bool -> entity array -> unit
 

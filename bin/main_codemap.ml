@@ -139,7 +139,7 @@ let legend = ref false
 let graph_file = ref (None: Common.filename option)
 let db_file    = ref (None: Common.filename option)
 let layer_file = ref (None: Common.filename option)
-let layer_dir  = ref (None: Common.dirname option)
+let layer_dir  = ref (None: Common.filename option)
 
 (* See also Gui.synchronous_actions *)
 let test_mode = ref (None: string option)

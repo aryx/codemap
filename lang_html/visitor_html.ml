@@ -32,7 +32,7 @@ open Ast_html
 (* Types *)
 (*****************************************************************************)
 
-type visitor_in = { khtml_tree : html_tree vin; kinfo : info vin }
+type visitor_in = { khtml_tree : html_tree vin; kinfo : Tok.t vin }
 and 'a vin = ('a -> unit) * visitor_out -> 'a -> unit
 and visitor_out = any -> unit
 
@@ -49,7 +49,7 @@ let (mk_visitor : visitor_in -> visitor_out) =
   let rec v_info x =
     let k x =
       match x with
-      | { Parse_info.token = _v_pinfo; _ } ->
+      | _v_pinfo ->
           (* TODO ? not sure what behavior we want with tokens and fake tokens.
       *)
           (*let arg = v_parse_info v_pinfo in *)

@@ -39,9 +39,9 @@ module Ast = Ast_html
 
 (* shortcuts *)
 let tok = Lexing.lexeme
-let tokinfo = Parse_info.tokinfo
-let error = Parse_info.lexical_error
-let tok_add_s = Parse_info.tok_add_s
+let tokinfo = Tok.tok_of_lexbuf
+let error = Parsing_error.lexical_error
+let tok_add_s = Tok.tok_add_s
 
 }
 

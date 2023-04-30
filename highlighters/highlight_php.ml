@@ -242,8 +242,8 @@ let visit_program ~tag _prefs _hentities (ast, toks) =
       :: T.TNewline _ii4
       :: T.T_COMMENT ii5
       :: xs ->
-        let s = Parse_info.str_of_info ii in
-        let s5 = Parse_info.str_of_info ii5 in
+        let s = Tok.content_of_tok ii in
+        let s5 = Tok.content_of_tok ii5 in
         (match () with
         | _ when s =~ ".*\\*\\*\\*\\*" && s5 =~ ".*\\*\\*\\*\\*" ->
             tag ii CommentEstet;

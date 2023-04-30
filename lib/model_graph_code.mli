@@ -9,7 +9,7 @@ val build_entities_of_file:
   (Common.filename, Graph_code.node list) Common.assoc
 
 val add_headers_files_entities_of_file:
-  Common.dirname -> 
+  Common.filename (* a dir *) -> 
   (Common.filename, Graph_code.node list) Common.assoc ->
   (Common.filename, Graph_code.node list) Common.assoc
 

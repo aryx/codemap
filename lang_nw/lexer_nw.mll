@@ -40,48 +40,48 @@ module Flag = Flag_parsing
  *)
 
 type token =
-  | TComment of Parse_info.t
-  | TCommentSpace of Parse_info.t
-  | TCommentNewline of Parse_info.t
+  | TComment of Tok.t
+  | TCommentSpace of Tok.t
+  | TCommentNewline of Tok.t
 
-  | TWord of (string * Parse_info.t)
-  | TNumber of (string * Parse_info.t)
+  | TWord of (string * Tok.t)
+  | TNumber of (string * Tok.t)
   (* e.g., 12pt *)
-  | TUnit of (string * Parse_info.t)
-  | TSymbol of (string * Parse_info.t)
+  | TUnit of (string * Tok.t)
+  | TSymbol of (string * Tok.t)
 
   (* \xxx *)
-  | TCommand of (string * Parse_info.t)
+  | TCommand of (string * Tok.t)
 
-  | TOBrace of Parse_info.t | TCBrace of Parse_info.t
-  | TOBracket of Parse_info.t | TCBracket of Parse_info.t
+  | TOBrace of Tok.t | TCBrace of Tok.t
+  | TOBracket of Tok.t | TCBracket of Tok.t
   (* no TOParen/TCParen, they are not forced to be matching in TeX *)
 
   (* pad-specific: \t \f \l, see noweblatexpad  *)
-  | TFootnote of char * Parse_info.t
+  | TFootnote of char * Tok.t
 
   (* verbatim (different lexing rules) *)
 
-  | TBeginVerbatim of Parse_info.t
-  | TEndVerbatim of Parse_info.t
-  | TVerbatimLine of (string * Parse_info.t)
+  | TBeginVerbatim of Tok.t
+  | TEndVerbatim of Tok.t
+  | TVerbatimLine of (string * Tok.t)
 
   (* start of noweb stuff (different lexing rules too) *)
 
   (* <<...>>= and @ *)
-  | TBeginNowebChunk of Parse_info.t
-  | TEndNowebChunk of Parse_info.t
-  | TNowebChunkStr of (string * Parse_info.t)
+  | TBeginNowebChunk of Tok.t
+  | TEndNowebChunk of Tok.t
+  | TNowebChunkStr of (string * Tok.t)
   (* << >> when on the same line and inside a noweb chunk *)
-  | TNowebChunkName of string * Parse_info.t
+  | TNowebChunkName of string * Tok.t
 
   (* [[ ]] *)
-  | TNowebCode of string * Parse_info.t
+  | TNowebCode of string * Tok.t
   (* syncweb-specific: *)
-  | TNowebCodeLink of string * Parse_info.t
+  | TNowebCodeLink of string * Tok.t
 
-  | TUnknown of Parse_info.t
-  | EOF of Parse_info.t
+  | TUnknown of Tok.t
+  | EOF of Tok.t
 
 (*****************************************************************************)
 (* Helpers *)
@@ -89,8 +89,8 @@ type token =
 
 (* shortcuts *)
 let tok = Lexing.lexeme
-let tokinfo = Parse_info.tokinfo
-let error = Parse_info.lexical_error
+let tokinfo = Tok.tok_of_lexbuf
+let error = Parsing_error.lexical_error
 
 (* let keyword_table = Common.hash_of_list [] ? not needed. No keyword
  * in TeX, just commands.
@@ -229,7 +229,7 @@ rule tex = parse
 
 
   (* ----------------------------------------------------------------------- *)
-  | eof { EOF (tokinfo lexbuf |> Parse_info.rewrap_str "") }
+  | eof { EOF (tokinfo lexbuf |> Tok.rewrap_str "") }
   | _ {
         error ("unrecognised symbol, in token rule:"^tok lexbuf) lexbuf;
         TUnknown (tokinfo lexbuf)
@@ -252,7 +252,7 @@ and noweb = parse
   | '<'  { TNowebChunkStr ("<", tokinfo lexbuf) }
 
   (* ----------------------------------------------------------------------- *)
-  | eof { EOF (tokinfo lexbuf |> Parse_info.rewrap_str "") }
+  | eof { EOF (tokinfo lexbuf |> Tok.rewrap_str "") }
   | _ {
       error ("unrecognised symbol, in noweb chunkname rule:"^tok lexbuf) lexbuf;
       TUnknown (tokinfo lexbuf)
@@ -275,7 +275,7 @@ and verbatim = parse
   | '\n' { TCommentNewline (tokinfo lexbuf) }
 
   (* ----------------------------------------------------------------------- *)
-  | eof { EOF (tokinfo lexbuf |> Parse_info.rewrap_str "") }
+  | eof { EOF (tokinfo lexbuf |> Tok.rewrap_str "") }
   | _ {
       error ("unrecognised symbol, in verbatim rule:"^tok lexbuf) lexbuf;
       TUnknown (tokinfo lexbuf)
@@ -288,4 +288,4 @@ and verb c = parse
         TEndVerbatim (tokinfo lexbuf)
       end else (TVerbatimLine (spf "%c" c, tokinfo lexbuf))
     }
-  | eof { EOF (tokinfo lexbuf |> Parse_info.rewrap_str "") }
+  | eof { EOF (tokinfo lexbuf |> Tok.rewrap_str "") }

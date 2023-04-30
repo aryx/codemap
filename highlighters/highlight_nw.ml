@@ -72,8 +72,8 @@ let visit_program ~tag_hook _prefs _file (trees, toks) =
       :: T.TCommentNewline _ii4
       :: T.TComment ii5
       :: xs ->
-        let s = Parse_info.str_of_info ii in
-        let s5 = Parse_info.str_of_info ii5 in
+        let s = Tok.content_of_tok ii in
+        let s5 = Tok.content_of_tok ii5 in
         (match () with
         | _ when s =~ "^%\\*\\*\\*\\*" && s5 =~ "^%\\*\\*\\*\\*" ->
             tag ii CommentEstet;
@@ -223,7 +223,7 @@ let visit_program ~tag_hook _prefs _file (trees, toks) =
          match tok with
          | T.TComment ii -> (
              if not (Hashtbl.mem already_tagged ii) then
-               let s = Parse_info.str_of_info ii |> String.lowercase_ascii in
+               let s = Tok.content_of_tok ii |> String.lowercase_ascii in
                match s with
                | _ when s =~ "^%todo:" -> tag ii BadSmell
                | _ -> tag ii CommentImportance0)

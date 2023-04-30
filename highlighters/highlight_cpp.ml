@@ -16,7 +16,6 @@ open Common
 open Ast_cpp
 open Entity_code
 open Highlight_code
-module PI = Parse_info
 module Ast = Ast_cpp
 module V = Visitor_cpp
 module Lib = Lib_parsing_cpp
@@ -69,8 +68,8 @@ let visit_toplevel ~tag_hook _prefs _file (*db_opt *) (ast, toks) =
       :: T.TCommentNewline _ii4
       :: T.TComment ii5
       :: xs ->
-        let s = PI.str_of_info ii in
-        let s5 = PI.str_of_info ii5 in
+        let s = Tok.content_of_tok ii in
+        let s5 = Tok.content_of_tok ii5 in
         (match () with
         | _ when s =~ ".*\\*\\*\\*\\*" && s5 =~ ".*\\*\\*\\*\\*" ->
             tag ii CommentEstet;
@@ -86,13 +85,13 @@ let visit_toplevel ~tag_hook _prefs _file (*db_opt *) (ast, toks) =
             tag ii3 CommentSection0
         | _ -> ());
         aux_toks xs;
-        let s = PI.str_of_info ii in
-        let s2 = PI.str_of_info ii3 in
+        let s = Tok.content_of_tok ii in
+        let s2 = Tok.content_of_tok ii3 in
         (match () with
         | _ when s =~ "//////////.*" && s2 =~ "// .*" -> tag ii3 CommentSection1
         | _ -> ());
         aux_toks xs
-    | T.TComment ii :: xs when PI.str_of_info ii =~ "//IMPORTANT:" ->
+    | T.TComment ii :: xs when Tok.content_of_tok ii =~ "//IMPORTANT:" ->
         tag ii CommentSection2;
         aux_toks xs
     (* heuristic for class/struct definitions.
@@ -127,11 +126,11 @@ let visit_toplevel ~tag_hook _prefs _file (*db_opt *) (ast, toks) =
       :: T.TCommentSpace _ii4
       :: T.TOBrace _ii5
       :: xs
-      when PI.col_of_info ii =|= 0 ->
+      when Tok.col_of_tok ii =|= 0 ->
         tag ii3 (Entity (Class, Def2 fake_no_def2));
         aux_toks xs (* heuristic for function definitions *)
     | t1 :: xs
-      when t1 |> TH.info_of_tok |> PI.col_of_info =|= 0 && TH.is_not_comment t1 ->
+      when t1 |> TH.info_of_tok |> Tok.col_of_tok =|= 0 && TH.is_not_comment t1 ->
         let line_t1 = TH.line_of_tok t1 in
         let rec find_ident_paren xs =
           match xs with
@@ -260,7 +259,7 @@ let visit_toplevel ~tag_hook _prefs _file (*db_opt *) (ast, toks) =
                 | DotAccess (_e, _, name) ->
                     Ast.ii_of_id_name name
                     |> List.iter (fun ii ->
-                           let file = PI.file_of_info ii in
+                           let file = Tok.file_of_tok ii in
                            if
                              File_type.file_type_of_file (Fpath.v file)
                              =*= File_type.PL (File_type.C "c")
@@ -402,7 +401,7 @@ let visit_toplevel ~tag_hook _prefs _file (*db_opt *) (ast, toks) =
          | T.TComment ii -> (
              if not (Hashtbl.mem already_tagged ii) then
                (* a little bit syncweb specific *)
-               let s = PI.str_of_info ii in
+               let s = Tok.content_of_tok ii in
                match s with
                (* yep, s e x are the syncweb markers *)
                | _ when s =~ "/\\*[sex]:" -> tag ii CommentSyncweb

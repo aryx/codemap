@@ -55,7 +55,7 @@ let parse file =
 let highlight org =
   org |> Common.index_list_1
   |> List.map (fun (org, line) ->
-         let filepos = { Common2.l = line; c = 0 } in
+         let filepos = { Pos.l = line; c = 0 } in
          match org with
          | Comment s -> (s, Some HC.Comment, filepos)
          | Other s ->

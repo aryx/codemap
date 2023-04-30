@@ -6,7 +6,7 @@ val color_of_webpl_type:
   File_type.webpl_type -> Simple_color.emacs_color
 
 val anamorphic_diviser_of_file:
-  root:Common.dirname ->
+  root:Common.filename ->
   Common.filename -> float
 
 (* default treemap *)

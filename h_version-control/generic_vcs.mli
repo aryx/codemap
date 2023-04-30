@@ -8,8 +8,8 @@ method files_involved_in_diff: Lib_vcs.versionid ->
   (Lib_vcs.file_commit_status * Common.filename) list
 end 
 
-val git: basedir:Common.dirname -> vcs
-val hg: basedir:Common.dirname -> vcs
+val git: basedir:Common.filename -> vcs
+val hg: basedir:Common.filename -> vcs
 
 (* infer from basedir *)
-val mk_vcs: basedir:Common.dirname -> vcs
+val mk_vcs: basedir:Common.filename -> vcs

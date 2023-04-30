@@ -27,14 +27,14 @@ val heat_map_properties : (kind * color) list
 
 (* The filenames are in absolute path format in the index. *)
 type layers_with_index = {
-  root : Common.dirname;
+  root : Common.filename;
   layers : (layer * bool (* is active *)) list;
   micro_index : (Common.filename, (int, color) Hashtbl.t) Hashtbl.t;
   macro_index : (Common.filename, (float * color) list) Hashtbl.t;
 }
 
 val build_index_of_layers :
-  root:Common.dirname -> (layer * bool) list -> layers_with_index
+  root:Common.filename (* a dir *) -> (layer * bool) list -> layers_with_index
 
 val has_active_layers : layers_with_index -> bool
 
@@ -49,10 +49,10 @@ val json_of_layer : layer -> JSON.t
 val layer_of_json : JSON.t -> layer
 
 val simple_layer_of_parse_infos :
-  root:Common.dirname ->
+  root:Common.filename ->
   title:string ->
   ?description:string ->
-  (Parse_info.t * kind) list ->
+  (Tok.t * kind) list ->
   (kind * color) list ->
   layer
 

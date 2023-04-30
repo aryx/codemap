@@ -20,8 +20,6 @@ open Entity_code
 module E = Entity_code
 module G = AST_generic
 module H = AST_generic_helpers
-module PI = Parse_info
-module V = Visitor_AST
 
 (*****************************************************************************)
 (* Prelude *)
@@ -124,7 +122,7 @@ let info_of_dotted_ident xs =
 *)
 let visit_program (already_tagged, tag) ast =
   let tag ii categ =
-    if PI.is_fake ii
+    if Tok.is_fake ii
     then ()
     else tag ii categ
   in
@@ -462,7 +460,7 @@ let visit_program (already_tagged, tag) ast =
         *)
         | DotAccess (_e, tok, 
              (FN (Id (id, _) | IdQualified {name_last = (id, _); _}))) ->
-            (match PI.str_of_info tok with
+            (match Tok.content_of_tok tok with
              (* ocaml specific *)
              | "#" -> tag_id id (Entity (Method, (Use2 fake_no_use2)))
 
@@ -579,7 +577,7 @@ let visit_for_highlight ~tag_hook _prefs _file (ast, tokens) =
     match origin with
     | Parse_languages.Extra -> tag_hook tk Comment
     | Parse_languages.InCST ->
-      let str = PI.str_of_info tk in
+      let str = Tok.content_of_tok tk in
       (match str with
       | "[" | "]" -> tag_hook tk Punctuation
       | "." -> tag_hook tk Punctuation

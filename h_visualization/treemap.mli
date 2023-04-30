@@ -87,15 +87,15 @@ val follow_symlinks : bool ref
 (* paths -> tree (see also Common.tree2_of_files) *)
 val tree_of_dirs_or_files :
   ?filter_file:(Common.filename -> bool) ->
-  ?filter_dir:(Common.dirname -> bool) ->
+  ?filter_dir:(Common.filename (* a dir *) -> bool) ->
   ?sort:directory_sort ->
   file_hook:(Common.filename -> 'a) ->
   Common2.path list ->
-  (Common.dirname, Common.filename * 'a) tree
+  (Common.filename (* a dir *), Common.filename * 'a) tree
 
 val remove_singleton_subdirs :
-  (Common.dirname, Common.filename * 'a) tree ->
-  (Common.dirname, Common.filename * 'a) tree
+  (Common.filename (* a dir *), Common.filename * 'a) tree ->
+  (Common.filename (* a dir *), Common.filename * 'a) tree
 
 (* internal functions *)
 (*s: signature treemap accessors *)

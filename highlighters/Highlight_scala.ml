@@ -16,7 +16,6 @@ open Common
 
 open Highlight_code
 open Entity_code
-module PI = Parse_info
 module T = Token_scala
 module FT = File_type
 
@@ -134,8 +133,8 @@ let visit_program
         ::T.Comment(ii5)
         ::xs ->
 
-        let s = PI.str_of_info ii in
-        let s5 =  PI.str_of_info ii5 in
+        let s = Tok.content_of_tok ii in
+        let s5 =  Tok.content_of_tok ii5 in
         (match () with
          | _ when s =~ ".*\\*\\*\\*\\*" && s5 =~ ".*\\*\\*\\*\\*" ->
              tag ii CommentEstet;
@@ -154,7 +153,7 @@ let visit_program
         );
         aux_toks (T.Comment ii3::T.Nl ii4::T.Comment ii5::xs)
 
-    |   T.Comment(ii)::xs when (PI.str_of_info ii) =~ "(\\*[ ]*coupling:" ->
+    |   T.Comment(ii)::xs when (Tok.content_of_tok ii) =~ "(\\*[ ]*coupling:" ->
         tag ii CommentImportance3;
         aux_toks xs
 
@@ -233,6 +232,8 @@ let visit_program
   if not disable_token_phase2 then
     toks |> List.iter (fun tok ->
       match tok with
+      (* TODO: new keywords *)
+      | T.Kexport _ | T.Kenum _ -> ()
       (* specials *)
 
       | T.Comment ii -> tag_if_not_tagged ii Comment
@@ -240,7 +241,7 @@ let visit_program
           if not (Hashtbl.mem already_tagged ii)
           then
             (* a little bit syncweb specific *)
-            let s = PI.str_of_info ii in
+            let s = Tok.content_of_info ii in
             (match s with
              (* yep, s e x are the syncweb markers *)
              | _ when s =~ "(\\*[sex]:"  -> tag ii CommentSyncweb
@@ -261,7 +262,7 @@ let visit_program
             )
 *)
       | T.Nl _ | T.Space _ | T.NEWLINE _ | T.NEWLINES _ -> ()
-      | T.INDENT _ | T.DEDENT _ -> ()
+      | T.DEDENT _ -> ()
       | T.Unknown ii -> tag ii Error
       | T.EOF _ii-> ()
 

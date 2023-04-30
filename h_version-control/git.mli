@@ -1,8 +1,8 @@
 (* filename below is assumed to be the path of the file relative to basedir *)
 
 (* finding the repository *)
-val is_git_repository: Common.dirname -> bool
-val find_root_from_absolute_path: Common.filename -> Common.dirname
+val is_git_repository: Common.filename (* a dir *) -> bool
+val find_root_from_absolute_path: Common.filename -> Common.filename (* a dir*)
 
 (* operations on a singular file *)
 
@@ -24,7 +24,7 @@ val commits:
   (Lib_vcs.versionid * string) list
 
 val refactoring_commits:
-  ?since:string -> ?threshold:int -> Common.dirname -> unit
+  ?since:string -> ?threshold:int -> Common.filename (* a dir *) -> unit
 val parse_skip_revs_file:
   Common.filename -> Lib_vcs.versionid list
 
@@ -88,7 +88,7 @@ val max_date_of_lines:
 val clean_git_patch: Patch.patch_raw -> Patch.patch_raw
 
 val ext_git_annot_cache: string
-val cleanup_cache_files: Common.dirname -> unit
+val cleanup_cache_files: Common.filename (* a dir *) -> unit
 
 (* raise exception if the return code is not good *)
-val exec_cmd: basedir:Common.dirname -> string -> unit
+val exec_cmd: basedir:Common.filename -> string -> unit

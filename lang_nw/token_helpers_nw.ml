@@ -13,7 +13,7 @@
  * license.txt for more details.
  *)
 open Lexer_nw
-module PI = Parse_info
+module FZ = Lib_ast_fuzzy
 
 (*****************************************************************************)
 (* Token Helpers *)
@@ -32,14 +32,14 @@ let is_comment = function
 
 let token_kind_of_tok t =
   match t with
-  | TOBrace _ -> PI.LBrace
-  | TCBrace _ -> PI.RBrace
-  | TOBracket _ -> PI.LBracket
-  | TCBracket _ -> PI.RBracket
-  | TComment _ -> PI.Esthet PI.Comment
-  | TCommentSpace _ -> PI.Esthet PI.Space
-  | TCommentNewline _ -> PI.Esthet PI.Newline
-  | _ -> PI.Other
+  | TOBrace _ -> FZ.LBrace
+  | TCBrace _ -> FZ.RBrace
+  | TOBracket _ -> FZ.LBracket
+  | TCBracket _ -> FZ.RBracket
+  | TComment _ -> FZ.Esthet FZ.Comment
+  | TCommentSpace _ -> FZ.Esthet FZ.Space
+  | TCommentNewline _ -> FZ.Esthet FZ.Newline
+  | _ -> FZ.Other
 
 (*****************************************************************************)
 (* Visitors *)

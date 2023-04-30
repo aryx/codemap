@@ -8,4 +8,4 @@ type org = org_line list
 val parse : Common.filename -> org
 
 val highlight :
-  org -> (string * Highlight_code.category option * Common2.filepos) list
+  org -> (string * Highlight_code.category option * Pos.linecol) list

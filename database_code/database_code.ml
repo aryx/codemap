@@ -106,7 +106,7 @@ type entity = {
   (* can be empty to save space when e_fullname = e_name *)
   e_fullname : string;
   e_file : Common.filename;
-  e_pos : Common2.filepos;
+  e_pos : Pos.linecol;
   (* Semantic information that can be leverage by a code visualizer.
    * The fields are set as mutable because usually we compute
    * the set of all entities in a first phase and then we
@@ -149,7 +149,7 @@ type database = {
    * filenames in which case we can strip the root from it
    * (e.g. in the treemap browser when we mouse over a rectangle).
    *)
-  root : Common.dirname;
+  root : Common.filename;
   (* Such list can be used in a search box powered by completion.
    * The int is for the total number of times this files is
    * externally referenced. Can be use for instance in the treemap
@@ -178,7 +178,7 @@ let default_db_name = "PFFF_DB.marshall"
 (* json -> X *)
 (*---------------------------------------------------------------------------*)
 
-let json_of_filepos x = J.Array [ J.Int x.Common2.l; J.Int x.Common2.c ]
+let json_of_filepos x = J.Array [ J.Int x.Pos.l; J.Int x.Pos.c ]
 
 let json_of_property x =
   match x with
@@ -231,7 +231,7 @@ let ids_of_json json =
 
 let filepos_of_json json =
   match json with
-  | J.Array [ J.Int l; J.Int c ] -> { Common2.l; Common2.c }
+  | J.Array [ J.Int l; J.Int c ] -> { Pos.l; Pos.c }
   | _ -> failwith "Bad json"
 
 let property_of_json json =
@@ -497,7 +497,7 @@ let mk_dir_entity dir n =
     e_name = Common2.basename dir ^ "/";
     e_fullname = "";
     e_file = dir;
-    e_pos = { Common2.l = 1; c = 0 };
+    e_pos = { Pos.l = 1; c = 0 };
     e_kind = Dir;
     e_number_external_users = n;
     e_good_examples_of_use = [];
@@ -509,7 +509,7 @@ let mk_file_entity file n =
     e_name = Common2.basename file;
     e_fullname = "";
     e_file = file;
-    e_pos = { Common2.l = 1; c = 0 };
+    e_pos = { Pos.l = 1; c = 0 };
     e_kind = File;
     e_number_external_users = n;
     e_good_examples_of_use = [];
@@ -525,7 +525,7 @@ let mk_multi_dirs_entity name dirs_entities =
     e_fullname = "";
     (* hack *)
     e_file = Common.join "|" dirs_fullnames;
-    e_pos = { Common2.l = 1; c = 0 };
+    e_pos = { Pos.l = 1; c = 0 };
     e_kind = MultiDirs;
     e_number_external_users = (* todo? *)
                               List.length dirs_fullnames;

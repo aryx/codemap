@@ -209,7 +209,7 @@ let fake_entity = {Database_code.
      e_fullname = "";
      e_file = "foo.php";
      e_kind = E.Function;
-     e_pos = { Common2.l = -1; c = -1 };
+     e_pos = { Pos.l = -1; c = -1 };
      e_number_external_users = 0;
      e_good_examples_of_use = [];
      e_properties = [];

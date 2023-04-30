@@ -6,7 +6,7 @@ type model = {
   (* for translating the absolute filenames in tr_label in readable so
    * one can access the node in the model for a tr_rectangle 
    *)
-  root: Common.dirname; 
+  root: Common.filename; 
 
   db: Database_code.database option;
   (*s: model fields hook *)
@@ -90,7 +90,7 @@ type drawing = {
   (* coupling: = List.length treemap *)
   nb_rects: int; 
   (* Used to display readable paths. When fully zoomed it's a filename. *)
-  current_root: Common.path;
+  current_root: Common.filename;
 
   mutable layers: Layer_code.layers_with_index;
 
@@ -131,9 +131,9 @@ type world = {
 
   (* computed lazily, semantic information about the code *)
   model: model Async.t;
-  root_orig: Common.dirname;
+  root_orig: Common.filename;
   (* to compute a new treemap based on user's action *)
-  treemap_func: Common.path list -> Treemap.treemap_rendering;
+  treemap_func: Common.filename list -> Treemap.treemap_rendering;
   (* misc settings, not really used for now *)
   settings: settings;
 
@@ -163,10 +163,10 @@ val context_of_drawing: drawing -> model Async.t -> context
 val init_drawing :
   ?width:int ->
   ?height:int ->
-  (Common.path list -> Treemap.treemap_rendering) ->
+  (Common.filename list -> Treemap.treemap_rendering) ->
   Layer_code.layers_with_index ->
-  Common.path list -> 
-  Common.dirname (* root *) ->
+  Common.filename list -> 
+  Common.filename (* root *) ->
   drawing
 (*e: [[init_drawing]] sig *)
 

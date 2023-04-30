@@ -9,27 +9,27 @@ type ('ast, 'token) t = {
    * after tokens that come later but were present in the 
    * AST and visited.
    *)
-  highlight:(tag_hook:(Parse_info.t -> Highlight_code.category -> unit) ->
+  highlight:(tag_hook:(Tok.t -> Highlight_code.category -> unit) ->
                    Highlight_code.highlighter_preferences ->
                    Fpath.t ->
                    'ast * 'token list -> unit);
-  info_of_tok:('token -> Parse_info.t);
+  info_of_tok:('token -> Tok.t);
 }
 
 val rust: 
-  (AST_generic.program, Parse_info.t * Parse_languages.origin_info) t
+  (AST_generic.program, Tok.t * Parse_languages.origin_info) t
 
 val jsonnet: 
-  (AST_generic.program, Parse_info.t * Parse_languages.origin_info) t
+  (AST_generic.program, Tok.t * Parse_languages.origin_info) t
 
 val yaml: 
-  (AST_generic.program, Parse_info.t * Parse_languages.origin_info) t
+  (AST_generic.program, Tok.t * Parse_languages.origin_info) t
 
 val bash: 
-  (AST_generic.program, Parse_info.t * Parse_languages.origin_info) t
+  (AST_generic.program, Tok.t * Parse_languages.origin_info) t
 
 val dockerfile: 
-  (AST_generic.program, Parse_info.t * Parse_languages.origin_info) t
+  (AST_generic.program, Tok.t * Parse_languages.origin_info) t
 
 val lisp: 
-  (AST_generic.program, Parse_info.t * Parse_languages.origin_info) t
+  (AST_generic.program, Tok.t * Parse_languages.origin_info) t

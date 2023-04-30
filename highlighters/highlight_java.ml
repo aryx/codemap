@@ -149,8 +149,8 @@ let visit_toplevel ~tag_hook _prefs _file (ast, toks) =
       :: T.TCommentNewline _ii4
       :: T.TComment ii5
       :: xs ->
-        let s = Parse_info.str_of_info ii in
-        let s5 = Parse_info.str_of_info ii5 in
+        let s = Tok.content_of_tok ii in
+        let s5 = Tok.content_of_tok ii5 in
         (match () with
         | _ when s =~ ".*\\*\\*\\*\\*" && s5 =~ ".*\\*\\*\\*\\*" ->
             tag ii CommentEstet;

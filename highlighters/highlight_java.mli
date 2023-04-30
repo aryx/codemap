@@ -1,5 +1,5 @@
 val visit_toplevel :
-  tag_hook:(Parse_info.t -> Highlight_code.category -> unit) ->
+  tag_hook:(Tok.t -> Highlight_code.category -> unit) ->
   Highlight_code.highlighter_preferences ->
   (*(Database_php.id * Common.filename * Database_php.database) option -> *)
   Fpath.t ->

@@ -17,7 +17,6 @@ open Common
 
 open Highlight_code
 open Entity_code
-module PI = Parse_info
 module T = Parser_ml
 module FT = File_type
 
@@ -128,8 +127,8 @@ let visit_program
         ::T.TComment(ii5)
         ::xs ->
 
-        let s = PI.str_of_info ii in
-        let s5 =  PI.str_of_info ii5 in
+        let s = Tok.content_of_tok ii in
+        let s5 =  Tok.content_of_tok ii5 in
         (match () with
          | _ when s =~ ".*\\*\\*\\*\\*" && s5 =~ ".*\\*\\*\\*\\*" ->
              tag ii CommentEstet;
@@ -148,7 +147,7 @@ let visit_program
         );
         aux_toks (T.TComment ii3::T.TCommentNewline ii4::T.TComment ii5::xs)
 
-    |   T.TComment(ii)::xs when (PI.str_of_info ii) =~ "(\\*[ ]*coupling:" ->
+    |   T.TComment(ii)::xs when (Tok.content_of_tok ii) =~ "(\\*[ ]*coupling:" ->
         tag ii CommentImportance3;
         aux_toks xs
 
@@ -166,21 +165,21 @@ let visit_program
      *  a far more regular-syntax (that's what they were designed for)
     *)
     | T.Tlet(ii)::T.TLowerIdent(_s, ii3)::T.TEq _ii5::xs
-      when PI.col_of_info ii =|= 0 ->
+      when Tok.col_of_tok ii =|= 0 ->
 
         if not (Hashtbl.mem already_tagged ii3) && lexer_based_tagger
         then tag ii3 (Entity (Global, (Def2 NoUse)));
         aux_toks xs;
 
     | T.Tlet(ii)::T.TLowerIdent(_s, ii3)::xs
-      when PI.col_of_info ii =|= 0 ->
+      when Tok.col_of_tok ii =|= 0 ->
 
         if not (Hashtbl.mem already_tagged ii3) && lexer_based_tagger
         then tag ii3 (Entity (Function, (Def2 NoUse)));
         aux_toks xs;
 
     | (T.Tval(ii)|T.Texternal(ii))::T.TLowerIdent(_s, ii3)::xs
-      when PI.col_of_info ii =|= 0 ->
+      when Tok.col_of_tok ii =|= 0 ->
 
         if not (Hashtbl.mem already_tagged ii3) && lexer_based_tagger
         then tag ii3 (FunctionDecl NoUse);
@@ -189,21 +188,21 @@ let visit_program
     | T.Tlet(ii)::
       T.Trec(_ii)::
       T.TLowerIdent(_s, ii3)::xs
-      when PI.col_of_info ii =|= 0 ->
+      when Tok.col_of_tok ii =|= 0 ->
 
         if not (Hashtbl.mem already_tagged ii3) && lexer_based_tagger
         then tag ii3 (Entity (Function, (Def2 NoUse)));
         aux_toks xs;
 
     | T.Tand(ii)::T.TLowerIdent(_s, ii3)::xs
-      when PI.col_of_info ii =|= 0 ->
+      when Tok.col_of_tok ii =|= 0 ->
 
         if not (Hashtbl.mem already_tagged ii3) && lexer_based_tagger
         then tag ii3 (Entity (Function, (Def2 NoUse)));
         aux_toks xs;
 
     | T.Ttype(ii)::T.TLowerIdent(_s, ii3)::xs
-      when PI.col_of_info ii =|= 0 ->
+      when Tok.col_of_tok ii =|= 0 ->
 
         if not (Hashtbl.mem already_tagged ii3) && lexer_based_tagger
         then tag ii3 (Entity (Type, Def2 NoUse));
@@ -273,7 +272,7 @@ let visit_program
 
         (* grammar rules in ocamlyacc *)
     | T.TLowerIdent (_s, ii1)::T.TColon _::xs
-      when PI.col_of_info ii1 =|= 0 ->
+      when Tok.col_of_tok ii1 =|= 0 ->
         tag ii1 GrammarRule;
         aux_toks xs
 
@@ -309,7 +308,7 @@ let visit_program
           if not (Hashtbl.mem already_tagged ii)
           then
             (* a little bit syncweb specific *)
-            let s = PI.str_of_info ii in
+            let s = Tok.content_of_tok ii in
             (match s with
              (* yep, s e x are the syncweb markers *)
              | _ when s =~ "(\\*[sex]:"  -> tag ii CommentSyncweb
