@@ -232,10 +232,7 @@ let visit_program
   if not disable_token_phase2 then
     toks |> List.iter (fun tok ->
       match tok with
-      (* TODO: new keywords *)
-      | T.Kexport _ | T.Kenum _ -> ()
       (* specials *)
-
       | T.Comment ii -> tag_if_not_tagged ii Comment
 (*
           if not (Hashtbl.mem already_tagged ii)
