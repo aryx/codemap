@@ -532,7 +532,7 @@ let info_of_category = function
   | NoType -> [ `BACKGROUND "DimGray" ]
   | Passed -> [ `BACKGROUND "DarkSlateGray4" ]
   | Expanded -> [ `BACKGROUND "red" ]
-  | Error -> [ `BACKGROUND "red2" ]
+  | Error -> [ `BACKGROUND "tomato" ]
   (* a flashy one that hurts the eye :) *)
   | BadSmell -> [ `FOREGROUND "magenta" ]
   | UseOfRef -> [ `FOREGROUND "magenta" ]
