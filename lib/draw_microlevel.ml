@@ -79,14 +79,14 @@ let is_big_file_with_few_lines ~nblines file =
 (* coupling: with parsing2.ml, todo move in parsing2.ml? *)
 let use_fancy_highlighting file =
   match FT.file_type_of_file (Fpath.v file) with
-  | ( FT.PL (FT.Web (FT.Php _))
-    | FT.PL (FT.Web (FT.Js))
-    | FT.PL (FT.Web (FT.Html))
-    | FT.PL (FT.OCaml _)
-    | FT.PL (FT.Scala)
-    | FT.PL (FT.Cplusplus _ | FT.C _ | FT.ObjectiveC _)
-    | FT.PL (FT.Thrift)
+  (* the one handled by parsing2.ml *)
+  | ( FT.PL (FT.OCaml _)
     | FT.Text ("nw" | "tex"  | "texi" | "web" | "org")
+    | FT.PL (FT.Web (FT.Php _ | FT.Js | FT.TypeScript | FT.Html))
+    | FT.PL (FT.IDL _)
+    | FT.Config (FT.Makefile | FT.Dockerfile | FT.Jsonnet | FT.Sexp | FT.Yaml)
+    | FT.PL (FT.Cplusplus _ | FT.C _ | FT.ObjectiveC _)
+    | FT.PL (FT.Scala)
     | FT.PL (FT.Lisp _)
     | FT.PL (FT.Haskell _)
     | FT.PL (FT.Python)
@@ -94,14 +94,11 @@ let use_fancy_highlighting file =
     | FT.PL (FT.Java)
     (*    | FT.PL (FT.Prolog _) *)
     | FT.PL (FT.Erlang)
-    | FT.PL (FT.Opa)
     | FT.PL (FT.Rust)
     | FT.PL (FT.Skip)
-    | FT.PL (FT.Web (FT.TypeScript))
     | FT.PL (FT.Go)
     | FT.PL (FT.Ruby)
     | FT.PL (FT.Script _)
-    | FT.Config (FT.Makefile | FT.Dockerfile | FT.Jsonnet | FT.Sexp | FT.Yaml)
     ) -> true
   | (FT.Text "txt") when Common2.basename file = "info.txt" -> true
   | _ -> false

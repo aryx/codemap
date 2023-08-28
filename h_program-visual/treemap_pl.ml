@@ -153,7 +153,7 @@ let color_of_source_archi kind =
 
 let color_of_webpl_type kind = 
   match kind with
-  | PL.Php _ | PL.Hack -> "IndianRed"
+  | PL.Php _ | PL.Hack | PL.Opa -> "IndianRed"
 
 
   | PL.Css -> "yellow"
@@ -162,6 +162,7 @@ let color_of_webpl_type kind =
 
 (*  | PL.Pic _ -> "RosyBrown" *)
   | PL.Sql -> "SteelBlue"
+  | PL.Flash -> "RosyBrown"
 
 (* TODO Config
   | PL.Json | PL.Yaml -> "sienna"

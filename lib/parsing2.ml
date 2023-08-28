@@ -201,6 +201,22 @@ let tokens_with_categ_of_file file hentities =
   let prefs = Highlight_code.default_highlighter_preferences in
   
   match ftype with
+  (* currently abusing the OCaml parser to also parse ATD files
+   * TODO? works also for Fsharp; at least the tokenizer 
+   *)
+  | FT.PL (FT.OCaml _) | FT.PL (FT.IDL FT.ATD) ->
+      tokens_with_categ_of_file_helper 
+        { parse = (parse_cache (fun file -> 
+             ML (Parse_languages.parse_ocaml file)
+         )
+         (function 
+         | ML {Parsing_result. ast; tokens; _} -> (ast, tokens)
+         | _ -> raise Impossible));
+        highlight = (fun ~tag_hook prefs file (ast, toks) -> 
+          Highlight_ml.visit_program ~tag_hook prefs file (ast, toks));
+        info_of_tok = Token_helpers_ml.info_of_tok;
+        }
+        file prefs hentities
   | FT.PL (FT.Web (FT.Php _)) ->
       tokens_with_categ_of_file_helper 
         { parse = (parse_cache (fun file ->
@@ -230,21 +246,6 @@ let tokens_with_categ_of_file file hentities =
             (ast, toks)
          );
          info_of_tok = Token_helpers_php.info_of_tok;
-        }
-        file prefs hentities
-
-  (* works also for Fsharp; at least the tokenizer *)
-  | FT.PL (FT.OCaml _) ->
-      tokens_with_categ_of_file_helper 
-        { parse = (parse_cache (fun file -> 
-             ML (Parse_languages.parse_ocaml file)
-         )
-         (function 
-         | ML {Parsing_result. ast; tokens; _} -> (ast, tokens)
-         | _ -> raise Impossible));
-        highlight = (fun ~tag_hook prefs file (ast, toks) -> 
-          Highlight_ml.visit_program ~tag_hook prefs file (ast, toks));
-        info_of_tok = Token_helpers_ml.info_of_tok;
         }
         file prefs hentities
 
@@ -388,7 +389,12 @@ let tokens_with_categ_of_file file hentities =
         }
         file prefs hentities
 
-  | FT.PL (FT.Cplusplus _ | FT.C _ | FT.Thrift | FT.ObjectiveC _) ->
+  | FT.PL (FT.Cplusplus _ | FT.C _ | FT.ObjectiveC _)
+  (* TODO? for Protobuf we could now use the one in tree-sitter
+   * TODO: does not work yet because got a Failure ("not a C/C++ file ...")
+   *)  
+  | FT.PL (FT.IDL (FT.Thrift | FT.Protobuf))
+     ->
       tokens_with_categ_of_file_helper 
         { parse = (parse_cache 
          (fun file -> 

@@ -222,14 +222,6 @@ let filters = [
     | _ -> false
   ));
 
-  (* exotic languages *)
-  "exotic", (fun file -> 
-    match FT.file_type_of_file (Fpath.v file) with
-    | FT.PL (FT.Opa | FT.Rust)  -> true
-(*    | FT.PL (FT.Web (_)) -> true *)
-    | _ -> false
-  );
-
   (* general categories *)
   "pl", (fun file ->
     match File_type.file_type_of_file (Fpath.v file) with
