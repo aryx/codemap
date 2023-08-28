@@ -134,7 +134,7 @@ let annotate2 ?(basedir="") ?(use_cache=false) ?(use_dash_C=true) filename =
   let full_filename = Filename.concat basedir filename in
 
   (* git blame is really slow, so cache its result *)
-  Common.cache_computation ~use_cache full_filename ext_git_annot_cache (fun()->
+  Cache_disk.cache_computation ~use_cache full_filename ext_git_annot_cache (fun()->
 
     (* adding -C leads to better information 
      * adding HEAD so that can get the full information of a file that

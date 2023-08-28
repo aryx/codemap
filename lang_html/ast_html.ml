@@ -406,7 +406,7 @@ type any = HtmlTree of html_tree
 (*****************************************************************************)
 
 let fakeInfo ?(next_to = None) ?(str = "") () =
-  Tok.FakeTokStr (str, next_to)
+  Tok.FakeTok (str, next_to)
 
 let str_of_tag (Tag (s, _)) = s
 

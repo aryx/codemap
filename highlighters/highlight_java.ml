@@ -213,6 +213,7 @@ let visit_toplevel ~tag_hook _prefs _file (ast, toks) =
          | T.CLASS ii
          | T.ABSTRACT ii
          | T.INTERFACE ii
+         | T.RECORD ii
          | T.PRIVATE ii
          | T.PROTECTED ii
          | T.PUBLIC ii

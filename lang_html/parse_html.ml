@@ -300,7 +300,7 @@ let parse file =
                (match ii with
                 | Tok.OriginTok pi ->
                          Tok.OriginTok (Tok.complete_location file table pi)
-                | Tok.FakeTokStr _
+                | Tok.FakeTok _
                 | Tok.Ab
                 | Tok.ExpandedTok _ ->
                          raise Impossible);

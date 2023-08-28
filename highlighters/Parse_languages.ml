@@ -68,7 +68,7 @@ let add_extra_infos file (infos : Tok.t list) : (Tok.t * origin_info) list =
        then 
           let (line, column) = conv current in
           let str = String.sub bigstr current (max - current) in
-          let loc = { Tok.pos = { Pos.file; line; column; charpos = current}; str } in
+          let loc = { Tok.pos = { Pos.file; line; column; bytepos = current}; str } in
           [Tok.tok_of_loc loc, Extra]
        else []
     | x::xs ->
@@ -76,15 +76,15 @@ let add_extra_infos file (infos : Tok.t list) : (Tok.t * origin_info) list =
       then (* filter fake tokens *) aux current xs
       else
         let loc = Tok.unsafe_loc_of_tok x in
-        (match current <=> loc.pos.charpos with
+        (match current <=> loc.pos.bytepos with
         | Inf ->
          let (line, column) = conv current in
-         let str = String.sub bigstr current (loc.pos.charpos - current) in
-         let loc2 = { Tok.pos = { Pos.file; line; column; charpos = current; };
+         let str = String.sub bigstr current (loc.pos.bytepos - current) in
+         let loc2 = { Tok.pos = { Pos.file; line; column; bytepos = current; };
                       str } in
-         (Tok.tok_of_loc loc2, Extra)::aux (loc.pos.charpos) (x::xs)
+         (Tok.tok_of_loc loc2, Extra)::aux (loc.pos.bytepos) (x::xs)
       | Equal ->
-         (x, InCST)::(aux (loc.pos.charpos + String.length loc.str) xs)
+         (x, InCST)::(aux (loc.pos.bytepos + String.length loc.str) xs)
       | Sup ->
          raise Common.Impossible
       )
