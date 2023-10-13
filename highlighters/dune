@@ -20,7 +20,7 @@
    parser_php.menhir parser_php.ast_generic
    parser_javascript.menhir parser_javascript.ast_generic
    parser_scala.recursive_descent parser_scala.ast_generic
-   parser_ruby.dyp parser_ruby.ast_generic
+   parser_ruby.tree_sitter parser_ruby.ast_generic
    parser_lisp.recursive_descent
    parser_rust.ast_generic
    parser_jsonnet.tree_sitter parser_jsonnet.ast_generic

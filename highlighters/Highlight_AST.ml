@@ -334,7 +334,7 @@ let visit_program (already_tagged, tag) ast =
 
       method! visit_stmt env x =
         match x.s with
-        | Try (tk, _e (*, tok_with*), _match_cases, _finally) ->
+        | Try (tk, _e (*, tok_with*), _match_cases, _else_cases, _finally) ->
             tag tk KeywordExn;
             Common.save_excursion in_try_with true (fun () ->
               super#visit_stmt env x
@@ -346,7 +346,7 @@ let visit_program (already_tagged, tag) ast =
             tag tk KeywordLoop;
             (match header with
             | ForEach (_, tk, _) -> tag tk KeywordLoop
-            | ForClassic _ | MultiForEach _ | ForIn _ | ForEllipsis _ -> () 
+            | ForClassic _ | MultiForEach _ | ForEllipsis _ -> () 
             );
             super#visit_stmt env x
         | Return (tk, _, _) ->

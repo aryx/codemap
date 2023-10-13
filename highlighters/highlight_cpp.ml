@@ -13,15 +13,19 @@
  * license.txt for more details.
  *)
 open Common
-open Ast_cpp
 open Entity_code
 open Highlight_code
-module Ast = Ast_cpp
-module V = Visitor_cpp
-module Lib = Lib_parsing_cpp
 module T = Parser_cpp
 module TH = Token_helpers_cpp
 module Type = Type_cpp
+
+(*
+open Ast_cpp
+module Ast = Ast_cpp
+module V = Visitor_cpp
+module Lib = Lib_parsing_cpp
+let ( ==~ ) = Common2.( ==~ )
+ *)
 
 (*****************************************************************************)
 (* Prelude *)
@@ -35,12 +39,13 @@ module Type = Type_cpp
 (*****************************************************************************)
 (* Helpers *)
 (*****************************************************************************)
-let ( ==~ ) = Common2.( ==~ )
 
 (*****************************************************************************)
 (* Helpers when have global analysis information *)
 (*****************************************************************************)
+(*
 let h_debug_functions = Common.hashset_of_list [ "DEBUG" ]
+ *)
 let fake_no_def2 = NoUse
 let fake_no_use2 = (NoInfoPlace, UniqueDef, MultiUse)
 
@@ -48,7 +53,7 @@ let fake_no_use2 = (NoInfoPlace, UniqueDef, MultiUse)
 (* Code highlighter *)
 (*****************************************************************************)
 
-let visit_toplevel ~tag_hook _prefs _file (*db_opt *) (ast, toks) =
+let visit_toplevel ~tag_hook _prefs _file (*db_opt *) (_ast, toks) =
   let already_tagged = Hashtbl.create 101 in
   let tag ii categ =
     tag_hook ii categ;
@@ -150,8 +155,9 @@ let visit_toplevel ~tag_hook _prefs _file (*db_opt *) (ast, toks) =
   in
   aux_toks toks;
 
-  let is_at_toplevel = ref true in
 
+(* TODO: use generic AST visitor instead  
+  let is_at_toplevel = ref true in
   (* -------------------------------------------------------------------- *)
   (* Ast phase 1 *)
   (* -------------------------------------------------------------------- *)
@@ -391,7 +397,8 @@ let visit_toplevel ~tag_hook _prefs _file (*db_opt *) (ast, toks) =
       }
   in
   visitor (Program ast);
-
+ *)
+  
   (* -------------------------------------------------------------------- *)
   (* toks phase 2 *)
   (* -------------------------------------------------------------------- *)

@@ -13,11 +13,13 @@
  * license.txt for more details.
  *)
 open Common
-open Ast_java
-open Entity_code
 open Highlight_code
 module Ast = Ast_java
+(*
+open Ast_java
+open Entity_code
 module V = Visitor_java
+ *)
 module T = Parser_java
 module HC = Highlight_code
 
@@ -32,8 +34,10 @@ module HC = Highlight_code
 (* we generate fake value here because the real one are computed in a
  * later phase in rewrite_categ_using_entities in pfff_visual.
  *)
+(*
 let fake_no_def2 = NoUse
 let fake_no_use2 = (NoInfoPlace, UniqueDef, MultiUse)
+ *)
 
 (*****************************************************************************)
 (* Code highlighter *)
@@ -45,17 +49,18 @@ let fake_no_use2 = (NoInfoPlace, UniqueDef, MultiUse)
  * to figure out what kind of ident it is.
  *)
 
-let visit_toplevel ~tag_hook _prefs _file (ast, toks) =
+let visit_toplevel ~tag_hook _prefs _file (_ast, toks) =
   let already_tagged = Hashtbl.create 101 in
   let tag ii categ =
     tag_hook ii categ;
     Hashtbl.replace already_tagged ii true
   in
+
+(* TODO: migrate to generic AST visitor instead  
   let tag_ident (id : Ast_java.ident) categ =
     let _s, ii = id in
     tag ii categ
   in
-
   (* -------------------------------------------------------------------- *)
   (* ast phase 1 *)
   (* tagging the idents of the AST *)
@@ -136,7 +141,8 @@ let visit_toplevel ~tag_hook _prefs _file (ast, toks) =
       }
   in
   visitor (AProgram ast);
-
+ *)
+  
   (* -------------------------------------------------------------------- *)
   (* toks phase 1 *)
   let rec aux_toks xs =

@@ -44,6 +44,7 @@ module PH = Parse_and_highlight
 type ast = 
   (* generic, which is used currently for: 
    * - Rust
+   * - TODO Ruby
    * - Jsonnet
    * - Yaml
    * - TODO Bash 
@@ -76,7 +77,6 @@ type ast =
 
   (* scripting *)
   | Python of (AST_python.program, Parser_python.token) Parsing_result.t
-  | Ruby of (Ast_ruby.program, Parser_ruby.token) Parsing_result.t
 
   (* documentation *)
   | Noweb of Parse_nw.program_and_tokens
@@ -280,22 +280,6 @@ let tokens_with_categ_of_file file hentities =
         }
         file prefs hentities
 
-  | FT.PL (FT.Ruby) ->
-      tokens_with_categ_of_file_helper 
-        { parse = (parse_cache (fun file -> 
-           Common.save_excursion Flag_parsing.error_recovery true (fun()->
-             Ruby (Parse_ruby.parse file))
-         )
-         (function 
-         | Ruby {Parsing_result. ast; tokens; _} -> (Some ast, tokens)
-         | _ -> raise Impossible
-         ));
-        highlight = (fun ~tag_hook prefs _file (ast, toks) -> 
-          Highlight_ruby.visit_program ~tag_hook prefs (ast, toks));
-        info_of_tok = Token_helpers_ruby.info_of_tok;
-        }
-        file prefs hentities
-
   | FT.PL (FT.Rust) ->
       let ph_with_cache = 
         { PH.rust with parse = (parse_cache 
@@ -303,6 +287,15 @@ let tokens_with_categ_of_file file hentities =
               (function Generic (ast, toks) -> ast, toks | _ -> raise Impossible))} in
       tokens_with_categ_of_file_helper ph_with_cache
         file prefs hentities
+(* TODO
+  | FT.PL (FT.Ruby) ->
+      let ph_with_cache = 
+        { PH.ruby with parse = (parse_cache 
+              (fun file -> Generic (PH.ruby.parse file))
+              (function Generic (ast, toks) -> ast, toks | _ -> raise Impossible))} in
+      tokens_with_categ_of_file_helper ph_with_cache
+        file prefs hentities
+ *)
 
   | FT.Config (FT.Jsonnet) ->
       let ph_with_cache = 

@@ -14,11 +14,14 @@
  * license.txt for more details.
  *)
 
-open AST_python
 open Highlight_code
-module T = Parser_python
-module V = Visitor_python
 module E = Entity_code
+module T = Parser_python
+
+(*
+open AST_python
+module V = Visitor_python
+ *)
 
 (*****************************************************************************)
 (* Prelude *)
@@ -57,6 +60,7 @@ let visit_program ~tag_hook _prefs (program, toks) =
     tag_hook ii categ;
     Hashtbl.replace already_tagged ii true
   in
+(*  
   let tag_name (_s, ii) categ =
     (* so treat the most specific in the enclosing code and then
      * do not fear to write very general case patterns later because
@@ -65,13 +69,14 @@ let visit_program ~tag_hook _prefs (program, toks) =
      *)
     if not (Hashtbl.mem already_tagged ii) then tag ii categ
   in
+*)
   let tag_if_not_tagged ii categ =
     if not (Hashtbl.mem already_tagged ii) then tag ii categ
   in
 
   let lexer_based_tagger = program = None in
 
-  
+(* TODO: use generic AST highlighter
   (* -------------------------------------------------------------------- *)
   (* AST phase 1 *)
   (* -------------------------------------------------------------------- *)
@@ -272,7 +277,8 @@ let visit_program ~tag_hook _prefs (program, toks) =
       }
   in
   program |> Option.iter (fun prog -> visitor (Program prog));
-
+ *)
+  
   (* -------------------------------------------------------------------- *)
   (* tokens phase 1 (list of tokens) *)
   (* -------------------------------------------------------------------- *)
