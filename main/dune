@@ -5,11 +5,13 @@
    str bigarray
    ocamlgraph
 
-   ; pfff deps
+   ; semgrep deps
    commons
-   dyp
+   dyp ; still?
    ppx_deriving
    uucp uutf
+   paths
+   gitignore
 
    ; codemap lib deps
    pfff-h_visualization gui

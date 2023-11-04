@@ -4,6 +4,7 @@
  * appearing just here.
  *)
 open Common
+open File.Operators
 
 module Flag = Flag_visual
 module FT = File_type
@@ -147,30 +148,30 @@ let test_mode = ref (None: string option)
 
 (* see filters below, which filter files we are interested in *)
 let filter = ref (fun _file -> true)
-let skip_file  = ref (None: Common.filename option)
 (* less: a config file: GtkMain.Rc.add_default_file "/.../pfff_browser.rc"; *)
 
+(* TODO: switch to Logs *)
 let log_config_file = ref "log_config.json"
 
 (* action mode *)
 let action = ref ""
 
 (*****************************************************************************)
-(* Shortcuts *)
+(* File targeting *)
 (*****************************************************************************)
 
 let filters = [
-  (* pad-specific: ocaml related files *)
-  "pfff", (fun file ->
+  (* pad-specific: semgrep related files *)
+  "semgrep", (fun file ->
     match FT.file_type_of_file (Fpath.v file) with
-    | FT.PL (FT.OCaml _ | FT.Prolog _) 
-    | FT.Config (FT.Makefile | FT.Jsonnet) -> 
-        not ( 
-                (* file =~ ".*commons/" || *)
-                (* file =~ ".*external/" || *)
-                file =~ ".*\\.md5sum_.*")
+    | FT.PL (FT.OCaml _ | FT.Python | FT.Web (FT.Js | FT.TypeScript))
+    | FT.PL (FT.IDL _)
+    | FT.PL (FT.Script _)
+    | FT.Config (FT.Makefile | FT.Dockerfile | FT.Jsonnet | FT.Yaml | FT.Sexp) -> 
+            true
     | _ -> false
   );
+  (* pad-specific: *)
   "xix", (fun file ->
     match FT.file_type_of_file (Fpath.v file) with
     | FT.PL ((FT.OCaml _) | (FT.C _ | FT.Asm)) | FT.Config FT.Makefile -> true
@@ -228,6 +229,31 @@ let filters = [
     | FT.PL _ -> true  | _ -> false
   );
 ]
+
+let mk_filter_file (root : Fpath.t) : (Common.filename -> bool) =
+  let gitignore_filter =
+    Gitignore_filter.create
+      ~gitignore_filenames:[
+      "gitignore", ".gitignore";
+      "codemapignore", ".codemapignore";
+      ]
+    ~project_root:root ()
+  in
+  (fun file ->
+     !filter file &&
+     let ppath =
+        match Ppath.in_project ~root (Fpath.v file) with
+        | Ok ppath -> ppath
+        | Error err ->
+              failwith (spf "could not find project path for %s with root = %s (errot = %s)"
+                file !!root err)
+     in
+     let (status, _events) =
+         Gitignore_filter.select gitignore_filter []
+          ppath
+     in
+     status =*= Gitignore.Not_ignored
+    )
 
 (*****************************************************************************)
 (* Helpers *)
@@ -317,6 +343,8 @@ let main_action xs =
   let root = Common2.common_prefix_of_files_or_dirs xs in
   pr2 (spf "Using root = %s" root);
 
+  let filter_file = mk_filter_file (Fpath.v root) in
+
   let async_model = Async.async_make () in
 
   let layers = 
@@ -368,20 +396,6 @@ let main_action xs =
   graph_file |> Option.iter (fun db -> 
     pr2 (spf "Using graphcode: %s" db)
   );
-  let skip_file = !skip_file ||| Filename.concat root "skip_list.txt" in
-  let skip_list =
-    if Sys.file_exists skip_file
-    then begin
-      pr2 (spf "Using skip file: %s" skip_file);
-      Skip_code.load (Fpath.v skip_file)
-    end
-    else []
-  in
-  let filter_files_skip_list = Skip_code.filter_files skip_list ~root:(Fpath.v root) in
-  let filter_file = (fun file -> 
-    !filter file && 
-    (skip_list =*= [] || fst (filter_files_skip_list [Fpath.v file]) <> []))
-  in
 
   let treemap_func = treemap_generator ~filter_file in
   let dw = Model.init_drawing  treemap_func layers_with_index xs root in
@@ -430,19 +444,8 @@ let main_action xs =
 let test_loc print_top30 xs =
   let xs = xs |> List.map Common.fullpath in
   let root = Common2.common_prefix_of_files_or_dirs xs in
-  let skip_file = !skip_file ||| Filename.concat root "skip_list.txt" in
-  let skip_list =
-    if Sys.file_exists skip_file
-    then begin
-      pr2 (spf "Using skip file: %s" skip_file);
-      Skip_code.load (Fpath.v skip_file)
-    end
-    else []
-  in
-  let filter_files_skip_list = Skip_code.filter_files skip_list ~root:(Fpath.v root) in
-  let filter_file = (fun file -> 
-    !filter file && (skip_list =*= [] || fst (filter_files_skip_list [Fpath.v file]) <> []))
-  in
+
+  let filter_file = mk_filter_file (Fpath.v root) in
   let treemap = Treemap_pl.code_treemap ~filter_file xs in
 
   let res = ref [] in
@@ -615,8 +618,6 @@ let options () = ([
       (filters |> List.map fst |> Common.join ", ");
     "-extra_filter", Arg.String (fun s -> Flag.extra_filter := Some s),
     " ";
-    "-skip_list", Arg.String (fun s -> skip_file := Some s), 
-    " <file> skip files or directories";
 
     "-ft", Arg.Set_float Flag.threshold_draw_content_font_size_real,
     " <float> threshold to draw content";
