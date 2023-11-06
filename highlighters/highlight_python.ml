@@ -1,7 +1,7 @@
 (* Yoann Padioleau
  *
  * Copyright (C) 2010 Facebook
- * Copyright (C) 2019 r2c
+ * Copyright (C) 2019, 2023 Semgrep Inc.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public License
@@ -13,7 +13,7 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the file
  * license.txt for more details.
  *)
-
+open Common
 open Highlight_code
 module E = Entity_code
 module T = Parser_python
@@ -74,12 +74,23 @@ let visit_program ~tag_hook _prefs (program, toks) =
     if not (Hashtbl.mem already_tagged ii) then tag ii categ
   in
 
-  let lexer_based_tagger = program = None in
+  let lexer_based_tagger = program =*= None in
 
-(* TODO: use generic AST highlighter
   (* -------------------------------------------------------------------- *)
   (* AST phase 1 *)
   (* -------------------------------------------------------------------- *)
+   (* Now using the AST_generic to factorize code betweenall the AST-based
+    * code highlighters. *)
+  program |> Option.iter (fun ast ->
+      let gen = Python_to_generic.program ast in
+      Naming_AST.resolve Lang.Python gen;
+      Highlight_AST.visit_program
+        (already_tagged, tag)
+      gen;
+  );
+
+
+(* old:
   (* try to better colorize identifiers which can be many different things
    * e.g. a field, a type, a function, a parameter, etc.
    *

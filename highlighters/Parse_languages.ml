@@ -86,7 +86,13 @@ let add_extra_infos file (infos : Tok.t list) : (Tok.t * origin_info) list =
       | Equal ->
          (x, InCST)::(aux (loc.pos.bytepos + String.length loc.str) xs)
       | Sup ->
-         raise Common.Impossible
+         Logs.err (fun m -> m "current (= %d) > token bytepos (= %s)"
+                current (Tok.show x));
+         (* try again.
+          * TODO? this happened for yaml files, so maybe we have wrong
+          * position information there?
+          *)
+         aux loc.pos.bytepos (x::xs)
       )
   in
   aux 0 infos
@@ -190,12 +196,9 @@ let parse_dockerfile file =
     let res = Tree_sitter_dockerfile.Parse.file file in
     match res.Tree_sitter_run.Parsing_result.program with
     | None -> []
-    | Some _cst ->
-        failwith "XXX"
-(* TODO
-       let raw = Tree_sitter_dockerfile.Boilerplate.map_document () cst in
+    | Some cst ->
+       let raw = Tree_sitter_dockerfile.Boilerplate.map_source_file () cst in
        extract_infos_raw_tree file raw
-*)
   in
   let ast = 
     match res.Tree_sitter_run.Parsing_result.program with
@@ -207,8 +210,20 @@ let parse_dockerfile file =
   in
   ast, tokens
 
-let parse_yaml _file =
-  failwith "TODO"
+(* We don't have a tree-sitter parser for YAML but use ocaml-yaml lib *)
+let parse_yaml file =
+  let ast = Yaml_to_generic.program file in
+  (* TODO: this does not really work yet in codemap; we get weird
+   * '(' and ')' token displayed whereas they are not in the file!
+   * maybe Emma generates them in Yaml_to_generic
+   *)
+  let toks = 
+    AST_generic_helpers.ii_of_any (AST_generic.Pr ast)
+    |> List.filter Tok.is_origintok
+    |> List.sort Tok.compare_pos
+    |>  add_extra_infos file
+  in
+  ast, toks
 
 
 (*****************************************************************************)

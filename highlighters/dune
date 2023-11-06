@@ -4,6 +4,7 @@
  (wrapped false)
  (libraries
    fpath
+   logs
 
    commons
    lib_parsing
@@ -27,6 +28,7 @@
    parser_bash.tree_sitter parser_bash.ast_generic
    parser_dockerfile.tree_sitter
    parser_lisp.tree_sitter
+   parser_yaml.ast_generic
 
    ; now in codemap
    pfff-lang_html

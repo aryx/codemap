@@ -4,6 +4,7 @@
    ; stdlib deps
    str bigarray
    ocamlgraph
+   logs
 
    ; semgrep deps
    commons

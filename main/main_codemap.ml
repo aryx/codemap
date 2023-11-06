@@ -675,6 +675,8 @@ let main () =
     Logging.load_config_file !log_config_file;
     logger#info "loaded %s" !log_config_file;
   end;
+  (* TODO: call setup_logging, use cmdliner and parse --debug, --info ... *)
+  Logs_helpers.enable_logging();
 
     
   (* must be done after Arg.parse, because Common.profile is set by it *)

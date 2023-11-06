@@ -84,7 +84,10 @@ let use_fancy_highlighting file =
     | FT.Text ("nw" | "tex"  | "texi" | "web" | "org")
     | FT.PL (FT.Web (FT.Php _ | FT.Js | FT.TypeScript | FT.Html))
     | FT.PL (FT.IDL _)
-    | FT.Config (FT.Makefile | FT.Dockerfile | FT.Jsonnet | FT.Sexp | FT.Yaml)
+    (* TODO: FT.Makefile, but not tree-sitter-make yet
+     * TODO: Yaml, but bad tokens still in Parse_languages.ml
+     *)
+    | FT.Config (FT.Dockerfile | FT.Jsonnet | FT.Sexp)
     | FT.PL (FT.Cplusplus _ | FT.C _ | FT.ObjectiveC _)
     | FT.PL (FT.Scala)
     | FT.PL (FT.Lisp _)
