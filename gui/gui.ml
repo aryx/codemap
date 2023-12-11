@@ -621,7 +621,7 @@ let dialog_ask_y_or_no ~text ~title  =
 
 let dialog_ask_filename ~title ~filename = 
 
-  let (res: filename option ref) = ref None in
+  let (res: string (* filename *) option ref) = ref None in
 
   let filew = GWindow.file_selection ~title ~filename ~modal:true () in
   filew#connect#destroy ~callback: GMain.Main.quit |> ignore;

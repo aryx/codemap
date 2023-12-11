@@ -91,7 +91,7 @@ let unittest =
          assert_equal 
            ~msg:"it should find all added files in a diff"
            [Lib.Added, "bar.txt"; Lib.Added, "foo.txt"]
-           (Common.sort xs);
+           (List_.sort xs);
 
          let xs = 
            Git.grep ~basedir "ba" in
@@ -114,14 +114,14 @@ let unittest =
 
          let tmpfile =
            Git.show ~basedir "bar.txt" commit_id in
-         let xs = Common.cat tmpfile in
+         let xs = UCommon.cat tmpfile in
          assert_equal
            ~msg:"it should show the current content of the file"
            ["new_content"]
            xs;
          let tmpfile =
            Git.show ~basedir "bar.txt" previous_id in
-         let xs = Common.cat tmpfile in
+         let xs = UCommon.cat tmpfile in
          assert_equal
            ~msg:"it should show the past content of the file"
            ["bar"]

@@ -80,7 +80,7 @@ open Common
 type patch_raw = string list
 
 (* parsing patch related *)
-type patchinfo = (filename, fileinfo) Common.assoc
+type patchinfo = (string (* filename *), fileinfo) Assoc.t
    and fileinfo = ((int * int) * hunk) list
    (* inv: the regions are sorted, because we process patch from start to 
     * end of file *)
@@ -274,9 +274,9 @@ let (parse_patch: (string list) -> patchinfo) = fun lines ->
 (*****************************************************************************)
 
 let hunk_containing_string s (pinfos: patchinfo) = 
-  pinfos |> Common.find_some (fun (_file, fileinfo) -> 
+  pinfos |> List_.find_some (fun (_file, fileinfo) -> 
     Common2.optionise (fun () -> 
-      fileinfo |> Common.find_some (fun (_limits, hunk) -> 
+      fileinfo |> List_.find_some (fun (_limits, hunk) -> 
         let hunk' = hunk |> List.map remove_prefix_mark in
         if List.mem s hunk'
         then Some hunk
@@ -285,25 +285,25 @@ let hunk_containing_string s (pinfos: patchinfo) =
   )
 
 let hunks_containing_string s (pinfos: patchinfo) = 
-  pinfos |> Common.map_filter (fun (_file, fileinfo) -> 
+  pinfos |> List_.map_filter (fun (_file, fileinfo) -> 
     let res = 
-      (fileinfo |> Common.map_filter (fun (_limits, hunk) -> 
+      (fileinfo |> List_.map_filter (fun (_limits, hunk) -> 
         let hunk' = hunk |> List.map remove_prefix_mark in
         if List.mem s hunk'
         then Some hunk
         else None
       ))
     in
-    if null res then None else Some res
+    if List_.null res then None else Some res
   ) |> List.flatten
 
 
 let modified_lines fileinfo = 
   fileinfo |> List.map (fun ((start, _end), hunk) ->
     let hunk = parse_hunk hunk in
-    let noplus = hunk |> Common.exclude (function Plus _ -> true | _ -> false)
+    let noplus = hunk |> List_.exclude (function Plus _ -> true | _ -> false)
     in
-    Common.index_list noplus |> Common.map_filter (function
+    List_.index_list noplus |> List_.map_filter (function
     | Minus _, idx -> Some (idx + start)
     | _ -> None
     )
@@ -343,7 +343,7 @@ let string_of_stat stat =
 (*****************************************************************************)
 
  
-let (relevant_part: (filename * (int * int)) -> patchinfo -> string) = 
+let (relevant_part: (string (* filename *) * (int * int)) -> patchinfo -> string) = 
  fun (_filename, (_startl, _endl)) _patchinfo ->
    raise Todo
 (*

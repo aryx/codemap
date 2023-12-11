@@ -50,12 +50,12 @@ let plot_matrix ~lines ~columns ~xlabel ~ylabel matrix =
   let limx = List.length columns - 1 in
   let limy = List.length lines - 1 in
 
-  Common.with_open_outfile tmpfile (fun (pr_no_nl, _chan) ->
+  UCommon.with_open_outfile tmpfile (fun (pr_no_nl, _chan) ->
       let pr s = pr_no_nl (s ^ "\n") in
 
       pr (prelude ());
 
-      Common.index_list columns
+      List_.index_list columns
       |> List.iter (fun (s, i) -> pr (spf "hash_label at %d : %s" i s));
       let middle = limx / 2 in
       pr (xaxis_font ());

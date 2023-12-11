@@ -8,7 +8,7 @@ type color = string (* Simple_color.emacs_color *)
 type layer = {
   title : string;
   description : string;
-  files : (Common.filename * file_info) list;
+  files : (string (* filename *) * file_info) list;
   kinds : (kind * color) list;
 }
 
@@ -27,29 +27,29 @@ val heat_map_properties : (kind * color) list
 
 (* The filenames are in absolute path format in the index. *)
 type layers_with_index = {
-  root : Common.filename;
+  root : string;
   layers : (layer * bool (* is active *)) list;
-  micro_index : (Common.filename, (int, color) Hashtbl.t) Hashtbl.t;
-  macro_index : (Common.filename, (float * color) list) Hashtbl.t;
+  micro_index : (string (* filename *), (int, color) Hashtbl.t) Hashtbl.t;
+  macro_index : (string (* filename *), (float * color) list) Hashtbl.t;
 }
 
 val build_index_of_layers :
-  root:Common.filename (* a dir *) -> (layer * bool) list -> layers_with_index
+  root:string (* a dir *) -> (layer * bool) list -> layers_with_index
 
 val has_active_layers : layers_with_index -> bool
 
 (* save either in a (readable) json format or (fast) marshalled form
  * depending on the extension of the filename
  *)
-val load_layer : Common.filename -> layer
-val save_layer : layer -> Common.filename -> unit
+val load_layer : string (* filename *) -> layer
+val save_layer : layer -> string (* filename *) -> unit
 
 (* helpers *)
 val json_of_layer : layer -> JSON.t
 val layer_of_json : JSON.t -> layer
 
 val simple_layer_of_parse_infos :
-  root:Common.filename ->
+  root:string ->
   title:string ->
   ?description:string ->
   (Tok.t * kind) list ->
@@ -57,4 +57,4 @@ val simple_layer_of_parse_infos :
   layer
 
 val stat_of_layer : layer -> (kind * int) list
-val filter_layer : (Common.filename -> bool) -> layer -> layer
+val filter_layer : (string (* filename *) -> bool) -> layer -> layer

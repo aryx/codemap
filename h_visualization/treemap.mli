@@ -86,16 +86,16 @@ val follow_symlinks : bool ref
 
 (* paths -> tree (see also Common.tree2_of_files) *)
 val tree_of_dirs_or_files :
-  ?filter_file:(Common.filename -> bool) ->
-  ?filter_dir:(Common.filename (* a dir *) -> bool) ->
+  ?filter_file:(string -> bool) ->
+  ?filter_dir:(string (* a dir *) -> bool) ->
   ?sort:directory_sort ->
-  file_hook:(Common.filename -> 'a) ->
-  Common2.path list ->
-  (Common.filename (* a dir *), Common.filename * 'a) tree
+  file_hook:(string (* filename *) -> 'a) ->
+  string list ->
+  (string (* a dir *), string (* filename *) * 'a) tree
 
 val remove_singleton_subdirs :
-  (Common.filename (* a dir *), Common.filename * 'a) tree ->
-  (Common.filename (* a dir *), Common.filename * 'a) tree
+  (string (* a dir *), string (* filename *) * 'a) tree ->
+  (string (* a dir *), string (* filename *) * 'a) tree
 
 (* internal functions *)
 (*s: signature treemap accessors *)
@@ -118,6 +118,6 @@ val tree_ex_wijk_1999 : (unit, int) tree
 val treemap_ex_ordered_2001 : (unit, unit) treemap
 (*e: signature tree and treemap examples *)
 
-val actions : unit -> Arg_helpers.cmdline_actions
+val actions : unit -> Arg_.cmdline_actions
 
 (*e: treemap.mli *)

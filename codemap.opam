@@ -21,6 +21,7 @@ depends: [
   "dune" {>= "2.7.0" }
   "lablgtk"
   "cairo2-gtk"
+  "ounit"
 ]
 
 build: [make]

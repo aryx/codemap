@@ -32,10 +32,10 @@ module VC = Version_control
 class type vcs = object
 method basedir: string
 
-method grep: string -> Common.filename list
-method show: Common.filename -> Lib_vcs.versionid -> Common.filename
+method grep: string -> string (* filename *) list
+method show: string (* filename *) -> Lib_vcs.versionid -> string (* filename *)
 method files_involved_in_diff: Lib_vcs.versionid -> 
-  (Lib_vcs.file_commit_status * Common.filename) list
+                               (Lib_vcs.file_commit_status * string (* filename *)) list
 end 
 
 (*****************************************************************************)

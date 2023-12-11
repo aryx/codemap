@@ -1,5 +1,5 @@
 
 val gen_layer: 
-  Common.filename (* a dir *) -> output:Common.filename -> unit
+  string (* a dir *) -> output:string (* filename *) -> unit
 
-val actions : unit -> Arg_helpers.cmdline_actions
+val actions : unit -> Arg_.cmdline_actions

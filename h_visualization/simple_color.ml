@@ -918,7 +918,7 @@ let string_of_color color =
   let dists =
     emacs_colors |> List.map (fun (s, rgbf2) -> (s, dist rgbf rgbf2))
   in
-  Common.sort_by_val_lowfirst dists |> List.hd |> fst
+  Assoc.sort_by_val_lowfirst dists |> List.hd |> fst
 
 (*
   Graphics.rgb (Random.int maxc) (Random.int maxc) (Random.int maxc)

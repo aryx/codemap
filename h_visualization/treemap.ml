@@ -280,7 +280,7 @@ let (slice_and_dicing_layout : ('a, 'b) layout_func) =
  *)
 let squarified_list_area_ex =
   [ 6; 6; 4; 3; 2; 2; 1 ]
-  |> List.map (fun x -> (float_of_int x, spf "info: %d" x))
+  |> List.map (fun x -> (float_of_int x, Common.spf "info: %d" x))
 
 (* normally our algorithm should do things proportionnally to the size
  * of the aready. It should not matter that the total sum of area is
@@ -383,7 +383,7 @@ let layout row rect =
          let rect_here =
            { p = { x = p.(0); y = p.(1) }; q = { x = q.(0); y = q.(1) } }
          in
-         Common.push (size_child, info, rect_here) res;
+         Stack_.push (size_child, info, rect_here) res;
          p.(axis_split) <- q.(axis_split));
   !res
 (*e: function layout *)
@@ -910,7 +910,7 @@ let tree_of_dir3 ?(filter_file = fun _ -> true) ?(filter_dir = fun _ -> true)
                        if filter_dir full then Common.push (aux full) res
                    | _ -> ()
                  with
-                 | Unix.Unix_error _ -> pr2 (spf "PB stat link at %s" full)
+                 | Unix.Unix_error _ -> pr2 (Common.spf "PB stat link at %s" full)
                else ()
            | _ -> ());
     Node (dir, List.rev !res)
@@ -1132,8 +1132,8 @@ let (treemap_ex_ordered_2001 : (unit, unit) treemap) =
            Leaf
              ( {
                  size;
-                 color = Color.color_of_string (spf "grey%d" (90 - (i * 3)));
-                 label = spf "size = %d" size;
+                 color = Color.color_of_string (Common.spf "grey%d" (90 - (i * 3)));
+                 label = Common.spf "size = %d" size;
                },
                () ))
   in

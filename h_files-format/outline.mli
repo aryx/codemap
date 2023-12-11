@@ -12,5 +12,5 @@ val outline_default_regexp : string
 val root_title : string
 val root_stars : string
 val is_root_node : outline_node -> bool
-val parse_outline : ?outline_regexp:string -> Common.filename -> outline
-val write_outline : outline -> Common.filename -> unit
+val parse_outline : ?outline_regexp:string -> string (* filename *) -> outline
+val write_outline : outline -> string (* filename *) -> unit

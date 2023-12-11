@@ -37,7 +37,7 @@ type file_commit_status =
   | Modified
   | Renamed of 
       int (* probability of rename *) *
-      Common.filename (* original filename *)
+      string (* original filename *)
   | FileTypeChanged
   | Unmerged
   | Unknown

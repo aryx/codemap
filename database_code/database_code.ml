@@ -105,7 +105,7 @@ type entity = {
   e_name : string;
   (* can be empty to save space when e_fullname = e_name *)
   e_fullname : string;
-  e_file : Common.filename;
+  e_file : string;
   e_pos : Pos.linecol;
   (* Semantic information that can be leverage by a code visualizer.
    * The fields are set as mutable because usually we compute
@@ -149,18 +149,18 @@ type database = {
    * filenames in which case we can strip the root from it
    * (e.g. in the treemap browser when we mouse over a rectangle).
    *)
-  root : Common.filename;
+  root : string;
   (* Such list can be used in a search box powered by completion.
    * The int is for the total number of times this files is
    * externally referenced. Can be use for instance in the treemap
    * to artificially augment the size of what is probably a more
    * "important" file.
    *)
-  dirs : (Common.filename * int) list;
+  dirs : (string (* filename *) * int) list;
   (* see also build_top_k_sorted_entities_per_file for dynamically
    * computed summary information for a file
    *)
-  files : (Common.filename * int) list;
+  files : (string (* filename *) * int) list;
   (* indexed by entity_id *)
   entities : entity array;
 }
@@ -316,7 +316,8 @@ let load_database file =
      * one wants to have a readable database.
      *)
     let json =
-      Profiling.profile_code "Json_in.load_json" (fun () -> J.load_json file)
+      Profiling.profile_code "Json_in.load_json" (fun () ->
+          UChan.with_open_in (Fpath.v file) J.json_of_chan)
     in
     database_of_json json
   else Common2.get_value file
@@ -332,7 +333,7 @@ let save_database database file =
   if File_type.is_json_filename (Fpath.v file) then
     database |> json_of_database
     |> J.string_of_json ~compact:false ~recursive:false ~allow_nan:true
-    |> Common.write_file ~file
+    |> UCommon.write_file ~file
   else Common2.write_value database file
 
 (*****************************************************************************)
@@ -468,7 +469,7 @@ let merge_databases db1 db2 =
   {
     root = db1.root;
     dirs =
-      db1.dirs @ db2.dirs |> Common.group_assoc_bykey_eff
+      db1.dirs @ db2.dirs |> Assoc.group_assoc_bykey_eff
       |> List.map (fun (file, xs) -> (file, Common2.sum xs));
     files = db1.files @ db2.files;
     (* should ensure exclusive ? *)
@@ -478,15 +479,15 @@ let merge_databases db1 db2 =
 let build_top_k_sorted_entities_per_file2 ~k xs =
   xs |> Array.to_list
   |> List.map (fun e -> (e.e_file, e))
-  |> Common.group_assoc_bykey_eff
+  |> Assoc.group_assoc_bykey_eff
   |> List.map (fun (file, xs) ->
          ( file,
            xs
            |> List.sort (fun e1 e2 ->
                   (* high first *)
                   compare e2.e_number_external_users e1.e_number_external_users)
-           |> Common.take_safe k ))
-  |> Common.hash_of_list
+           |> List_.take_safe k ))
+  |> Hashtbl_.hash_of_list
 
 let build_top_k_sorted_entities_per_file ~k xs =
   Profiling.profile_code "Db.build_sorted_entities" (fun () ->
@@ -494,7 +495,7 @@ let build_top_k_sorted_entities_per_file ~k xs =
 
 let mk_dir_entity dir n =
   {
-    e_name = Common2.basename dir ^ "/";
+    e_name = Filename.basename dir ^ "/";
     e_fullname = "";
     e_file = dir;
     e_pos = { Pos.l = 1; c = 0 };

@@ -2,14 +2,14 @@
 class type vcs = object
 method basedir: string
 
-method grep: string -> Common.filename list
-method show: Common.filename -> Lib_vcs.versionid -> Common.filename
+method grep: string -> string (* filename *) list
+method show: string (* filename *) -> Lib_vcs.versionid -> string (* filename *)
 method files_involved_in_diff: Lib_vcs.versionid -> 
-  (Lib_vcs.file_commit_status * Common.filename) list
+                               (Lib_vcs.file_commit_status * string (* filename *)) list
 end 
 
-val git: basedir:Common.filename -> vcs
-val hg: basedir:Common.filename -> vcs
+val git: basedir:string -> vcs
+val hg: basedir:string -> vcs
 
 (* infer from basedir *)
-val mk_vcs: basedir:Common.filename -> vcs
+val mk_vcs: basedir:string -> vcs

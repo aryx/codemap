@@ -17,10 +17,10 @@ let test_git dir =
 
 let actions () = [
   "-test_git", "   <dir>", 
-  Arg_helpers.mk_action_1_arg test_git;
+  Arg_.mk_action_1_arg test_git;
 
   "-test_git2", "   <dir> <str>", 
-  Arg_helpers.mk_action_2_arg (fun basedir str ->
+  Arg_.mk_action_2_arg (fun basedir str ->
     let vid = 
       (* Git.commit_of_relative_time ~basedir str  *)
       Lib_vcs.VersionId str
@@ -30,7 +30,7 @@ let actions () = [
     pr2_gen patch;
   );
   "-test_git3", "<dir>", 
-  Arg_helpers.mk_action_1_arg (fun basedir ->
+  Arg_.mk_action_1_arg (fun basedir ->
 
     (* pr2 (Git.parent_path_with_dotgit basedir); *)
 

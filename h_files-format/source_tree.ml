@@ -24,10 +24,10 @@ let reverse_index reorg =
   let res = ref [] in
   reorg
   |> List.iter (fun (SubSystem s1, dirs) ->
-         dirs |> List.iter (fun (Dir s2) -> push (Dir s2, SubSystem s1) res));
+         dirs |> List.iter (fun (Dir s2) -> Stack_.push (Dir s2, SubSystem s1) res));
   List.rev !res
 
-let (load_tree_reorganization : Common.filename -> tree_reorganization) =
+let (load_tree_reorganization : string (* filename *) -> tree_reorganization) =
  fun file ->
   let xs = Simple_format.title_colon_elems_space_separated file in
   xs
@@ -66,7 +66,7 @@ let change_organization_subsystems_to_dirs reorg basedir =
   ()
 
 let (change_organization :
-      tree_reorganization -> Common.filename (* dir *) -> unit) =
+      tree_reorganization -> string (* dir *) -> unit) =
  fun reorg dir ->
   pr2_gen reorg;
   pr2_gen dir;
@@ -90,15 +90,15 @@ let (change_organization :
 
 let subsystem_of_dir (Dir dir) reorg =
   let index = reverse_index reorg in
-  let dirsplit = Common.split "/" dir in
+  let dirsplit = String_.split ~sep:"/" dir in
   let index =
-    index |> List.map (fun (Dir d, sub) -> (Common.split "/" d, sub))
+    index |> List.map (fun (Dir d, sub) -> (String_.split ~sep:"/" d, sub))
   in
   try
     index
     |> List.find (fun (dirsplit2, _sub) ->
            let len = List.length dirsplit2 in
-           Common2.take_safe len dirsplit =*= dirsplit2)
+           List_.take_safe len dirsplit =*= dirsplit2)
     |> snd
   with
   | Not_found ->

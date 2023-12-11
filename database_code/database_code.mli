@@ -10,7 +10,7 @@ type entity = {
    *)
   e_name : string;
   e_fullname : string; (* can be empty *)
-  e_file : Common.filename;
+  e_file : string (* filename *);
   e_pos : Pos.linecol;
   mutable e_number_external_users : int;
   mutable e_good_examples_of_use : entity_id list;
@@ -26,12 +26,12 @@ type entity = {
  * JSON file). Only root is in absolute path format.
  *)
 type database = {
-  root : Common.filename;
+  root : string;
   (* the int are for the total number of times this file or dir is
    * externally referenced.
    *)
-  dirs : (Common.filename * int) list;
-  files : (Common.filename * int) list;
+  dirs : (string (* filename *) * int) list;
+  files : (string (* filename *) * int) list;
   entities : entity array;
 }
 
@@ -42,24 +42,24 @@ val default_db_name : string
 (* save either in a (readable) json format or (fast) marshalled form
  * depending on the extension of the filename
  *)
-val load_database : Common.filename -> database
-val save_database : database -> Common.filename -> unit
+val load_database : string (* filename *) -> database
+val save_database : database -> string (* filename *) -> unit
 
 (* when we want to analyze multi-languages projets *)
 val merge_databases : database -> database -> database
 
 (* build database helpers *)
 val alldirs_and_parent_dirs_of_relative_dirs :
-  Common.filename (* dir *) list -> Common.filename (* a dir *) list
+  string (* dir *) list -> string (* a dir *) list
 
 val files_and_dirs_database_from_files :
-  root:Common.filename -> Common.filename list -> database
+  root:string -> string (* filename *) list -> database
 
 val adjust_method_or_field_external_users : verbose:bool -> entity array -> unit
 
 (* for displaying a summary of the important functions in a file *)
 val build_top_k_sorted_entities_per_file :
-  k:int -> entity array -> (Common.filename, entity list) Hashtbl.t
+  k:int -> entity array -> (string (* filename *), entity list) Hashtbl.t
 
 (* for big grep *)
 val files_and_dirs_and_sorted_entities_for_completion :

@@ -285,9 +285,9 @@ type element_state = {
 }
 
 let parse file =
-  Common.with_open_infile file (fun chan ->
+  UCommon.with_open_infile file (fun chan ->
       let buf = Lexing.from_channel chan in
-      let table = Pos.full_charpos_to_pos_large file in
+      let table = Pos.full_converters_large file in
 
       let toks = ref [] in
       let call_scan scannerf =
@@ -306,12 +306,12 @@ let parse file =
                          raise Impossible);
                )
         in
-        Common.push tok toks;
+        Stack_.push tok toks;
         tok
       in
 
       let dtd = Dtd.html40_dtd in
-      let dtd_hash = Common.hash_of_list dtd in
+      let dtd_hash = Hashtbl_.hash_of_list dtd in
 
       let current =
         ref
@@ -585,8 +585,8 @@ let parse file =
 (* this function is useful mostly for our unit tests *)
 let (html_tree_of_string : string -> Ast_html.html_tree) =
  fun s ->
-  let tmpfile = Common.new_temp_file "pfff_html_tree_of_s" "html" in
-  Common.write_file tmpfile s;
+  let tmpfile = UCommon.new_temp_file "pfff_html_tree_of_s" "html" in
+  UCommon.write_file tmpfile s;
   let ast, _toks = parse tmpfile in
-  Common.erase_this_temp_file tmpfile;
+  UCommon.erase_this_temp_file tmpfile;
   ast

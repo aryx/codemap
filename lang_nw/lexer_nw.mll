@@ -126,8 +126,8 @@ let rec current_mode () =
     reset();
     current_mode ()
 
-let push_mode mode = Common.push mode _mode_stack
-let pop_mode () = Common2.pop2 _mode_stack |> ignore
+let push_mode mode = Stack_.push mode _mode_stack
+let pop_mode () = Stack_.pop _mode_stack |> ignore
 
 }
 

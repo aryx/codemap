@@ -37,7 +37,7 @@ type org = org_line list
 (*****************************************************************************)
 
 let parse file =
-  let xs = Common.cat file in
+  let xs = UCommon.cat file in
   xs
   |> List.map (fun s ->
          let s = s ^ "\n" in
@@ -53,7 +53,7 @@ let parse file =
 (*****************************************************************************)
 
 let highlight org =
-  org |> Common.index_list_1
+  org |> List_.index_list_1
   |> List.map (fun (org, line) ->
          let filepos = { Pos.l = line; c = 0 } in
          match org with

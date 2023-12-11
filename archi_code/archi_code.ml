@@ -192,7 +192,7 @@ let find_duplicate_dirname dir =
   in
   aux dir;
   pr2 "duplicate are:";
-  dups#to_list |> Common.sort_by_val_highfirst
+  dups#to_list |> Assoc.sort_by_val_highfirst
   |> List.iter (fun (dir, cnt) -> pr2 (spf " %s: %d" dir cnt));
   ()
 

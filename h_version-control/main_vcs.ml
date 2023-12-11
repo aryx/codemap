@@ -49,7 +49,7 @@ let options () =
     "-verbose", Arg.Set verbose, 
     " ";
   ] @
-  Arg_helpers.options_of_actions action (all_actions()) @
+  Arg_.options_of_actions action (all_actions()) @
   Common2.cmdline_flags_devel () @
   Common2.cmdline_flags_verbose () @
   Common2.cmdline_flags_other () @
@@ -75,11 +75,11 @@ let options () =
 
 let main () = 
   let usage_msg = 
-    "Usage: " ^ Common2.basename Sys.argv.(0) ^ 
+    "Usage: " ^ Filename.basename Sys.argv.(0) ^ 
       " [options] <file or dir> " ^ "\n" ^ "Options are:"
   in
   (* does side effect on many global flags *)
-  let args = Arg_helpers.parse_options (options()) usage_msg Sys.argv in
+  let args = Arg_.parse_options (options()) usage_msg Sys.argv in
 
   (* must be done after Arg.parse, because Common.profile is set by it *)
   Profiling.profile_code "Main total" (fun () -> 
@@ -89,10 +89,10 @@ let main () =
     (* --------------------------------------------------------- *)
     (* actions, useful to debug subpart *)
     (* --------------------------------------------------------- *)
-    | xs when List.mem !action (Arg_helpers.action_list (all_actions())) -> 
-        Arg_helpers.do_action !action xs (all_actions())
+    | xs when List.mem !action (Arg_.action_list (all_actions())) -> 
+        Arg_.do_action !action xs (all_actions())
 
-    | _ when not (Common.null_string !action) -> 
+    | _ when not (String_.empty !action) -> 
         failwith ("unrecognized action or wrong params: " ^ !action)
 
     (* --------------------------------------------------------- *)
@@ -105,14 +105,14 @@ let main () =
     (* empty entry *)
     (* --------------------------------------------------------- *)
     | [] -> 
-        Arg_helpers.usage usage_msg (options()); 
+        Arg_.usage usage_msg (options()); 
         failwith "too few arguments"
     )
   )
 
 (*****************************************************************************)
 let _ =
-  Common.main_boilerplate (fun () -> 
+  UCommon.main_boilerplate (fun () -> 
       main ();
   )
 

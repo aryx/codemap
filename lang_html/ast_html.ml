@@ -153,7 +153,7 @@ and attr_value = Val of string wrap
 (* Top and Head *)
 (* ------------------------------------------------------------------------- *)
 
-type html = Html of attrs * head * (body, frameset) Common.either
+type html = Html of attrs * head * (body, frameset) Either.t
 and head = Head of attrs * head_content list
 
 and head_content =

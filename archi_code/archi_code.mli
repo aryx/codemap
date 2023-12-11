@@ -38,4 +38,4 @@ val source_archi_list : source_archi list
 type source_kind = Header | Source
 
 (* can tell you about architecture, and also about design pbs *)
-val find_duplicate_dirname : Common.filename (* a dir *) -> unit
+val find_duplicate_dirname : string (* a dir *) -> unit

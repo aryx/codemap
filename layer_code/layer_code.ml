@@ -141,7 +141,7 @@ type color = string (* Simple_color.emacs_color *)
 type layer = {
   title : string;
   description : string;
-  files : (filename * file_info) list;
+  files : (string (* filename *) * file_info) list;
   kinds : (kind * color) list;
 }
 
@@ -170,10 +170,10 @@ and kind = string
  * current file.
  *)
 type layers_with_index = {
-  root : Common.filename;
+  root : string;
   layers : (layer * bool (* is active *)) list;
-  micro_index : (filename, (int, color) Hashtbl.t) Hashtbl.t;
-  macro_index : (filename, (float * color) list) Hashtbl.t;
+  micro_index : (string (* filename *), (int, color) Hashtbl.t) Hashtbl.t;
+  macro_index : (string (* filename *), (float * color) list) Hashtbl.t;
 }
 
 (*****************************************************************************)
@@ -226,7 +226,7 @@ let build_index_of_layers ~root layers =
   layers
   |> List.filter (fun (_layer, active) -> active)
   |> List.iter (fun (layer, _active) ->
-         let hkind = Common.hash_of_list layer.kinds in
+         let hkind = Hashtbl_.hash_of_list layer.kinds in
 
          layer.files
          |> List.iter (fun (file, finfo) ->
@@ -241,7 +241,7 @@ let build_index_of_layers ~root layers =
                  *)
                 let color_macro_level =
                   finfo.macro_level
-                  |> Common.map_filter (fun (kind, v) ->
+                  |> List_.map_filter (fun (kind, v) ->
                          (* some sanity checking *)
                          try Some (v, Hashtbl.find hkind kind) with
                          | Not_found ->
@@ -381,7 +381,7 @@ let record_only_pairs_expected loc v =
   let record_list_instead_atom _loc _v = failwith "record_list_instead_atom:"
 
   let tuple_of_size_n_expected _loc n v =
-    failwith (spf "tuple_of_size_n_expected: %d, got %s" n (Common2.dump v))
+    failwith (spf "tuple_of_size_n_expected: %d, got %s" n (Dumper.dump v))
 
   let rec json_of_v v =
     match v with
@@ -402,7 +402,7 @@ let record_only_pairs_expected loc v =
      *)
     | VFloat f -> J.Float f
     | VChar c -> J.String (Common2.string_of_char c)
-    | VInt i -> J.Int i
+    | VInt i -> J.Int (Int64.to_int i)
     | VTODO _v1 -> J.String "VTODO"
     | VVar _v1 -> failwith "json_of_v: VVar not handled"
     | VArrow _v1 -> failwith "json_of_v: VArrow not handled"
@@ -415,7 +415,7 @@ let record_only_pairs_expected loc v =
    fun j ->
     match j with
     | J.String s -> VString s
-    | J.Int i -> VInt i
+    | J.Int i -> VInt (Int64.of_int i)
     | J.Float f -> VFloat f
     | J.Bool b -> VBool b
     | J.Null -> raise Todo
@@ -443,7 +443,7 @@ let record_only_pairs_expected loc v =
 
   let save_json file json =
     let s = J.string_of_json json in
-    Common.write_file ~file s
+    UCommon.write_file ~file s
 end
 
 (* I have not yet an ocamltarzan script for the of_json ... but I have one

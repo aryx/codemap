@@ -16,7 +16,7 @@ type file_commit_status =
   | Modified
   | Renamed of 
       int (* probability of rename *) *
-      Common.filename (* original filename *)
+      string (* original filename *)
   | FileTypeChanged
   | Unmerged
   | Unknown
@@ -26,11 +26,11 @@ type file_commit_status =
 val s_of_versionid: versionid -> string
 
 (* generate a "cd xxx" *)
-val goto_dir : Common.filename (* basedir *) -> string
+val goto_dir : string (* basedir *) -> string
 
 val dummy_annotation : line_annotation
 
 val parse_commit_patch: string list -> commit_patch
-val parse_file_status: string -> file_commit_status * Common.filename
+val parse_file_status: string -> file_commit_status * string (* filename *)
 
-val filter_vcs_dir: Common.filename (* a dir *) -> bool
+val filter_vcs_dir: string (* a dir *) -> bool

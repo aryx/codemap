@@ -78,17 +78,17 @@ let test_pp_html file =
 
 let actions () =
   [
-    ("-tokens_html", "   <file>", Arg_helpers.mk_action_1_arg test_tokens_html);
-    ("-parse_html", "   <files or dirs>", Arg_helpers.mk_action_n_arg test_parse_html);
+    ("-tokens_html", "   <file>", Arg_.mk_action_1_arg test_tokens_html);
+    ("-parse_html", "   <files or dirs>", Arg_.mk_action_n_arg test_parse_html);
     (*
   "-dump_html", "   <file>",
-  Arg_helpers.mk_action_1_arg test_dump_html;
+  Arg_.mk_action_1_arg test_dump_html;
 *)
-    ("-pp_html", "   <file>", Arg_helpers.mk_action_1_arg test_pp_html)
+    ("-pp_html", "   <file>", Arg_.mk_action_1_arg test_pp_html)
     (*
   "-json_html", "   <file>",
-  Arg_helpers.mk_action_1_arg test_json_html;
+  Arg_.mk_action_1_arg test_json_html;
   "-json_html_old", "   <file>",
-  Arg_helpers.mk_action_1_arg test_dump_html_old;
+  Arg_.mk_action_1_arg test_dump_html_old;
 *);
   ]
