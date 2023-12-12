@@ -4,7 +4,7 @@
  (libraries
    ounit2
 
-   commons profiling
+   commons commons2 profiling
  )
  (preprocess
    (pps

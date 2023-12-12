@@ -3,7 +3,9 @@
  (name pfff_h_files_format)
  (wrapped false)
  (libraries
-   commons profiling
+   commons
+   commons2
+   profiling
  )
  (preprocess
    (pps

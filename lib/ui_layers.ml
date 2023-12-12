@@ -28,7 +28,7 @@ module L = Layer_code
 (*****************************************************************************)
 
 let choose_layer ~root layer_title_opt w =
-  pr2 "choose_layer()";
+  UCommon.pr2 "choose_layer()";
   let dw = w.dw in
 
   let original_layers = dw.M.layers.L.layers |> List.map fst in

@@ -6,7 +6,7 @@ type model = {
   (* for translating the absolute filenames in tr_label in readable so
    * one can access the node in the model for a tr_rectangle 
    *)
-  root: Common.filename; 
+  root: string; 
 
   db: Database_code.database option;
   (*s: model fields hook *)
@@ -20,9 +20,9 @@ type model = {
   (* for microlevel use/def information *)
   g: Graph_code.t option;
   (* for macrolevel use/def information, only for Dir and File *)
-  hfile_deps_of_node: (Graph_code.node, Common.filename deps) Hashtbl.t;
+  hfile_deps_of_node: (Graph_code.node, string (* filename *) deps) Hashtbl.t;
   (* we used to store line information there, but the file may have changed *)
-  hentities_of_file: (Common.filename, Graph_code.node list) Hashtbl.t;
+  hentities_of_file: (string (* filename *), Graph_code.node list) Hashtbl.t;
  }
 (*e: type model *)
 and 'a deps = 'a list (* uses *) * 'a list (* users *)
@@ -86,11 +86,11 @@ type drawing = {
 
   (* generated from dw.treemap, contains readable path relative to model.root *)
   readable_file_to_rect: 
-    (Common.filename, Treemap.treemap_rectangle) Hashtbl.t;
+    (string (* filename *), Treemap.treemap_rectangle) Hashtbl.t;
   (* coupling: = List.length treemap *)
   nb_rects: int; 
   (* Used to display readable paths. When fully zoomed it's a filename. *)
-  current_root: Common.filename;
+  current_root: string;
 
   mutable layers: Layer_code.layers_with_index;
 
@@ -98,7 +98,7 @@ type drawing = {
   (* queries *)
   mutable current_query: string;
   mutable current_searched_rectangles: Treemap.treemap_rectangle list;
-  mutable current_grep_query: (Common.filename, line) Hashtbl.t;
+  mutable current_grep_query: (string (* filename *), line) Hashtbl.t;
   (*e: fields drawing query stuff *)
 
   (*s: fields drawing main view *)
@@ -127,13 +127,13 @@ type drawing = {
 
 type world = {
   mutable dw: drawing;
-  dw_stack: drawing Common.stack ref;
+  dw_stack: drawing Stack_.t;
 
   (* computed lazily, semantic information about the code *)
   model: model Async.t;
-  root_orig: Common.filename;
+  root_orig: string;
   (* to compute a new treemap based on user's action *)
-  treemap_func: Common.filename list -> Treemap.treemap_rendering;
+  treemap_func: string (* filename *) list -> Treemap.treemap_rendering;
   (* misc settings, not really used for now *)
   settings: settings;
 
@@ -151,9 +151,9 @@ type world = {
 type context = {
   model2: model Async.t;
   nb_rects_on_screen: int;
-  grep_query: (Common.filename, line) Hashtbl.t;
+  grep_query: (string (* filename *), line) Hashtbl.t;
   layers_microlevel: 
-   (Common.filename, (int, Simple_color.emacs_color) Hashtbl.t) Hashtbl.t;
+   (string (* filename *), (int, Simple_color.emacs_color) Hashtbl.t) Hashtbl.t;
 }
 (*e: type context *)
 val context_of_drawing: drawing -> model Async.t -> context
@@ -163,10 +163,10 @@ val context_of_drawing: drawing -> model Async.t -> context
 val init_drawing :
   ?width:int ->
   ?height:int ->
-  (Common.filename list -> Treemap.treemap_rendering) ->
+  (string (* filename *) list -> Treemap.treemap_rendering) ->
   Layer_code.layers_with_index ->
-  Common.filename list -> 
-  Common.filename (* root *) ->
+  string (* filename *) list -> 
+  string (* root *) ->
   drawing
 (*e: [[init_drawing]] sig *)
 
@@ -206,7 +206,7 @@ val node_of_rect:
 
 val deps_readable_files_of_node:
   Graph_code.node -> model -> 
-  Common.filename (* readable *) deps
+  string (* readable *) deps
 
 val deps_rects_of_rect: 
   Treemap.treemap_rectangle -> drawing -> model ->

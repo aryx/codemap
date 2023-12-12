@@ -2,14 +2,14 @@
 
 (*s: hentities sig *)
 val hentities :
-  Common.filename -> Database_code.database option -> 
+  string (* filename *) -> Database_code.database option -> 
   (string, Database_code.entity) Hashtbl.t
 (*e: hentities sig *)
 
 (*s: [[hfiles_and_top_entities]] sig *)
 val hfiles_and_top_entities :
-  Common.filename -> Database_code.database option -> 
-  (Common.filename, Database_code.entity list) Hashtbl.t
+  string (* filename *) -> Database_code.database option -> 
+  (string (* filename *), Database_code.entity list) Hashtbl.t
 (*e: [[hfiles_and_top_entities]] sig *)
 
 (*s: [[all_entities]] sig *)
@@ -17,18 +17,18 @@ val hfiles_and_top_entities :
  * an extra entity when have a fullname that is not empty
  *)
 val all_entities :
-  root:Common.filename -> Common.filename list -> Database_code.database option->
+  root:string (* filename *) -> string (* filename *) list -> Database_code.database option->
   Database_code.entity list
 (*e: [[all_entities]] sig *)
 
 (*s: [[actual_root_of_db]] sig *)
 val actual_root_of_db : 
-  root:Common.filename -> Database_code.database -> string
+  root:string (* filename *) -> Database_code.database -> string
 (*e: [[actual_root_of_db]] sig *)
 
 (*s: [[readable_to_absolute_filename_under_root]] sig *)
 val readable_to_absolute_filename_under_root :
-  root:Common.filename -> string -> string
+  root:string (* filename *) -> string -> string
 (*e: [[readable_to_absolute_filename_under_root]] sig *)
 
 (*e: model_database_code.mli *)

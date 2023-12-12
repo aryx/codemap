@@ -55,15 +55,15 @@ let options () =
   Common2.cmdline_flags_other () @
   [
   "-version",   Arg.Unit (fun () -> 
-    pr2 (spf "vcs version: %s" version);
+    UCommon.pr2 (spf "vcs version: %s" version);
     exit 0;
   ), 
     "  guess what";
 
   (* this can not be factorized in Common *)
   "-date",   Arg.Unit (fun () -> 
-    pr2 "version: $Date: 2008/10/26 00:44:57 $";
-    raise (Common2.UnixExit 0)
+    UCommon.pr2 "version: $Date: 2008/10/26 00:44:57 $";
+    raise (Common.UnixExit 0)
     ), 
   "   guess what";
   ] @

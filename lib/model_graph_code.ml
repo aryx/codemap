@@ -116,11 +116,11 @@ let build_entities_of_file g =
  *)
 let add_headers_files_entities_of_file root xs =
   let headers =
-    xs |> Common.map_filter (fun (file, xs) ->
-      let (d,b,e) = Common2.dbe_of_filename_noext_ok file in
+    xs |> List_.map_filter (fun (file, xs) ->
+      let (d,b,e) = Filename_.dbe_of_filename_noext_ok file in
       match e with
       | "ml" -> 
-        let header_readable = Common2.filename_of_dbe (d,b,"mli") in
+        let header_readable = Filename_.filename_of_dbe (d,b,"mli") in
         let header = Filename.concat root header_readable in
         if Sys.file_exists header 
         (* todo: we add too many defs here, a mli can actually restrict

@@ -218,7 +218,7 @@ let visit_program
   and tag_path_and_aux_toks _ent xs =
     aux_toks xs
   in
-  let toks' = toks |> Common.exclude (function
+  let toks' = toks |> List_.exclude (function
     | T.Space _ | T.NEWLINE _  | T.NEWLINES _ -> true
     | _ -> false
   )

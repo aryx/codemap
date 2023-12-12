@@ -79,14 +79,14 @@ let cleanup_cache_files dir =
   cache_ext |> List.iter (fun ext -> 
     let files = Common2.files_of_dir_or_files_no_vcs ext [dir] in
     files |> List.iter (fun file -> 
-      assert(Common2.filesuffix file = ext);
+      assert(Filename_.filesuffix file = ext);
       pr2 file;
       Sys.command (spf "rm -f %s" file) |> ignore;
     ));
   ()
 
 let clean_git_patch xs =
-  xs |> Common.exclude (fun s -> 
+  xs |> List_.exclude (fun s -> 
     s =~ "^index[ \t]" ||
     s =~ "^deleted file mode" ||
     s =~ "^new file mode" ||
@@ -149,11 +149,11 @@ let annotate2 ?(basedir="") ?(use_cache=false) ?(use_dash_C=true) filename =
     (* todo? check status. can have a file not under git in which case we
      * get a 'fatal: no such path ... in HEAD
      *)
-    let (xs, _status) = Common2.cmd_to_list_and_status cmd in
+    let xs = UCmd.cmd_to_list cmd in
     (*let ys = Common.cat (Common.filename_of_db (basedir,filename)) in*)
 
     let annots = 
-      xs |> Common.map_filter (fun s -> 
+      xs |> List_.map_filter (fun s -> 
         if s =~ annotate_regexp 
         then 
           let (commitid, author, year, month, day) = Common.matched5 s in
@@ -179,11 +179,11 @@ let annotate_raw ?(basedir="") filename =
 
   let cmd = (goto_dir basedir ^ "git annotate HEAD -- "^filename^" 2>&1") in
   (* pr2 cmd; *)
-  let xs = Common.cmd_to_list cmd in
+  let xs = UCmd.cmd_to_list cmd in
   (*let ys = Common.cat (Common.filename_of_db (basedir,filename)) in*)
 
   let annots = 
-    xs |> Common.map_filter (fun s -> 
+    xs |> List_.map_filter (fun s -> 
       if s =~ annotate_regexp 
       then 
         Some s
@@ -217,7 +217,7 @@ let date_file_creation2 ?(basedir="") file =
              "git log --reverse --pretty=format:%aD "^file^" 2>&1")
   in
   (* pr2 cmd; *)
-  let xs = Common.cmd_to_list cmd in
+  let xs = UCmd.cmd_to_list cmd in
   match xs with
   | s::_xs -> 
       if s =~ date_regexp
@@ -242,7 +242,7 @@ let date_file_creation ?basedir a =
 let branches ~basedir = 
   let cmd = (goto_dir basedir ^
                 "git branch --no-color") in
-  let xs = Common.cmd_to_list cmd in
+  let xs = UCmd.cmd_to_list cmd in
   xs |> List.map (fun s ->
     if s=~ "[ \t]*\\*[ \t]+\\(.*\\)"
     then matched1 s
@@ -263,12 +263,14 @@ let id_and_summary_oneline s =
 let commits ?(extra_args="") ~basedir () = 
   let cmd = (goto_dir basedir ^
                 (spf "git log --no-color --pretty=oneline %s" extra_args)) in
-  let xs = Common.cmd_to_list cmd in
+  let xs = UCmd.cmd_to_list cmd in
   xs |> List.map id_and_summary_oneline
 
 let grep ~basedir str =
   let cmd = (goto_dir basedir ^
                (spf "git grep --files-with-matches %s" str)) in
+  UCmd.cmd_to_list cmd
+(*
   let (xs, status) = Common2.cmd_to_list_and_status cmd in
   (* According to git grep man page, non-zero exit code is expected when
    * there are no matches
@@ -279,9 +281,10 @@ let grep ~basedir str =
   | _ -> 
     raise (CmdError (status, (spf "CMD = %s, RESULT = %s"
                                 cmd (String.concat "\n" xs))))
+*)
 
 let show ~basedir file commitid =
-  let tmpfile = Common.new_temp_file "git_show" ".cat" in
+  let tmpfile = UCommon.new_temp_file "git_show" ".cat" in
   let str_commit = Lib_vcs.s_of_versionid commitid in
   let cmd = (spf "git show %s:%s > %s" str_commit file tmpfile) in
   exec_cmd ~basedir cmd;
@@ -295,7 +298,7 @@ let commit_raw_patch ~basedir commitid =
   let (VersionId scommit) = commitid in
   let cmd = (goto_dir basedir ^
              (spf "git show --no-color %s" scommit)) in
-  let xs = Common.cmd_to_list cmd in
+  let xs = UCmd.cmd_to_list cmd in
   xs
 
 let commit_summary ~basedir commitid = 
@@ -303,7 +306,7 @@ let commit_summary ~basedir commitid =
   let cmd = (goto_dir basedir ^
              (* (spf "git show --no-color --pretty=oneline %s" scommit)) in *)
              (spf "git log --pretty=oneline -1 %s" scommit)) in
-  let xs = Common.cmd_to_list cmd in
+  let xs = UCmd.cmd_to_list cmd in
   List.hd xs |> id_and_summary_oneline |> snd
 
 let commit_info ~basedir commitid = 
@@ -311,14 +314,14 @@ let commit_info ~basedir commitid =
   let cmd = (goto_dir basedir ^
              (* (spf "git show --no-color --pretty=oneline %s" scommit)) in *)
              (spf "git log --format='%%b' -1 %s" scommit)) in
-  let xs = Common.cmd_to_list cmd in
+  let xs = UCmd.cmd_to_list cmd in
   xs
 
 let commit_patch ~basedir commitid = 
   let (VersionId scommit) = commitid in
   let cmd = (goto_dir basedir ^
              (spf "git show --no-color %s" scommit)) in
-  let xs = Common.cmd_to_list cmd in
+  let xs = UCmd.cmd_to_list cmd in
   let xs = clean_git_patch xs in
 
   Lib_vcs.parse_commit_patch xs
@@ -329,7 +332,7 @@ let commit_of_relative_time ~basedir relative_data_string =
              (spf "git log --no-color --pretty=oneline --since=\"%s\"" 
                  relative_data_string
              )) in
-  let xs = Common.cmd_to_list cmd in
+  let xs = UCmd.cmd_to_list cmd in
   let last = Common2.list_last xs in
   id_and_summary_oneline last |> fst
 
@@ -337,7 +340,7 @@ let files_involved_in_diff ~basedir commitid =
   let str_commit = Lib_vcs.s_of_versionid commitid in
   let cmd = goto_dir basedir ^
     spf "git show --name-status --pretty=\"format:\" %s" str_commit in
-  let xs = Common.cmd_to_list cmd in
+  let xs = UCmd.cmd_to_list cmd in
   xs |> List.map Lib_vcs.parse_file_status
 
 (*****************************************************************************)
@@ -350,14 +353,14 @@ let commits_between_commitids ~basedir ~old_id ~recent_id =
                  (s_of_versionid old_id)
                  (s_of_versionid recent_id)
              )) in
-  let xs = Common.cmd_to_list cmd in
+  let xs = UCmd.cmd_to_list cmd in
   xs |> List.map id_and_summary_oneline |> List.map fst |> List.rev
  
 
 let file_to_commits ~basedir commits = 
   let h = Common2.hash_with_default (fun() -> []) in
   let total = List.length commits in
-  commits |> Common.index_list_1 |> List.iter (fun (vid, cnt) ->
+  commits |> List_.index_list_1 |> List.iter (fun (vid, cnt) ->
     Common2.log2 (spf "patch %d/%d" cnt total);
     try 
       let patch = commit_patch ~basedir vid in
@@ -381,33 +384,33 @@ let file_to_commits ~basedir commits =
  * responsible for the code in the file.
  *)
 let refactoring_commits ?(since="--since='1 year ago'") ?(threshold=50) repo =
-  let basedir = Common.fullpath repo in
+  let basedir = UCommon.fullpath repo in
   let commits = commits ~basedir ~extra_args:since () in
   pr2 (spf "#commits = %d" (List.length commits));
   
   let refactoring_ids = 
-  commits |> Console.progress (fun k -> List.filter (fun (id, _x) ->
-    k ();
+  commits |> (* Console.progress (fun k -> *) List.filter (fun (id, _x) ->
+    (* k (); *)
     let (Lib_vcs.VersionId scommit) = id in
     let cmd = (spf "cd %s; git show --oneline --no-color --stat %s"
                   basedir scommit) in
-    let xs = Common.cmd_to_list cmd in
+    let xs = UCmd.cmd_to_list cmd in
     (* basic heuristic: more than N files in a diff => refactoring diff *)
     List.length xs > threshold
-  ))
+  )
   in
   let tmpfile = "/tmp/refactoring_diffs.list" in
   pr2 (spf "writing data in %s" tmpfile);
-  Common.with_open_outfile tmpfile (fun (pr, _chan) ->
+  UCommon.with_open_outfile tmpfile (fun (xpr, _chan) ->
     refactoring_ids |> List.iter (fun (id, s) ->
-      pr2_gen (id, s);
-      pr (spf "%s %s\n" (Lib_vcs.s_of_versionid id) s);
+      UCommon.pr2_gen (id, s);
+      xpr (spf "%s %s\n" (Lib_vcs.s_of_versionid id) s);
     );
   );
   ()
 
 let parse_skip_revs_file file =
-  file |> Common.cat |> List.map (fun s ->
+  file |> UCommon.cat |> List.map (fun s ->
     if s =~ "^\\([^ ]+\\) "
     (* git annotate returns commitid of length 8, so must match that *)
     then Lib_vcs.VersionId (String.sub (Common.matched1 s) 0 8)
@@ -419,13 +422,13 @@ let parse_skip_revs_file file =
 (*****************************************************************************)
 
 let apply_patch ~basedir patch_string_list = 
-  let tmpfile = Common.new_temp_file "git" ".patch" in
+  let tmpfile = UCommon.new_temp_file "git" ".patch" in
   let s = Common2.unlines patch_string_list in
-  Common.write_file ~file:tmpfile s;
+  UCommon.write_file ~file:tmpfile s;
   
   let cmd = (goto_dir basedir ^ "git apply "^tmpfile^" 2>&1") in
-  let xs = Common.cmd_to_list cmd in
-  xs |> List.iter pr2;
+  let xs = UCmd.cmd_to_list cmd in
+  xs |> List.iter UCommon.pr2;
   ()
 
 (* ------------------------------------------------------------------------ *)
@@ -489,7 +492,7 @@ let get_2_best_blamers_of_lines
   let annots = annotate ~basedir ?use_cache filename in
 
   let toblame = 
-    lines_to_remove |> Common.map_filter (fun i ->
+    lines_to_remove |> List_.map_filter (fun i ->
       let (version, Lib_vcs.Author author, _date) = annots.(i) in
       (* todo: commitid string sometimes are specified by their full
        * length, somtimes only by its first 8 characters. Maybe should
@@ -503,9 +506,9 @@ let get_2_best_blamers_of_lines
     )
   in
 
-  let hblame = Common.hashset_of_list toblame in
+  let hblame = Hashtbl_.hashset_of_list toblame in
   let other_authors = 
-    annots |> Array.to_list |> Common.map_filter (fun x ->
+    annots |> Array.to_list |> List_.map_filter (fun x ->
       let (version, Lib_vcs.Author author, _date) = x in
       if is_valid_author author 
          && not (Common2.hmem author hblame) 
@@ -520,7 +523,7 @@ let get_2_best_blamers_of_lines
   let counts' = Common2.count_elements_sorted_highfirst other_authors |>
     List.map fst in
 
-  Common2.take_safe 2 (counts @ counts')
+  List_.take_safe 2 (counts @ counts')
 
 
 let max_date_of_lines ~basedir ?use_cache ?(skip_revs=[])
@@ -531,7 +534,7 @@ let max_date_of_lines ~basedir ?use_cache ?(skip_revs=[])
   (* todo? use only the lines_to_remove or the whole file to
    * decide of the "date" of the patch ? *)
   let toblame = 
-    lines_to_remove |> Common.map_filter (fun i -> 
+    lines_to_remove |> List_.map_filter (fun i -> 
       let (version, Lib_vcs.Author _author, date) = annots.(i) in
       if not (List.mem version skip_revs)
       then Some date

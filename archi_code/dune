@@ -4,7 +4,9 @@
  (name archi_code)
  (wrapped false)
  (libraries
-    commons profiling
+    commons
+    commons2
+    profiling
  )
  (preprocess
    (pps

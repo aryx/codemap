@@ -39,7 +39,7 @@ let debug_source_tree = false
 let change_organization_dirs_to_subsystems reorg basedir =
   let cmd s = 
     if debug_source_tree 
-    then pr2 s 
+    then UCommon.pr2 s 
     else Sys.command s |> ignore in
   reorg
   |> List.iter (fun (SubSystem sub, dirs) ->
@@ -54,7 +54,7 @@ let change_organization_dirs_to_subsystems reorg basedir =
 let change_organization_subsystems_to_dirs reorg basedir =
   let cmd s = 
     if debug_source_tree 
-    then pr2 s 
+    then UCommon.pr2 s 
     else Sys.command s |> ignore in
   reorg
   |> List.iter (fun (SubSystem sub, dirs) ->
@@ -68,8 +68,8 @@ let change_organization_subsystems_to_dirs reorg basedir =
 let (change_organization :
       tree_reorganization -> string (* dir *) -> unit) =
  fun reorg dir ->
-  pr2_gen reorg;
-  pr2_gen dir;
+  UCommon.pr2_gen reorg;
+  UCommon.pr2_gen dir;
 
   let subsystem_bools =
     all_subsystem reorg
@@ -102,6 +102,6 @@ let subsystem_of_dir (Dir dir) reorg =
     |> snd
   with
   | Not_found ->
-      pr2 (spf "Cant find %s in reorganization information" dir);
+      UCommon.pr2 (spf "Cant find %s in reorganization information" dir);
       raise Not_found
 [@@profiling]

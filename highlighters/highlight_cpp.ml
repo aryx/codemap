@@ -507,6 +507,8 @@ let visit_toplevel ~tag_hook _prefs _file (*db_opt *) (_ast, toks) =
          | T.Tsizeof ii
          | T.Trestrict ii
          | T.Tconstexpr ii
+         | T.Toverride ii
+         | T.Tfinal ii
          | T.Tthread_local ii ->
              tag ii Keyword
          | T.Tgoto ii ->

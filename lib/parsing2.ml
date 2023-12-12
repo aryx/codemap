@@ -87,7 +87,7 @@ let _hmemo_file = Hashtbl.create 101
 (* with directories with many files, this is useful *)
 let parse_cache parse_in extract file =
   Profiling.profile_code "View.parse_cache" (fun () ->
-    let mtime = Common2.filemtime file in
+    let mtime = UFile.filemtime (Fpath.v file) in
     let recompute = 
       if Hashtbl.mem _hmemo_file file
       then
@@ -156,7 +156,7 @@ let rewrite_categ_using_entities s categ file entities =
       | _x::_y::_xs ->
         (* TODO: handle __construct directly *)
         if not (List.mem s ["__construct"])
-        then pr2_once (spf "multi def found for %s in %s" s file);
+        then UCommon.pr2_once (spf "multi def found for %s in %s" s file);
         categ
 
 (*****************************************************************************)
@@ -166,10 +166,10 @@ let rewrite_categ_using_entities s categ file entities =
 let tokens_with_categ_of_file_helper 
   {PH.parse; highlight; info_of_tok} file prefs hentities =
   
-  if !Flag.verbose_visual then pr2 (spf "Parsing: %s" file);
+  if !Flag.verbose_visual then UCommon.pr2 (spf "Parsing: %s" file);
   let (ast, toks) = parse file in
 
-  if !Flag.verbose_visual then pr2 (spf "Highlighting: %s" file);
+  if !Flag.verbose_visual then UCommon.pr2 (spf "Highlighting: %s" file);
     let h = Hashtbl.create 101 in
 
     (* computing the token attributes *)
@@ -177,13 +177,13 @@ let tokens_with_categ_of_file_helper
       prefs (Fpath.v file) (ast, toks);
 
     (* getting the text *)
-    toks |> Common.map_filter (fun tok -> 
+    toks |> List_.map_filter (fun tok -> 
       let info = info_of_tok tok in
       let s = Tok.content_of_tok info in
       if not (Tok.is_origintok info)
       then None
       else 
-        let categ = Common2.hfind_option info h |> Common2.fmap (fun categ ->
+        let categ = Common2.hfind_option info h |> Option.map (fun categ ->
           rewrite_categ_using_entities s categ file hentities
         ) in
         Some (s, categ,{ Pos.l = Tok.line_of_tok info; c = Tok.col_of_tok info; })
@@ -471,7 +471,7 @@ let tokens_with_categ_of_file file hentities =
    * # -*- org   indication.
    * very pad and code-overlay specific.
    *)
-  | FT.Text ("txt") when Common2.basename file = "info.txt" ->
+  | FT.Text ("txt") when Filename.basename file = "info.txt" ->
       let org = Org_mode.parse file in
       Org_mode.highlight org
 

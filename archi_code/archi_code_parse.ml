@@ -41,32 +41,32 @@ let re_c_yaccfile = Str.regexp "\\(.*\\).tab"
 
 (* coupling: don't forget to extend re_auto_generated below too *)
 let is_auto_generated file =
-  let d, b, e = Common2.dbe_of_filename_noext_ok file in
+  let d, b, e = Filename_.dbe_of_filename_noext_ok file in
   match e with
   | "ml" ->
-      Sys.file_exists (Common2.filename_of_dbe (d, b, "mll"))
-      || Sys.file_exists (Common2.filename_of_dbe (d, b, "mly"))
-      || Sys.file_exists (Common2.filename_of_dbe (d, b, "mlb"))
-  | "mli" -> Sys.file_exists (Common2.filename_of_dbe (d, b, "mly"))
-  | "tex" -> Sys.file_exists (Common2.filename_of_dbe (d, b ^ ".tex", "nw"))
-  | "info" -> Sys.file_exists (Common2.filename_of_dbe (d, b, "texi"))
+      Sys.file_exists (Filename_.filename_of_dbe (d, b, "mll"))
+      || Sys.file_exists (Filename_.filename_of_dbe (d, b, "mly"))
+      || Sys.file_exists (Filename_.filename_of_dbe (d, b, "mlb"))
+  | "mli" -> Sys.file_exists (Filename_.filename_of_dbe (d, b, "mly"))
+  | "tex" -> Sys.file_exists (Filename_.filename_of_dbe (d, b ^ ".tex", "nw"))
+  | "info" -> Sys.file_exists (Filename_.filename_of_dbe (d, b, "texi"))
   (* Makefile.in *)
-  | "in" -> Sys.file_exists (Common2.filename_of_dbe (d, b, "am"))
+  | "in" -> Sys.file_exists (Filename_.filename_of_dbe (d, b, "am"))
   | "c" ->
       b = "y.tab"
-      || Sys.file_exists (Common2.filename_of_dbe (d, b, "y"))
-      || Sys.file_exists (Common2.filename_of_dbe (d, b, "l"))
+      || Sys.file_exists (Filename_.filename_of_dbe (d, b, "y"))
+      || Sys.file_exists (Filename_.filename_of_dbe (d, b, "l"))
       ||
       (* bigloo (hmm but then conflict with s9 that have s9.c and s9.scm *)
-      (* Sys.file_exists (Common2.filename_of_dbe (d,b, "scm")) || *)
+      (* Sys.file_exists (Filename_.filename_of_dbe (d,b, "scm")) || *)
       if b ==~ re_c_yaccfile then
         let b' = Common.matched1 b in
-        Sys.file_exists (Common2.filename_of_dbe (d, b', "y"))
+        Sys.file_exists (Filename_.filename_of_dbe (d, b', "y"))
       else false
   | _ when b = "Makefile" && e = "NOEXT" ->
-      Sys.file_exists (Common2.filename_of_dbe (d, b, "am"))
-      || Sys.file_exists (Common2.filename_of_dbe (d, b, "in"))
-      || Sys.file_exists (Common2.filename_of_dbe (d, "Imakefile", ""))
+      Sys.file_exists (Filename_.filename_of_dbe (d, b, "am"))
+      || Sys.file_exists (Filename_.filename_of_dbe (d, b, "in"))
+      || Sys.file_exists (Filename_.filename_of_dbe (d, "Imakefile", ""))
   | _ -> false
 
 (* opti: for some fastpath *)

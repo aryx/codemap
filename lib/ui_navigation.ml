@@ -36,7 +36,7 @@ let go_back w =
   !Controller.paint_content_maybe_refresher |> Option.iter (fun x ->
     GMain.Idle.remove x;
   );
-  let old_dw = Common2.pop2 w.dw_stack in
+  let old_dw = Stack_.pop w.dw_stack in
   w.dw <- old_dw;
  
   let path = w.dw.current_root in
@@ -48,7 +48,7 @@ let go_back w =
 (*s: [[go_dirs_or_file]] *)
 let go_dirs_or_file ?(current_grep_query=None) w paths =
   let root = Common2.common_prefix_of_files_or_dirs paths in
-  pr2 (spf "zooming in %s" (Common.join "|" paths));
+  UCommon.pr2 (spf "zooming in %s" (String.concat "|" paths));
 
   (* reset the painter? not needed because will call draw below
    * which will reset it
@@ -56,7 +56,7 @@ let go_dirs_or_file ?(current_grep_query=None) w paths =
   let dw = w.dw in
   !Controller._set_title (Controller.title_of_path root);
 
-  Common.push w.dw w.dw_stack;
+  Stack_.push w.dw w.dw_stack;
   w.dw <- 
     Model2.init_drawing 
       ~width:dw.width

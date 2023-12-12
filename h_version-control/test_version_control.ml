@@ -1,12 +1,10 @@
-open Common
-
 (*****************************************************************************)
 (* Subsystem testing *)
 (*****************************************************************************)
 
 let test_git dir = 
   let xs = Git.commits ~basedir:dir () in
-  xs |> List.iter pr2_gen
+  xs |> List.iter UCommon.pr2_gen
 
 
 (* ------------------------------------------------------------------------ *)
@@ -25,9 +23,9 @@ let actions () = [
       (* Git.commit_of_relative_time ~basedir str  *)
       Lib_vcs.VersionId str
     in
-    pr2_gen vid;
+    UCommon.pr2_gen vid;
     let patch = Git.commit_patch ~basedir vid in
-    pr2_gen patch;
+    UCommon.pr2_gen patch;
   );
   "-test_git3", "<dir>", 
   Arg_.mk_action_1_arg (fun basedir ->
@@ -37,9 +35,9 @@ let actions () = [
     let old_id = Git.commit_of_relative_time ~basedir "2 weeks ago" in
     let recent_id = Git.commit_of_relative_time ~basedir "1 week ago" in
     let commits = Git.commits_between_commitids ~basedir ~old_id ~recent_id in
-    pr2_gen old_id;
-    pr2_gen recent_id;
+    UCommon.pr2_gen old_id;
+    UCommon.pr2_gen recent_id;
     Common2.pr2_xxxxxxxxxxxxxxxxx ();
-    commits |> List.iter pr2_gen;
+    commits |> List.iter UCommon.pr2_gen;
   )
 ]

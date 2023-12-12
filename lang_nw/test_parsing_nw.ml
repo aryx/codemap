@@ -6,13 +6,13 @@ module Flag = Flag_parsing
 (*****************************************************************************)
 
 let test_tokens_nw file =
-  if not (file =~ ".*\\.nw") then pr2 "warning: seems not a noweb file";
+  if not (file =~ ".*\\.nw") then UCommon.pr2 "warning: seems not a noweb file";
 
   Flag.verbose_lexing := true;
   Flag.verbose_parsing := true;
 
   let toks = Parse_nw.tokens (Parsing_helpers.file file) in
-  toks |> List.iter (fun x -> pr2_gen x);
+  toks |> List.iter (fun x -> UCommon.pr2_gen x);
   ()
 
 let test_parse_nw file =
@@ -23,7 +23,7 @@ let test_dump_nw file =
   let (trees, _toks), _stat = Parse_nw.parse file in
   let v = Meta_ast_fuzzy.vof_trees trees in
   let s = OCaml.string_of_v v in
-  pr2 s
+  UCommon.pr2 s
  *)
 
 (*****************************************************************************)

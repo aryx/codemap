@@ -4,7 +4,7 @@
  * appearing just here.
  *)
 open Common
-open File.Operators
+open Fpath_.Operators
 
 module Flag = Flag_visual
 module FT = File_type
@@ -137,10 +137,10 @@ let legend = ref false
  *)
 
 (* if not specified, codemap will try to use files in the current directory *)
-let graph_file = ref (None: Common.filename option)
-let db_file    = ref (None: Common.filename option)
-let layer_file = ref (None: Common.filename option)
-let layer_dir  = ref (None: Common.filename option)
+let graph_file = ref (None: string (* filename *) option)
+let db_file    = ref (None: string (* filename *) option)
+let layer_file = ref (None: string (* filename *) option)
+let layer_dir  = ref (None: string (* filename *) option)
 
 (* See also Gui.synchronous_actions *)
 let test_mode = ref (None: string option)
@@ -230,7 +230,7 @@ let filters = [
   );
 ]
 
-let mk_filter_file (root : Fpath.t) : (Common.filename -> bool) =
+let mk_filter_file (root : Fpath.t) : (string (* filename *) -> bool) =
   let gitignore_filter =
     Gitignore_filter.create
       ~gitignore_filenames:[
@@ -282,7 +282,7 @@ let treemap_generator ~filter_file =
   let algo = Treemap.Ordered Treemap.PivotByMiddle in
   let big_borders = !Flag.boost_label_size in
   let rects = Treemap.render_treemap ~algo ~big_borders treemap in
-  Common.pr2 (spf "%d rectangles to draw" (List.length rects));
+  UCommon.pr2 (spf "%d rectangles to draw" (List.length rects));
   rects
 (*e: [[treemap_generator]] *)
 
@@ -292,7 +292,7 @@ let build_model root dbfile_opt graphfile_opt =
 
   let db_opt = dbfile_opt |> Option.map Database_code.load_database in
   let files = 
-    Common.files_of_dir_or_files_no_vcs_nofilter [root] |> List.filter !filter
+    UCommon.files_of_dir_or_files_no_vcs_nofilter [root] |> List.filter !filter
   in
   let hentities = Model_database_code.hentities root db_opt in
   let all_entities = Model_database_code.all_entities ~root files db_opt in
@@ -306,7 +306,7 @@ let build_model root dbfile_opt graphfile_opt =
       let a = Model_graph_code.build_filedeps_of_dir_or_file g in
       let b = Model_graph_code.build_entities_of_file g in
       let b = Model_graph_code.add_headers_files_entities_of_file root b in
-      a, Common.hash_of_list b
+      a, Hashtbl_.hash_of_list b
   in
   
   let model = { Model.
@@ -323,7 +323,7 @@ let build_model root dbfile_opt graphfile_opt =
 
 (* could also to parse all json files and filter the one which do not parse *)
 let layers_in_dir dir =
-  Common2.readdir_to_file_list dir |> Common.map_filter (fun file ->
+  Common2.readdir_to_file_list dir |> List_.map_filter (fun file ->
     if file =~ "layer.*json"
     then Some (Filename.concat dir file)
     else None
@@ -341,7 +341,7 @@ let main_action xs =
   let _locale = GtkMain.Main.init () in
 
   let root = Common2.common_prefix_of_files_or_dirs xs in
-  pr2 (spf "Using root = %s" root);
+  UCommon.pr2 (spf "Using root = %s" root);
 
   let filter_file = mk_filter_file (Fpath.v root) in
 
@@ -378,7 +378,7 @@ let main_action xs =
       | _ -> None
   in
   db_file |> Option.iter (fun db -> 
-    pr2 (spf "Using pfff light db: %s" db)
+    UCommon.pr2 (spf "Using pfff light db: %s" db)
   );
   let graph_file = 
     match !graph_file, xs with
@@ -394,7 +394,7 @@ let main_action xs =
     | _ -> None
   in
   graph_file |> Option.iter (fun db -> 
-    pr2 (spf "Using graphcode: %s" db)
+    UCommon.pr2 (spf "Using graphcode: %s" db)
   );
 
   let treemap_func = treemap_generator ~filter_file in
@@ -442,7 +442,7 @@ let main_action xs =
  * and archi_code_lexer.mll which lower the important of some files?
  *)
 let test_loc print_top30 xs =
-  let xs = xs |> List.map Common.fullpath in
+  let xs = xs |> List.map UCommon.fullpath in
   let root = Common2.common_prefix_of_files_or_dirs xs in
 
   let filter_file = mk_filter_file (Fpath.v root) in
@@ -462,19 +462,19 @@ let test_loc print_top30 xs =
           let multiplier = (float_of_int size /. float_of_int unix_size) in
           let multiplier = min multiplier 1.0 in
           let loc = Common2.nblines_with_wc file in
-          Common.push ((Common.readable ~root file), 
+          Stack_.push ((Filename_.readable ~root file), 
                        (float_of_int loc *. multiplier)) res;
         end
   in
   aux treemap;
   let total = !res |> List.map snd |> List.map int_of_float  |> Common2.sum in
-  pr2 (spf "LOC = %d (%d files)" total (List.length !res));
+  UCommon.pr2 (spf "LOC = %d (%d files)" total (List.length !res));
   if print_top30 then begin
     let topx = 30 in
-    pr2 (spf "Top %d:" topx);
-    !res |> Common.sort_by_val_highfirst |> Common.take_safe topx 
+    UCommon.pr2 (spf "Top %d:" topx);
+    !res |> Assoc.sort_by_val_highfirst |> List_.take_safe topx 
     |>  List.iter (fun (file, f) ->
-      pr2 (spf "%-40s: %d" file (int_of_float f))
+      UCommon.pr2 (spf "%-40s: %d" file (int_of_float f))
     )
   end
 
@@ -482,7 +482,7 @@ let test_loc print_top30 xs =
 let test_treemap_dirs () =
   let paths = 
     ["commons/common.ml"; "h_visualization"; "code_graph"] 
-    |> List.map Common.fullpath in
+    |> List.map UCommon.fullpath in
   let paths = List.sort String.compare paths in
   let tree = 
     paths |> Treemap.tree_of_dirs_or_files
@@ -490,7 +490,7 @@ let test_treemap_dirs () =
       ~filter_file:(fun file -> file =~ ".*\\.ml")
       ~file_hook:(fun _file -> 10)
   in
-  pr2_gen tree
+  UCommon.pr2_gen tree
 
 
 (* update: try to put ocamlgtk related tests in widgets/test_widgets.ml, not
@@ -500,15 +500,15 @@ let test_treemap_dirs () =
 
 (*s: [[visual_commitid]]() action *)
 let test_visual_commitid id =
-  let files = Common.cmd_to_list
+  let files = UCmd.cmd_to_list
     (spf "git show --pretty=\"format:\" --name-only %s"
         id) 
     (* not sure why git adds an extra empty line at the beginning but we
      * have to filter it
      *)
-    |> Common.exclude Common.null_string
+    |> List_.exclude String_.empty
   in
-  pr2_gen files;
+  UCommon.pr2_gen files;
   main_action files
 (*e: [[visual_commitid]]() action *)
 
@@ -571,15 +571,15 @@ let test_cairo () =
 let extra_actions () = [
  (*s: actions *)
    "-test_loc", " ",
-   Arg_helpers.mk_action_n_arg (test_loc true);
+   Arg_.mk_action_n_arg (test_loc true);
    "-test_loc2", " ",
-   Arg_helpers.mk_action_n_arg (test_loc false);
+   Arg_.mk_action_n_arg (test_loc false);
    "-test_cairo", " ",
-   Arg_helpers.mk_action_0_arg (test_cairo);
+   Arg_.mk_action_0_arg (test_cairo);
    "-test_commitid", " <id>",
-   Arg_helpers.mk_action_1_arg (test_visual_commitid);
+   Arg_.mk_action_1_arg (test_visual_commitid);
    "-test_treemap_dirs", " <id>",
-   Arg_helpers.mk_action_0_arg (test_treemap_dirs);
+   Arg_.mk_action_0_arg (test_treemap_dirs);
  (*e: actions *)
 ]
  
@@ -615,7 +615,7 @@ let options () = ([
     " <dir_with_layers>";
     "-filter", Arg.String (fun s -> filter := List.assoc s filters;), 
      spf " filter certain files (available = %s)" 
-      (filters |> List.map fst |> Common.join ", ");
+      (filters |> List.map fst |> String.concat ", ");
     "-extra_filter", Arg.String (fun s -> Flag.extra_filter := Some s),
     " ";
 
@@ -648,11 +648,11 @@ let options () = ([
     " ";
   (*e: options *)
   ] @
-  Arg_helpers.options_of_actions action (all_actions()) @
+  Arg_.options_of_actions action (all_actions()) @
   Common2.cmdline_flags_devel () @
   [
   "-version",   Arg.Unit (fun () -> 
-    pr2 (spf "CodeMap version: %s" "TODO: version codemap");
+    UCommon.pr2 (spf "CodeMap version: %s" "TODO: version codemap");
     exit 0;
   ), 
     " guess what";
@@ -668,7 +668,7 @@ let main () =
       (Filename.basename Sys.argv.(0))
       "https://github.com/facebook/pfff/wiki/Codemap"
   in
-  let args = Arg_helpers.parse_options (options()) usage_msg Sys.argv in
+  let args = Arg_.parse_options (options()) usage_msg Sys.argv in
 
   if Sys.file_exists !log_config_file
   then begin
@@ -676,7 +676,7 @@ let main () =
     logger#info "loaded %s" !log_config_file;
   end;
   (* TODO: call setup_logging, use cmdliner and parse --debug, --info ... *)
-  Logs_helpers.enable_logging();
+  Logs_.enable_logging();
 
     
   (* must be done after Arg.parse, because Common.profile is set by it *)
@@ -686,10 +686,10 @@ let main () =
     (* --------------------------------------------------------- *)
     (* actions, useful to debug subpart *)
     (* --------------------------------------------------------- *)
-    | xs when List.mem !action (Arg_helpers.action_list (all_actions())) -> 
-        Arg_helpers.do_action !action xs (all_actions())
+    | xs when List.mem !action (Arg_.action_list (all_actions())) -> 
+        Arg_.do_action !action xs (all_actions())
 
-    | _ when not (Common.null_string !action) -> 
+    | _ when not (String_.empty !action) -> 
         failwith ("unrecognized action or wrong params: " ^ !action)
 
     (* --------------------------------------------------------- *)
@@ -707,7 +707,7 @@ let main () =
 
 (*****************************************************************************)
 let _ = 
-  Common.main_boilerplate (fun () ->
+  UCommon.main_boilerplate (fun () ->
     main ()
   )
 (*e: main_codemap.ml *)

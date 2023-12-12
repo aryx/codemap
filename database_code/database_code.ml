@@ -309,7 +309,7 @@ let database_of_json json =
 (*****************************************************************************)
 
 let load_database file =
-  pr2 (spf "loading database: %s" file);
+  UCommon.pr2 (spf "loading database: %s" file);
   if File_type.is_json_filename (Fpath.v file) then
     (* This code is mostly obsolete. It's more efficient to use Marshall
      * to store big database. This should be used only when
@@ -445,7 +445,7 @@ let alldirs_and_parent_dirs_of_relative_dirs dirs =
 let merge_databases db1 db2 =
   (* assert same root ?then can just add the fields *)
   if db1.root <> db2.root then (
-    pr2 (spf "merge_database: the root differs, %s != %s" db1.root db2.root);
+    UCommon.pr2 (spf "merge_database: the root differs, %s != %s" db1.root db2.root);
     if not (Common2.y_or_no "Continue ?") then failwith "ok we stop");
 
   (* entities now contain references to other entities through
@@ -507,7 +507,7 @@ let mk_dir_entity dir n =
 
 let mk_file_entity file n =
   {
-    e_name = Common2.basename file;
+    e_name = Filename.basename file;
     e_fullname = "";
     e_file = file;
     e_pos = { Pos.l = 1; c = 0 };
@@ -525,7 +525,7 @@ let mk_multi_dirs_entity name dirs_entities =
     (* hack *)
     e_fullname = "";
     (* hack *)
-    e_file = Common.join "|" dirs_fullnames;
+    e_file = String.concat "|" dirs_fullnames;
     e_pos = { Pos.l = 1; c = 0 };
     e_kind = MultiDirs;
     e_number_external_users = (* todo? *)
@@ -539,21 +539,21 @@ let multi_dirs_entities_of_dirs es =
   es |> List.iter (fun e -> Hashtbl.add h e.e_name e);
   let keys = Common2.hkeys h in
   keys
-  |> Common.map_filter (fun k ->
+  |> List_.map_filter (fun k ->
          let vs = Hashtbl.find_all h k in
          if List.length vs > 1 then Some (mk_multi_dirs_entity k vs) else None)
 
 let files_and_dirs_database_from_files ~root files =
   (* quite similar to what we first do in a database_light_xxx.ml *)
   let dirs = files |> List.map Filename.dirname |> Common2.uniq_eff in
-  let dirs = dirs |> List.map (fun s -> Common.readable ~root s) in
+  let dirs = dirs |> List.map (fun s -> Filename_.readable ~root s) in
   let dirs = alldirs_and_parent_dirs_of_relative_dirs dirs in
 
   {
     root;
     dirs = dirs |> List.map (fun d -> (d, 0));
     (* TODO *)
-    files = files |> List.map (fun f -> (Common.readable ~root f, 0));
+    files = files |> List.map (fun f -> (Filename_.readable ~root f, 0));
     (* TODO *)
     entities = [||];
   }
@@ -570,7 +570,7 @@ let files_and_dirs_and_sorted_entities_for_completion2
     multidirs @ dirs @ files
     @
     if nb_entities > threshold_too_many_entities then (
-      pr2 "Too many entities. Completion just for filenames";
+      UCommon.pr2 "Too many entities. Completion just for filenames";
       [])
     else
       db.entities |> Array.to_list
@@ -595,7 +595,7 @@ let files_and_dirs_and_sorted_entities_for_completion2
            | File -> 20
            | _ -> e.e_number_external_users),
            e ))
-  |> Common.sort_by_key_highfirst |> List.map snd
+  |> Assoc.sort_by_key_highfirst |> List.map snd
 
 let files_and_dirs_and_sorted_entities_for_completion
     ~threshold_too_many_entities a =
@@ -628,7 +628,7 @@ let adjust_method_or_field_external_users ~verbose entities =
          | Field ->
              let k = e.e_name in
              let nb_defs = h_method_def_count#assoc k in
-             if nb_defs > 1 && verbose then pr2 ("Adjusting: " ^ e.e_fullname);
+             if nb_defs > 1 && verbose then UCommon.pr2 ("Adjusting: " ^ e.e_fullname);
 
              let orig_number = e.e_number_external_users in
              e.e_number_external_users <- orig_number / nb_defs

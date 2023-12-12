@@ -179,7 +179,7 @@ let visit_toplevel ~tag_hook _prefs _file (_ast, toks) =
   in
   let toks' =
     toks
-    |> Common.exclude (function
+    |> List_.exclude (function
          | T.TCommentSpace _ -> true
          | _ -> false)
   in

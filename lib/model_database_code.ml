@@ -47,7 +47,7 @@ let readable_to_absolute_filename_under_root ~root filename =
 
   (* the root may be a filename *)
   let root_dir = 
-    if Common2.is_directory root then root
+    if UFile.is_directory (Fpath.v root) then root
     else Filename.dirname root
   in
 
@@ -156,7 +156,7 @@ let all_entities ~root files db_opt =
   | Some db ->
       let nb_entities = Array.length db.Db.entities in
       let nb_files = List.length db.Db.files in
-      pr2 (spf "We got %d entities in %d files" nb_entities nb_files);
+      UCommon.pr2 (spf "We got %d entities in %d files" nb_entities nb_files);
 
       (* the db passed might be just about .ml files but we could be
        * called on a directory with non .ml files that we would

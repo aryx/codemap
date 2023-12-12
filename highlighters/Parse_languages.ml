@@ -57,16 +57,16 @@ let visit ~v_token ~v_any x =
  * we got from the CST.
  *)
 let add_extra_infos file (infos : Tok.t list) : (Tok.t * origin_info) list =
-  let bigstr = Common.read_file file in
+  let bigstr = UCommon.read_file file in
   let max = String.length bigstr in
-  let conv = Pos.full_charpos_to_pos_large file in
+  let conv = Pos.full_converters_large file in
 
   let rec aux current xs =
     match xs with
     | [] ->
        if current < max
        then 
-          let (line, column) = conv current in
+          let (line, column) = conv.bytepos_to_linecol_fun current in
           let str = String.sub bigstr current (max - current) in
           let loc = { Tok.pos = { Pos.file; line; column; bytepos = current}; str } in
           [Tok.tok_of_loc loc, Extra]
@@ -78,7 +78,7 @@ let add_extra_infos file (infos : Tok.t list) : (Tok.t * origin_info) list =
         let loc = Tok.unsafe_loc_of_tok x in
         (match current <=> loc.pos.bytepos with
         | Inf ->
-         let (line, column) = conv current in
+         let (line, column) = conv.bytepos_to_linecol_fun current in
          let str = String.sub bigstr current (loc.pos.bytepos - current) in
          let loc2 = { Tok.pos = { Pos.file; line; column; bytepos = current; };
                       str } in
@@ -104,7 +104,7 @@ let add_extra_infos file (infos : Tok.t list) : (Tok.t * origin_info) list =
 let extract_infos_raw_tree file (raw : unit Tree_sitter_run.Raw_tree.t) : (Tok.t * origin_info) list =
   let infos = ref [] in
   let env = { H.file; conv = H.line_col_to_pos file; extra = () } in
-  visit ~v_token:(fun tok -> Common.push (H.token env tok) infos) ~v_any:(fun _ -> ()) raw;
+  visit ~v_token:(fun tok -> Stack_.push (H.token env tok) infos) ~v_any:(fun _ -> ()) raw;
   !infos |> List.rev |> add_extra_infos file
 
 (*****************************************************************************)
@@ -131,7 +131,7 @@ let parse_rust file =
   in
   ast, tokens
 
-let parse_jsonnet ( file : Common.filename) =
+let parse_jsonnet ( file : string ) =
   let res = Parse_jsonnet_tree_sitter.parse (Fpath.v file) in
   let tokens = 
     let res = Tree_sitter_jsonnet.Parse.file file in

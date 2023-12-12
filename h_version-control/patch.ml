@@ -119,7 +119,7 @@ let remove_prefix_mark s =
   if s =~ str_regexp_no_mark
   then matched1 s
   else begin
-    pr2 ("no mark in: " ^ s);
+    UCommon.pr2 ("no mark in: " ^ s);
     s
   end
 
@@ -173,7 +173,7 @@ let rec mark_file_boundary_and_normalize_with_xxx xs =
               mark_file_boundary_and_normalize_with_xxx xs
           | _ ->
               if verbose 
-              then pr2 ("weird, diff header but no modif: " ^ x);
+              then UCommon.pr2 ("weird, diff header but no modif: " ^ x);
               mark_file_boundary_and_normalize_with_xxx (xs)
         end
       else
@@ -408,19 +408,19 @@ let (_filter_driver_sound: string list -> string list) = fun _lines ->
  * Could use 'ed' as sgimm suggested, or make a small OCaml API around 'ed'.
  *)
 let (generate_patch: 
-     edition_cmd list -> filename_in_project:string -> Common.filename ->
+     edition_cmd list -> filename_in_project:string -> string (* filename *) ->
      string list) = 
  fun edition_cmds ~filename_in_project filename ->
 
    let indexed_lines = 
-     Common.cat filename |> Common.index_list_1 in
+     UCommon.cat filename |> List_.index_list_1 in
    
    let indexed_lines = 
      edition_cmds |> List.fold_left (fun indexed_lines edition_cmd ->
      match edition_cmd with
      | RemoveLines index_lines -> 
          indexed_lines
-         |> Common.exclude (fun (_line, idx) -> List.mem idx index_lines)
+         |> List_.exclude (fun (_line, idx) -> List.mem idx index_lines)
      | PreAddAt (lineno, lines_to_add) 
      | PostAddAt (lineno, lines_to_add) ->
          let lines_to_add_fake_indexed = 
@@ -441,11 +441,10 @@ let (generate_patch:
    let lines' = indexed_lines |> List.map fst in
                                     
    (* generating diff *)
-   let tmpfile = Common.new_temp_file "genpatch" ".patch" in
-   write_file ~file:tmpfile (Common2.unlines lines');
+   let tmpfile = UCommon.new_temp_file "genpatch" ".patch" in
+   UCommon.write_file ~file:tmpfile (Common2.unlines lines');
    (* pr2 filename_in_project; *)
-   let (xs, _) = 
-     Common2.cmd_to_list_and_status 
+   let xs = UCmd.cmd_to_list 
        (spf "diff -u -p  \"%s\" \"%s\"" filename tmpfile) 
    in
    

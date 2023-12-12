@@ -41,7 +41,7 @@ module V = Visitor_python
  *)
 let def2 = Def2 NoUse
 let use2 = Use2 (NoInfoPlace, UniqueDef, MultiUse)
-let builtin_functions = Common.hashset_of_list [ "isinstance"; "set"; "dict" ]
+let builtin_functions = Hashtbl_.hashset_of_list [ "isinstance"; "set"; "dict" ]
 
 (*****************************************************************************)
 (* Code highlighter *)
@@ -375,7 +375,7 @@ let visit_program ~tag_hook _prefs (program, toks) =
   in
   let toks' =
     toks
-    |> Common.exclude (function
+    |> List_.exclude (function
          | T.TCommentSpace _ -> true
          | _ -> false)
   in

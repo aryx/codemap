@@ -105,7 +105,7 @@ let paint_content_maybe_rect ~user_rect dw model rect =
 
 (* todo: deadlock:  M.locked (fun () ->  ) dw.M.model.M.m *)
 let lazy_paint user_rect dw model () =
-  pr2 "Lazy Paint";
+  UCommon.pr2 "Lazy Paint";
   let start = Unix.gettimeofday () in
   while Unix.gettimeofday () - start < 0.3 do
     match !Ctl.current_rects_to_draw with
@@ -113,7 +113,7 @@ let lazy_paint user_rect dw model () =
     | x::xs ->
         Ctl.current_rects_to_draw := xs;
         if !debug
-        then pr2 (spf "Drawing: %s" (x.T.tr_label));
+        then UCommon.pr2 (spf "Drawing: %s" (x.T.tr_label));
         paint_content_maybe_rect ~user_rect dw model x;
   done;
   !Ctl._refresh_da ();
@@ -127,13 +127,13 @@ let lazy_paint user_rect dw model () =
   else true
 
 let paint dw model = 
-  pr2 (spf "paint");
+  UCommon.pr2 (spf "paint");
   
   !Ctl.paint_content_maybe_refresher |> Option.iter GMain.Idle.remove;
   Ctl.current_rects_to_draw := [];
 
   let user_rect = device_to_user_area dw in
-  pr2 (F.s_of_rectangle user_rect);
+  UCommon.pr2 (F.s_of_rectangle user_rect);
   let nb_rects = dw.nb_rects in
   let rects = dw.treemap in
 
@@ -189,18 +189,18 @@ let button_action w ev =
   | `BUTTON_PRESS ->
       let button = GdkEvent.Button.button ev in
       let state = GdkEvent.Button.state ev in
-      pr2 (spf "button %d pressed" button);
+      UCommon.pr2 (spf "button %d pressed" button);
       (match button with
       | 1 -> 
         r_opt |> Option.iter (fun (r, _, _r_englobing) ->
           let file = r.T.tr_label in
-          pr2 (spf "clicking on %s" file);
+          UCommon.pr2 (spf "clicking on %s" file);
         );
         true
       | 2 ->
         r_opt |> Option.iter (fun (r, _, _r_englobing) ->
           let file = r.T.tr_label in
-          pr2 (spf "opening %s" file);
+          UCommon.pr2 (spf "opening %s" file);
           let line = 
             M.find_line_in_rectangle_at_user_point user r dw ||| (Line 0)
           in
@@ -225,12 +225,12 @@ let button_action w ev =
           let glyph_opt =
             M.find_glyph_in_rectangle_at_user_point user tr dw in
           let entity_def_opt = 
-            line_opt >>= (fun line ->
-              M.find_def_entity_at_line_opt line tr dw model) in
+            let* line = line_opt in
+            M.find_def_entity_at_line_opt line tr dw model in
           let entity_use_opt =
-            line_opt >>= (fun line -> 
-            glyph_opt >>= (fun glyph ->
-              M.find_use_entity_at_line_and_glyph_opt line glyph tr dw model))
+            let* line = line_opt in
+            let* glyph = glyph_opt in
+            M.find_use_entity_at_line_and_glyph_opt line glyph tr dw model
           in
           let entity_opt = 
             match entity_use_opt, entity_def_opt with
@@ -248,7 +248,7 @@ let button_action w ev =
             |> List.sort compare
             |> Common2.uniq
             (* todo: tfidf to filter files like common2.ml *)
-            |> Common.exclude (fun readable -> 
+            |> List_.exclude (fun readable -> 
                 readable =~ "commons/common2.ml"
                 (*readable =~ "external/.*"  *)
             )
@@ -256,7 +256,7 @@ let button_action w ev =
             (* less: print a warning when does not exist? *)
             |> List.filter Sys.file_exists
           in
-          let readable = Common.readable ~root:model.root file in
+          let readable = Filename_.readable ~root:model.root file in
           let readable =
             match entity_opt with
             | None -> readable
@@ -301,7 +301,7 @@ let button_action w ev =
                   let str =
                     ([Graph_code.string_of_node n] @
                     (users |> List.map Graph_code.string_of_node )
-                    ) |> Common.join "\n"
+                    ) |> String.concat "\n"
                   in
                   Gui.dialog_text ~text:str ~title:"Info entity";
                 ));
@@ -322,14 +322,14 @@ let button_action w ev =
       )
   | `BUTTON_RELEASE ->
       let button = GdkEvent.Button.button ev in
-      pr2 (spf "button %d released" button);
+      UCommon.pr2 (spf "button %d released" button);
       (match button with
       | 1 -> true
       | _ -> false
       )
 
   | `TWO_BUTTON_PRESS ->
-      pr2 ("double click");
+      UCommon.pr2 ("double click");
       r_opt |> Option.iter (fun (_r, _, r_englobing) ->
         let path = r_englobing.T.tr_label in
         !Ctl._go_dirs_or_file w [path];

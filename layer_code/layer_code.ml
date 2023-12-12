@@ -249,7 +249,7 @@ let build_index_of_layers ~root layers =
                               * to be able to filter kinds in codemap by just editing the
                               * JSON file and removing certain kind definitions
                               *)
-                             pr2_once (spf "PB: kind %s was not defined" kind);
+                             UCommon.pr2_once (spf "PB: kind %s was not defined" kind);
                              None)
                 in
                 hmacro#update file (fun old -> color_macro_level @ old);
@@ -268,7 +268,7 @@ let build_index_of_layers ~root layers =
                              oldh)
                        with
                        | Not_found ->
-                           pr2_once (spf "PB: kind %s was not defined" kind))));
+                           UCommon.pr2_once (spf "PB: kind %s was not defined" kind))));
   { layers; root; macro_index = hmacro#to_h; micro_index = hmicro#to_h }
 
 (*****************************************************************************)
@@ -594,7 +594,7 @@ and file_info_ofv__ =
       else
         match (!micro_level_field, !macro_level_field) with
         | Some micro_level_value, Some macro_level_value ->
-            { micro_level = micro_level_value; macro_level = macro_level_value }
+            { micro_level = micro_level_value |> List.map (fun (i, x) -> Int64.to_int i, x); macro_level = macro_level_value }
         | _ ->
             OCamlx.record_undefined_elements _loc sexp
               [
@@ -627,7 +627,8 @@ let layer_of_json json = json |> OCamlx.v_of_json |> layer_ofv
  *)
 let load_layer file =
   (* pr2 (spf "loading layer: %s" file); *)
-  if File_type.is_json_filename (Fpath.v file) then J.load_json file |> layer_of_json
+  if File_type.is_json_filename (Fpath.v file) 
+  then UChan.with_open_in (Fpath.v file) J.json_of_chan |> layer_of_json
   else Common2.get_value file
 
 let save_layer layer file =
@@ -649,7 +650,7 @@ let simple_layer_of_parse_infos ~root ~title ?(description = "") xs kinds =
   let ranks_kinds =
     kinds
     |> List.map (fun (k, _color) -> k)
-    |> Common.index_list_1 |> Common.hash_of_list
+    |> List_.index_list_1 |> Hashtbl_.hash_of_list
   in
 
   (* group by file, group by line, uniq categ *)
@@ -659,11 +660,11 @@ let simple_layer_of_parse_infos ~root ~title ?(description = "") xs kinds =
            let file = Tok.file_of_tok tok in
            let line = Tok.line_of_tok tok in
            let file' = Common2.relative_to_absolute file in
-           (Common.readable ~root file', (line, kind)))
+           (Filename_.readable ~root file', (line, kind)))
   in
 
-  let (group_by_file : (Common.filename * (int * kind) list) list) =
-    Common.group_assoc_bykey_eff files_and_lines
+  let (group_by_file : (string (* filename *) * (int * kind) list) list) =
+    Assoc.group_assoc_bykey_eff files_and_lines
   in
 
   {
@@ -674,7 +675,7 @@ let simple_layer_of_parse_infos ~root ~title ?(description = "") xs kinds =
       group_by_file
       |> List.map (fun (file, lines_and_kinds) ->
              let (group_by_line : (int * kind list) list) =
-               Common.group_assoc_bykey_eff lines_and_kinds
+               Assoc.group_assoc_bykey_eff lines_and_kinds
              in
              let all_kinds_in_file =
                group_by_line |> List.map snd |> List.flatten |> Common2.uniq
@@ -695,7 +696,7 @@ let simple_layer_of_parse_infos ~root ~title ?(description = "") xs kinds =
                                 kinds
                                 |> List.map (fun x ->
                                        (x, Hashtbl.find ranks_kinds x))
-                                |> Common.sort_by_val_lowfirst
+                                |> Assoc.sort_by_val_lowfirst
                               in
                               (line, List.hd sorted |> fst));
                  macro_level =

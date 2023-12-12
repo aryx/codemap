@@ -5,13 +5,13 @@ open Common
 (*****************************************************************************)
 
 let test_tokens_html file =
-  if not (file =~ ".*\\.html") then pr2 "warning: seems not a html file";
+  if not (file =~ ".*\\.html") then UCommon.pr2 "warning: seems not a html file";
   (*
   Flag.verbose_lexing := true;
   Flag.verbose_parsing := true;
 *)
   let _ast, toks = Parse_html.parse file in
-  toks |> List.iter (fun x -> pr2_gen x);
+  toks |> List.iter (fun x -> UCommon.pr2_gen x);
   ()
 
 let test_parse_html xs =
@@ -19,7 +19,7 @@ let test_parse_html xs =
 
   fullxs
   |> List.iter (fun file ->
-         pr2 ("PARSING: " ^ file);
+         UCommon.pr2 ("PARSING: " ^ file);
 
          (* old:
           *  let s = Common.read_file file in
@@ -33,7 +33,7 @@ let test_parse_html xs =
            ()
          with
          | Parsing_error.Syntax_error info ->
-             pr2 (Parsing_helpers.error_message_info info));
+             UCommon.pr2 (Parsing_helpers.error_message_info info));
   ()
 
 (*
@@ -45,7 +45,7 @@ let test_dump_html_old _file =
   let ast = Parse_html.parse_simple_tree (HtmlRaw s) in
   let json = Export_html.json_of_html_tree2 ast in
   let s = Json_out.string_of_json json in
-  pr2 s
+  UCommon.pr2 s
 *)
 
 (*
@@ -66,7 +66,7 @@ let test_json_html file =
 let test_pp_html file =
   let ast, _toks = Parse_html.parse file in
   let s = Pretty_print_html.string_of_html_tree ast in
-  pr2 s
+  UCommon.pr2 s
 
 (*****************************************************************************)
 (* Unit tests *)

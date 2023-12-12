@@ -39,14 +39,14 @@ let debug_missing_tag = ref false
 (*****************************************************************************)
 
 (* pad-specific: see my ~/.emacs *)
-let h_pervasives_pad = Common.hashset_of_list [
+let h_pervasives_pad = Hashtbl_.hashset_of_list [
   "pr2";"pr";"pr2_gen";
   "sprintf";"i_to_s";
   "pp2";"spf";
   "log";"log2";"log3"
 ]
 
-let h_builtin_modules = Common.hashset_of_list [
+let h_builtin_modules = Hashtbl_.hashset_of_list [
   "Pervasives"; "Common";
   "List"; "Hashtbl"; "Array"; "Stack";
   "String"; "Bytes"; "Str";
@@ -54,7 +54,7 @@ let h_builtin_modules = Common.hashset_of_list [
   "Filename";
 ]
 
-let h_builtin_bool = Common.hashset_of_list [
+let h_builtin_bool = Hashtbl_.hashset_of_list [
   "not";
   "exists"; "forall";
 ]
@@ -290,7 +290,7 @@ let visit_program
     | _x::xs ->
         aux_toks xs
   in
-  let toks' = toks |> Common.exclude (function
+  let toks' = toks |> List_.exclude (function
     | T.TCommentSpace _ -> true
     | _ -> false
   )

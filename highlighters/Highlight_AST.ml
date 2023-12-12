@@ -42,7 +42,7 @@ module H = AST_generic_helpers
 (*****************************************************************************)
 
 (* totally ocaml specific *)
-let h_builtin_modules = Common.hashset_of_list [
+let h_builtin_modules = Hashtbl_.hashset_of_list [
   "Pervasives"; "Common";
   "List"; "Hashtbl"; "Array"; "Stack";
   "String"; "Bytes"; "Str";

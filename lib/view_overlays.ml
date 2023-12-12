@@ -44,11 +44,11 @@ let readable_txt_for_label txt current_root =
   let readable_txt = 
     if current_root = txt (* when we are fully zoomed on one file *)
     then "root"
-    else Common.readable ~root:current_root txt 
+    else Filename_.readable ~root:current_root txt 
   in
   if String.length readable_txt > 25
   then 
-    let dirs = Filename.dirname readable_txt |> Common.split "/" in
+    let dirs = Filename.dirname readable_txt |> String_.split ~sep:"/" in
     let file = Filename.basename readable_txt in
     spf "%s/.../%s" (List.hd dirs) file
   else readable_txt
@@ -107,7 +107,7 @@ let draw_englobing_rectangles_overlay ~dw (r, middle, r_englobing) =
   Draw_labels.draw_treemap_rectangle_label_maybe 
     ~cr:cr_overlay ~color:(Some "red") ~zoom:1.0 r_englobing;
 
-  middle |> Common.index_list_1 |> List.iter (fun (r, i) ->
+  middle |> List_.index_list_1 |> List.iter (fun (r, i) ->
     let color = 
       match i with
       | 1 -> "grey70"
@@ -190,9 +190,9 @@ let draw_tooltip ~cr_overlay ~x ~y n g =
   let succ = Graph_code.succ n Graph_code.Use g in
   let files = 
     pred 
-    |> Common.map_filter (fun n ->
+    |> List_.map_filter (fun n ->
         Common2.optionise (fun () -> (Graph_code.file_of_node n g)))
-    |> Common.sort |> Common2.uniq
+    |> List_.sort |> Common2.uniq
   in
   let str = spf "
  Entity: %s
@@ -228,7 +228,7 @@ let draw_tooltip ~cr_overlay ~x ~y n g =
     ();
 
   Cairo.set_source_rgba cr_overlay 1. 1. 1.    1.0;
-  xs |> Common.index_list_0 |> List.iter (fun (txt, line) ->
+  xs |> List_.index_list_0 |> List.iter (fun (txt, line) ->
     let line = float_of_int line in
     Cairo.move_to cr_overlay refx (refy + line * th);
     CairoH.show_text cr_overlay txt;
@@ -308,14 +308,14 @@ let motion_refresher ev w =
       M.find_glyph_in_rectangle_at_user_point user tr dw in
 
     let entity_def_opt = 
-      Async.async_get_opt w.model >>= (fun model ->
-      line_opt >>= (fun line ->
-        M.find_def_entity_at_line_opt line tr dw model)) in
+      let* model = Async.async_get_opt w.model in
+      let* line = line_opt in
+        M.find_def_entity_at_line_opt line tr dw model in
     let entity_use_opt =
-      Async.async_get_opt w.model >>= (fun model ->
-      line_opt >>= (fun line -> 
-      glyph_opt >>= (fun glyph ->
-        M.find_use_entity_at_line_and_glyph_opt line glyph tr dw model)))
+      let* model = Async.async_get_opt w.model in
+      let* line = line_opt in
+      let* glyph = glyph_opt in
+      M.find_use_entity_at_line_and_glyph_opt line glyph tr dw model
     in
     let entity_opt = 
       match entity_use_opt, entity_def_opt with

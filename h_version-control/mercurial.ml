@@ -71,11 +71,11 @@ let annotate2 ?(basedir="") filename =
   *)
   let cmd = (goto_dir basedir ^ "hg annotate -u -f -c -d "^filename^" 2>&1") in
   (* pr2 cmd; *)
-  let xs = Common.cmd_to_list cmd in
+  let xs = UCmd.cmd_to_list cmd in
   (*let ys = Common.cat (Common.filename_of_db (basedir,filename)) in*)
 
   let annots = 
-    xs |> Common.map_filter (fun s -> 
+    xs |> List_.map_filter (fun s -> 
       if s =~ annotate_regexp 
       then 
         let (author, commitid, month_str, day, year) = Common.matched5 s in
@@ -101,10 +101,10 @@ let annotate ?basedir a =
 
 let annotate_raw ?(basedir="") filename = 
   let cmd = (goto_dir basedir ^ "hg annotate -u -f -c -d "^filename^" 2>&1") in
-  let xs = Common.cmd_to_list cmd in
+  let xs = UCmd.cmd_to_list cmd in
 
   let annots = 
-    xs |> Common.map_filter (fun s -> 
+    xs |> List_.map_filter (fun s -> 
       if s =~ annotate_regexp 
       then 
         Some s
@@ -139,10 +139,10 @@ let date_file_creation2 ?(basedir="") file =
   let cmd = (goto_dir basedir ^ 
              "hg log -f "^file^" 2>&1")
   in
-  let xs = Common.cmd_to_list cmd in
+  let xs = UCmd.cmd_to_list cmd in
   let xs = List.rev xs in   (* could also hg log ... | tac *)
   
-  xs |> Common.find_some (fun s -> 
+  xs |> List_.find_some (fun s -> 
     if s =~ date_regexp
     then 
       let (month_str, day, year) = Common.matched3 s in
@@ -165,6 +165,8 @@ let grep ~basedir str =
   let cmd = (goto_dir basedir ^
             (spf "hg locate -0 | xargs -0 grep --files-with-matches %s" str)) 
   in
+  UCmd.cmd_to_list cmd
+(*
   let (xs, status) = Common2.cmd_to_list_and_status cmd in
   (* According to grep man page, non-zero exit code is expected when
    * there are no matches.
@@ -177,12 +179,13 @@ let grep ~basedir str =
   | xs, Unix.WEXITED 123
     -> xs
   | _ -> 
-    raise (CmdError (status, (spf "CMD = %s, RESULT = %s" cmd
+    raise (UCmd.CmdError (status, (spf "CMD = %s, RESULT = %s" cmd
                                 (Dumper.dump (status, xs)))))
+*)
  
 
 let show ~basedir file commitid =
-  let tmpfile = Common.new_temp_file "hg_cat" ".cat" in
+  let tmpfile = UCommon.new_temp_file "hg_cat" ".cat" in
   let str_commit = Lib_vcs.s_of_versionid commitid in
   let cmd = (spf "hg cat -r '%s' %s > %s" str_commit file tmpfile) in
   exec_cmd ~basedir cmd;
@@ -192,6 +195,6 @@ let files_involved_in_diff ~basedir commitid =
   let str_commit = Lib_vcs.s_of_versionid commitid in
   let cmd = goto_dir basedir ^
     spf "hg status --change '%s'" str_commit in
-  let xs = Common.cmd_to_list cmd in
+  let xs = UCmd.cmd_to_list cmd in
   xs |> List.map Lib_vcs.parse_file_status
 

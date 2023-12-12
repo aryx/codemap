@@ -2,7 +2,7 @@
 
 (* internally memoize the parsing part in _hmemo_file *)
 val tokens_with_categ_of_file:
-  Common.filename ->
+  string (* filename *) ->
   (string, Database_code.entity) Hashtbl.t ->
   (string * Highlight_code.category option * Pos.linecol) list
 

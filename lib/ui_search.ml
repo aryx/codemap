@@ -60,12 +60,12 @@ let dialog_search_def model =
       )
       (fun () -> 
         let text = entry#text in 
-        pr2 text;
+        UCommon.pr2 text;
         text
       )
   in
   res |> Option.iter (fun s -> 
-    pr2 ("selected: " ^ s);
+    UCommon.pr2 ("selected: " ^ s);
   );
   res
 (*e: [[dialog_search_def]] *)
@@ -82,7 +82,7 @@ let run_grep_query ~root s =
   let cmd = 
     spf "cd %s; git grep %s %s" root git_grep_options s
   in
-  let xs = Common.cmd_to_list cmd in
+  let xs = UCmd.cmd_to_list cmd in
   let xs = xs |> List.map (fun s ->
     if s =~ "\\([^:]*\\):\\([0-9]+\\):.*"
     then
@@ -101,7 +101,7 @@ let run_tbgs_query ~root s =
   let cmd = 
     spf "cd %s; tbgs --stripdir %s" root s
   in
-  let xs = Common.cmd_to_list cmd in
+  let xs = UCmd.cmd_to_list cmd in
   let xs = xs |> List.map (fun s ->
     if s =~ "\\([^:]*\\):\\([0-9]+\\):.*"
     then

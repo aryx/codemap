@@ -426,7 +426,7 @@ let rec (squarify_orig :
   match children with
   | c :: cs ->
       if
-        null current_row
+        List_.null current_row
         || worst (floats (current_row @ [ c ])) size_side_row
            <= worst (floats current_row) size_side_row
       then
@@ -451,20 +451,20 @@ let rec (squarify_orig :
         in
 
         if verbose then (
-          pr2 "layoutrow:";
-          pr2_gen current_row;
-          pr2 "row rect";
-          pr2 (s_of_rectangle row_rect));
+          UCommon.pr2 "layoutrow:";
+          UCommon.pr2_gen current_row;
+          UCommon.pr2 "row rect";
+          UCommon.pr2 (s_of_rectangle row_rect));
 
         let rects_row = layout current_row row_rect in
         let rects_remain = squarify_orig children [] remaining_rect in
         rects_row @ rects_remain
   | [] ->
       if verbose then (
-        pr2 "layoutrow:";
-        pr2_gen current_row;
-        pr2 "row rect";
-        pr2 (s_of_rectangle rect));
+        UCommon.pr2 "layoutrow:";
+        UCommon.pr2_gen current_row;
+        UCommon.pr2 "row rect";
+        UCommon.pr2 (s_of_rectangle rect));
 
       layout current_row rect
 (*e: function squarify_orig *)
@@ -482,12 +482,12 @@ let squarify children rect =
 
 (*s: function test_squarify *)
 let test_squarify () =
-  pr2_gen (worst [ 6.0 ] 4.0);
-  pr2_gen (worst [ 6.0; 6.0 ] 4.0);
-  pr2_gen (worst [ 6.0; 6.0; 4.0 ] 4.0);
-  pr2_xxxxxxxxxxxxxxxxx ();
+  UCommon.pr2_gen (worst [ 6.0 ] 4.0);
+  UCommon.pr2_gen (worst [ 6.0; 6.0 ] 4.0);
+  UCommon.pr2_gen (worst [ 6.0; 6.0; 4.0 ] 4.0);
+  Common2.pr2_xxxxxxxxxxxxxxxxx ();
   squarify squarified_list_area_ex dim_rect_orig |> ignore;
-  pr2_xxxxxxxxxxxxxxxxx ();
+  Common2.pr2_xxxxxxxxxxxxxxxxx ();
   squarify squarified_list_area_ex2 (rect_ortho ()) |> ignore;
   ()
 (*e: function test_squarify *)
@@ -495,7 +495,7 @@ let test_squarify () =
 (*s: layout squarify *)
 let (squarify_layout : ('a, 'b) layout_func) =
  fun children _depth rect ->
-  let children' = children |> Common.sort_by_key_highfirst in
+  let children' = children |> Assoc.sort_by_key_highfirst in
   squarify children' rect
 
 let (squarify_layout_no_sort_size : ('a, 'b) layout_func) =
@@ -613,7 +613,7 @@ let balayer_right xs =
   let n = List.length xs in
   let res = ref [] in
   for i = 0 to n do
-    Common.push (take i xs, drop i xs) res
+    Stack_.push (List_.take i xs, List_.drop i xs) res
   done;
   List.rev !res
 
@@ -669,7 +669,7 @@ let orderify_children ?(pivotf = PivotBySize) xs rect =
                      (rect_width rects.pivot, rect_height rects.pivot),
                    (rects, childs_pivotized) ))
         in
-        let best = Common.sort_by_key_lowfirst scores_and_rects |> List.hd in
+        let best = Assoc.sort_by_key_lowfirst scores_and_rects |> List.hd in
         let _score, (rects, childs_pivotized) = best in
 
         (* pr2_gen rects; *)
@@ -691,7 +691,7 @@ let test_orderify () =
   let children = xs |> List.map (fun size -> (size, fake_treemap)) in
 
   let layout = orderify_children children rect in
-  pr2_gen layout
+  UCommon.pr2_gen layout
 (*e: function test_orderify *)
 
 (*s: layout ordered *)
@@ -731,7 +731,7 @@ let render_treemap_algo2 ?(algo = Classic) ?(big_borders = false) treemap =
       | Leaf (tnode, _fileinfo) ->
           let color = color_of_treemap_node root in
 
-          Common.push
+          Stack_.push
             {
               tr_rect = rect;
               tr_color = color;
@@ -742,7 +742,7 @@ let render_treemap_algo2 ?(algo = Classic) ?(big_borders = false) treemap =
             treemap_rects
       | Node (mode, children) ->
           (* let's draw some borders. Far better to see the structure. *)
-          Common.push
+          Stack_.push
             {
               tr_rect = rect;
               tr_color = Color.black;
@@ -897,20 +897,20 @@ let tree_of_dir3 ?(filter_file = fun _ -> true) ?(filter_dir = fun _ -> true)
            match stat.Unix.st_kind with
            | Unix.S_REG ->
                if filter_file full then
-                 Common.push (Leaf (full, file_hook full)) res
-           | Unix.S_DIR -> if filter_dir full then Common.push (aux full) res
+                 Stack_.push (Leaf (full, file_hook full)) res
+           | Unix.S_DIR -> if filter_dir full then Stack_.push (aux full) res
            | Unix.S_LNK ->
                if !follow_symlinks then
                  try
                    match (Unix.stat full).Unix.st_kind with
                    | Unix.S_REG ->
                        if filter_file full then
-                         Common.push (Leaf (full, file_hook full)) res
+                         Stack_.push (Leaf (full, file_hook full)) res
                    | Unix.S_DIR ->
-                       if filter_dir full then Common.push (aux full) res
+                       if filter_dir full then Stack_.push (aux full) res
                    | _ -> ()
                  with
-                 | Unix.Unix_error _ -> pr2 (Common.spf "PB stat link at %s" full)
+                 | Unix.Unix_error _ -> UCommon.pr2 (Common.spf "PB stat link at %s" full)
                else ()
            | _ -> ());
     Node (dir, List.rev !res)
@@ -922,7 +922,7 @@ let tree_of_dir ?filter_file ?filter_dir ?sort ~file_hook a =
       tree_of_dir3 ?filter_file ?filter_dir ?sort ~file_hook a)
 
 let tree_of_dir_or_file ?filter_file ?filter_dir ?sort ~file_hook path =
-  if Common2.is_directory path then
+  if UFile.is_directory (Fpath.v path) then
     tree_of_dir ?filter_file ?filter_dir ?sort ~file_hook path
   else Leaf (path, file_hook path)
 
@@ -934,7 +934,7 @@ let add_intermediate_nodes root_path nodes =
   if not (Common2.is_absolute root) then
     failwith ("must pass absolute path, not: " ^ root);
 
-  let root = Common.split "/" root in
+  let root = String_.split ~sep:"/" root in
 
   (* extract dirs and file from file, e.g. ["home";"pad"], "__flib.php", path *)
   let xs =
@@ -949,20 +949,20 @@ let add_intermediate_nodes root_path nodes =
     xs
     |> List.map (fun ((dirs, base), node) ->
            let n = List.length root in
-           let root', rest = (Common2.take n dirs, Common2.drop n dirs) in
-           assert (root' =*= root);
+           let root', rest = (List_.take n dirs, List_.drop n dirs) in
+           assert (root' = root);
            ((rest, base), node))
   in
   (* now ready to build the tree recursively *)
   let rec aux current_root xs =
     let files_here, rest =
-      xs |> List.partition (fun ((dirs, _base), _) -> null dirs)
+      xs |> List.partition (fun ((dirs, _base), _) -> List_.null dirs)
     in
     let groups =
       rest
       |> group_by_mapped_key (fun ((dirs, _base), _) ->
              (* would be a file if null dirs *)
-             assert (not (null dirs));
+             assert (not (List_.null dirs));
              List.hd dirs)
     in
 
@@ -1127,7 +1127,7 @@ let (treemap_ex_ordered_2001 : (unit, unit) treemap) =
   let children = children_ex_ordered_2001 in
 
   let children_treemap =
-    children |> Common.index_list_1
+    children |> List_.index_list_1
     |> List.map (fun (size, i) ->
            Leaf
              ( {
@@ -1150,8 +1150,8 @@ let (treemap_ex_ordered_2001 : (unit, unit) treemap) =
 let actions () =
   [
     (*s: treemap actions *)
-    ("-test_squarify", "<>", Arg_helpers.mk_action_0_arg test_squarify);
-    ("-test_orderify", "<>", Arg_helpers.mk_action_0_arg test_orderify)
+    ("-test_squarify", "<>", Arg_.mk_action_0_arg test_squarify);
+    ("-test_orderify", "<>", Arg_.mk_action_0_arg test_orderify)
     (*e: treemap actions *);
   ]
 (*e: treemap.ml *)

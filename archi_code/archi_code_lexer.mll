@@ -113,6 +113,8 @@ rule category = parse
   | "/main." { Main }
   | "/init." { Init }
 
+  | "/main.tf" { Regular }
+
   | "/init/" { Init }
 
   (* facebook specific *)

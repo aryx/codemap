@@ -54,7 +54,7 @@ let use2 = Use2 (NoInfoPlace, UniqueDef, MultiUse)
  *  - _ (blank identifier)
  *)
 let builtin_functions =
-  Common.hashset_of_list
+  Hashtbl_.hashset_of_list
     [
       "iota";
       "new";

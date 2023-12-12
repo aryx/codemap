@@ -15,7 +15,6 @@
  * license.txt for more details.
  *)
 (*e: Facebook copyright *)
-open Common
 
 (*****************************************************************************)
 (* Prelude *)
@@ -58,7 +57,7 @@ let async_get a =
   let rec go a =
     match !(a.v) with
     | None -> 
-        pr2 "not yet computed";
+        UCommon.pr2 "not yet computed";
         Condition.wait a.c a.m; 
         go a
     | Some v -> v

@@ -219,7 +219,7 @@ let mk_gui ~screen_size ~legend test_mode w =
             let matching_files = Ui_search.run_grep_query ~root s in
             let files = matching_files |> List.map fst |> Common2.uniq in
             let current_grep_query = 
-              Some (Common.hash_of_list matching_files)
+              Some (Hashtbl_.hash_of_list matching_files)
             in
             !Controller._go_dirs_or_file ~current_grep_query w files
           );
@@ -233,7 +233,7 @@ let mk_gui ~screen_size ~legend test_mode w =
             let matching_files = Ui_search.run_tbgs_query ~root s in
             let files = matching_files |> List.map fst |> Common2.uniq in
             let current_grep_query = 
-              Some (Common.hash_of_list matching_files)
+              Some (Hashtbl_.hash_of_list matching_files)
             in
             !Controller._go_dirs_or_file ~current_grep_query w files
           );
@@ -266,7 +266,7 @@ let mk_gui ~screen_size ~legend test_mode w =
 
         fc#add_item "_Refresh" ~key:K._R ~callback:(fun () -> 
           let current_root = w.dw.current_root in
-          let _old_dw = Common2.pop2 w.dw_stack in
+          let _old_dw = Stack_.pop w.dw_stack in
           !Controller._go_dirs_or_file w [current_root];
         ) |> ignore;
 
@@ -324,7 +324,7 @@ let mk_gui ~screen_size ~legend test_mode w =
             match e.Db.e_kind with
             | Entity_code.MultiDirs ->
                 (* hack: coupling: with mk_multi_dirs_entity *)
-                Common.split "|" e.Db.e_file
+                String_.split ~sep:"|" e.Db.e_file
             | _ ->
                 [e.Db.e_file]
           in
@@ -335,7 +335,7 @@ let mk_gui ~screen_size ~legend test_mode w =
                  ~root:w.dw.current_root)
           in
 
-          pr2 (spf "e= %s, final_paths= %s" str(Common.join "|" final_paths));
+          pr2 (spf "e= %s, final_paths= %s" str(String.concat "|" final_paths));
           w.current_entity <- Some e;
           Async.async_get_opt w.model |> Option.iter (fun model ->
             model.g |> Option.iter (fun g ->
@@ -398,7 +398,7 @@ let mk_gui ~screen_size ~legend test_mode w =
       tb#insert_widget (G.mk (GButton.button ~stock:`GO_UP) (fun b -> 
         b#connect#clicked ~callback:(fun () -> 
           let current_root = w.dw.current_root in
-          !Controller._go_dirs_or_file w [Common2.dirname current_root];
+          !Controller._go_dirs_or_file w [Filename.dirname current_root];
         ) |> ignore;
       ));
 
@@ -486,7 +486,7 @@ let mk_gui ~screen_size ~legend test_mode w =
     (* old: before 3.11: Features.Backtrace.print(); *)
     let s = Printexc.get_backtrace () in
     pr2 s;
-    let pb = "pb: " ^ string_of_exn exn ^ "\n" ^ s in
+    let pb = "pb: " ^ Common.exn_to_s exn ^ "\n" ^ s in
     G.dialog_text ~text:pb ~title:"pb";
     raise exn
   );

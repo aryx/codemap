@@ -81,7 +81,7 @@ let color_of_entity_kind kind =
   let use = HC.SomeUse in
   let props = HC.info_of_entity_kind_and_usedef2 kind (HC.Def2 use) in
   let color = 
-    try props |> Common.find_some (function
+    try props |> List_.find_some (function
         | `FOREGROUND s -> Some s
         | _ -> None
       )
@@ -127,8 +127,8 @@ let model_of_list_pair_string_with_icon xs =
   let model = GTree.tree_store column_list in
   let store_id_to_entity = Hashtbl.create 101 in
 
-  pr2 (spf "Size of model = %d" (List.length xs));
-  xs |> Common2.index_list_0 |> List.iter (fun (e, id) ->
+  UCommon.pr2 (spf "Size of model = %d" (List.length xs));
+  xs |> List_.index_list_0 |> List.iter (fun (e, id) ->
    
     let _has_unit_test =
       List.length e.Db.e_good_examples_of_use >= 1
@@ -264,8 +264,8 @@ let my_entry_completion_eff2 ~callback_selected ~callback_changed fn_idx =
       let id = !model#get ~row ~column:col_id in
       let entity = Hashtbl.find !store_id_to_entity id in
 
-      pr2 str;
-      pr2 file;
+      UCommon.pr2 str;
+      UCommon.pr2 file;
       callback_selected entry str file entity
 
   ) |> ignore;
@@ -274,7 +274,7 @@ let my_entry_completion_eff2 ~callback_selected ~callback_changed fn_idx =
 
   entry#connect#changed (fun () -> 
     let s = entry#text in
-    pr2 s;
+    UCommon.pr2 s;
     if s <> "" then begin
       !current_timeout |> Option.iter (fun x ->
         GMain.Timeout.remove x;
@@ -285,7 +285,7 @@ let my_entry_completion_eff2 ~callback_selected ~callback_changed fn_idx =
            ~callback:(fun _ -> 
             (* bugfix: reset it otherwise get Glib errors *)
             current_timeout := None;
-            pr2 "changing model";
+            UCommon.pr2 "changing model";
             let idx = fn_idx () in
             let (m,h) = model_col_of_prefix s idx in
             model := m;

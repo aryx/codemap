@@ -43,7 +43,7 @@ let annotate2 ?(basedir="") filename =
   (* TODO????: compute it from file directly ? *)
   (* ??? let date = "-D \"12 Feb\"" in *)
   let date = "-D \"1 Sep\"" in
-  Common.pr2_once ("using Date for CVS:" ^ date);
+  UCommon.pr2_once ("using Date for CVS:" ^ date);
 
 
   (* bugfix: for eclipse files can have space and $ in filename *)
@@ -51,7 +51,7 @@ let annotate2 ?(basedir="") filename =
     spf "%s cvs annotate %s '%s' 2>&1" 
     (Lib_vcs.goto_dir basedir) date filename in
   (* pr2 cmd; *)
-  let xs = Common.cmd_to_list cmd in
+  let xs = UCmd.cmd_to_list cmd in
 
   (* have to get rid of header
      
@@ -62,7 +62,7 @@ let annotate2 ?(basedir="") filename =
   (*let ys = Common.cat (Common.filename_of_db (basedir,filename)) in*)
 
   let annots = 
-    xs |> Common.map_filter (fun s -> 
+    xs |> List_.map_filter (fun s -> 
       match () with
       | () when s =~ annotate_regexp -> 
         let (rcsid, _, author, day, month_str, year) = Common.matched6 s in
@@ -81,7 +81,7 @@ let annotate2 ?(basedir="") filename =
       | () when s = "***************" -> None
       | () when s =~ "^Annotations for.*" -> None
       | _ -> 
-          pr2 ("cvs annotate wrong line: " ^ s);
+          UCommon.pr2 ("cvs annotate wrong line: " ^ s);
           None
     ) 
   in
@@ -102,7 +102,7 @@ let annotate_raw ?(basedir="") filename =
     (Lib_vcs.goto_dir basedir) date filename in
 
   (* pr2 cmd; *)
-  let xs = Common.cmd_to_list cmd in
+  let xs = UCmd.cmd_to_list cmd in
 
   (* have to get rid of header
      
@@ -113,7 +113,7 @@ let annotate_raw ?(basedir="") filename =
   (*let ys = Common.cat (Common.filename_of_db (basedir,filename)) in*)
 
   let annots = 
-    xs |> Common.map_filter (fun s -> 
+    xs |> List_.map_filter (fun s -> 
       if s =~ annotate_regexp 
       then 
         Some s
@@ -149,11 +149,11 @@ let date_regexp2 =
 
 
 let find_all_date cmd = 
-  let xs = Common.cmd_to_list cmd in
+  let xs = UCmd.cmd_to_list cmd in
 
   (*todo: use find_some *)
   let xs' = 
-    xs |> Common.map_filter (fun s -> 
+    xs |> List_.map_filter (fun s -> 
       if s=~ date_regexp
       then 
         let (year, month, day) = matched3 s in
@@ -204,11 +204,11 @@ let date_file_creation2 ?(basedir="") file =
   match find_date cmd with
   | Some x -> x
   | None -> 
-      pr2 ("wierd: cvs cant find date revision 1.1");
+      UCommon.pr2 ("wierd: cvs cant find date revision 1.1");
       (match find_date cmd2 with
       | Some x -> x 
       | None -> 
-          pr2 ("PB: cvs cant find date revision 1.1 or 1.2");
+          UCommon.pr2 ("PB: cvs cant find date revision 1.1 or 1.2");
           (match find_date_min cmd_alt with
           | Some x -> x 
           | None -> 

@@ -236,7 +236,7 @@ let treemap_file_size_hook2 ~root file =
   let filesize = 
     try (Common2.unix_stat_eff file).Unix.st_size
     with Unix.Unix_error _ ->
-      pr2 (spf "PB stating %s" file);
+      UCommon.pr2 (spf "PB stating %s" file);
       0
   in
 

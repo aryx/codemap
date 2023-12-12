@@ -183,7 +183,7 @@ let find_duplicate_dirname dir =
            let path = Filename.concat path dir in
 
            if Hashtbl.mem h dir then (
-             pr2
+             UCommon.pr2
                (spf "duplicate dir for %s already there: %s" dir
                   (Hashtbl.find h dir));
              dups#update dir (fun old -> old + 1))
@@ -191,9 +191,9 @@ let find_duplicate_dirname dir =
            aux path)
   in
   aux dir;
-  pr2 "duplicate are:";
+  UCommon.pr2 "duplicate are:";
   dups#to_list |> Assoc.sort_by_val_highfirst
-  |> List.iter (fun (dir, cnt) -> pr2 (spf " %s: %d" dir cnt));
+  |> List.iter (fun (dir, cnt) -> UCommon.pr2 (spf " %s: %d" dir cnt));
   ()
 
 (*****************************************************************************)

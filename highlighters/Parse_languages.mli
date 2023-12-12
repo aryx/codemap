@@ -8,23 +8,23 @@ type origin_info =
   | Extra
 
 val parse_ocaml: 
-  Common.filename -> (Ast_ml.program, Parser_ml.token) Parsing_result.t
+  string (* filename *) -> (Ast_ml.program, Parser_ml.token) Parsing_result.t
 
 val parse_rust:
-  Common.filename -> AST_generic.program * (Tok.t * origin_info) list
+  string (* filename *) -> AST_generic.program * (Tok.t * origin_info) list
 
 val parse_jsonnet:
-  Common.filename -> AST_generic.program * (Tok.t * origin_info) list
+  string (* filename *) -> AST_generic.program * (Tok.t * origin_info) list
 
 val parse_yaml:
-  Common.filename -> AST_generic.program * (Tok.t * origin_info) list
+  string (* filename *) -> AST_generic.program * (Tok.t * origin_info) list
 
 val parse_bash:
-  Common.filename -> AST_generic.program * (Tok.t * origin_info) list
+  string (* filename *) -> AST_generic.program * (Tok.t * origin_info) list
 
 val parse_dockerfile:
-  Common.filename -> AST_generic.program * (Tok.t * origin_info) list
+  string (* filename *) -> AST_generic.program * (Tok.t * origin_info) list
 
 val parse_lisp:
-  Common.filename -> AST_generic.program * (Tok.t * origin_info) list
+  string (* filename *) -> AST_generic.program * (Tok.t * origin_info) list
 

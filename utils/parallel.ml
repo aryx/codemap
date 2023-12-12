@@ -102,7 +102,7 @@ let invoke f x =
                   propagated along with the exception, even across processes
                   through Marshal to/from_string? *)
                if !backtrace_when_exn then
-                 pr2
+                 UCommon.pr2
                    (spf "Exception in invoked func: %s" (Exception.to_string e));
                Error e)
            [];
@@ -116,7 +116,7 @@ let invoke f x =
           ()
       | exn ->
           let e = Exception.catch exn in
-          pr2
+          UCommon.pr2
             (spf "really unexpected exn in invoke child: %s"
                (Exception.to_string e)));
       exit 0

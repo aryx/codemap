@@ -1,11 +1,12 @@
 open Ast_html
+module T = Alcotest_ext
 
 (*****************************************************************************)
 (* Unit tests *)
 (*****************************************************************************)
 
 let tests =
-  Testutil.pack_tests "parsing_html"
+  T.pack_tests "parsing_html"
     [
       ("lexing regular code", fun () -> ());
       ("parsing regular code", fun () -> ());

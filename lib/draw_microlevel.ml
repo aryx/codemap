@@ -16,6 +16,7 @@
  *)
 (*e: Facebook copyright *)
 open Common
+open Either
 open Common2.ArithFloatInfix
 
 open Figures (* for the fields *)
@@ -79,6 +80,9 @@ let is_big_file_with_few_lines ~nblines file =
 (* coupling: with parsing2.ml, todo move in parsing2.ml? *)
 let use_fancy_highlighting file =
   match FT.file_type_of_file (Fpath.v file) with
+  (* not yet *)
+  | FT.PL (FT.IDL FT.Protobuf) -> false
+
   (* the one handled by parsing2.ml *)
   | ( FT.PL (FT.OCaml _)
     | FT.Text ("nw" | "tex"  | "texi" | "web" | "org")
@@ -103,7 +107,7 @@ let use_fancy_highlighting file =
     | FT.PL (FT.Ruby)
     | FT.PL (FT.Script _)
     ) -> true
-  | (FT.Text "txt") when Common2.basename file = "info.txt" -> true
+  | (FT.Text "txt") when Filename.basename file = "info.txt" -> true
   | _ -> false
 
 (*****************************************************************************)
@@ -175,7 +179,7 @@ let color_of_categ categ =
     | None ->       Highlight_code.info_of_category Highlight_code.Normal
     | Some categ -> Highlight_code.info_of_category categ
   in
-  attrs |> Common.find_some (fun attr ->
+  attrs |> List_.find_some (fun attr ->
     match attr with
     | `FOREGROUND s 
     | `BACKGROUND s (* todo: should really draw the background of the text *)
@@ -220,10 +224,10 @@ let glyphs_of_file ~font_size ~font_size_real model_async file
 
       let xs = Common2.lines_with_nl_either s in
       xs |> List.iter (function
-      | Common2.Left str ->
-          Common.push { M. str; font_size=final_font_size; color; categ;pos } 
+      | Left str ->
+          Stack_.push { M. str; font_size=final_font_size; color; categ;pos } 
             acc;
-      | Common2.Right () ->
+      | Right () ->
           arr.(!line) <- List.rev !acc;
           acc := [];
           incr line;
@@ -238,7 +242,7 @@ let glyphs_of_file ~font_size ~font_size_real model_async file
 
   | FT.PL _ | FT.Text _ | FT.Config _ ->
      logger#info "black highlighting for %s" file;
-      Common.cat file
+      UCommon.cat file
       |> List.map (fun str -> 
         [{ M.str; font_size; color = "black"; categ=None; pos }])
       |> Array.of_list
@@ -255,7 +259,7 @@ let defs_of_glyphs glyphs =
       glyph.categ |> Option.iter (fun categ ->
         Database_code.entity_kind_of_highlight_category_def categ 
         |> Option.iter (fun kind ->
-              Common.push (Line line_0_indexed, (glyph.str, kind)) res
+              Stack_.push (Line line_0_indexed, (glyph.str, kind)) res
         ))));
   List.rev !res
 
