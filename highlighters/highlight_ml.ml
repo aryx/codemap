@@ -100,10 +100,10 @@ let visit_program
   (* -------------------------------------------------------------------- *)
   (* AST phase 1 *)
   (* -------------------------------------------------------------------- *)
-  (* Now using the AST_generic instead of Ast_ml to factorize code between
+  (* Now using the AST_generic instead of AST_ocaml to factorize code between
    * all the AST-based code highlighters.
   *)
-  let gen = Ml_to_generic.program ast in
+  let gen = Ocaml_to_generic.program ast in
   Naming_AST.resolve Lang.Ocaml gen;
   Highlight_AST.visit_program
     (already_tagged, tag)

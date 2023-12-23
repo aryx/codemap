@@ -60,7 +60,7 @@ type ast =
 *)
 
   (* functional *)
-  | ML  of (Ast_ml.program, Parser_ml.token) Parsing_result.t
+  | ML  of (AST_ocaml.program, Parser_ml.token) Parsing_result.t
   | Scala of (AST_scala.program, Parser_scala.token) Parsing_result.t
 
   (* web *)

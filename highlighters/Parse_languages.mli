@@ -8,7 +8,7 @@ type origin_info =
   | Extra
 
 val parse_ocaml: 
-  string (* filename *) -> (Ast_ml.program, Parser_ml.token) Parsing_result.t
+  string (* filename *) -> (AST_ocaml.program, Parser_ml.token) Parsing_result.t
 
 val parse_rust:
   string (* filename *) -> AST_generic.program * (Tok.t * origin_info) list

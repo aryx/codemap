@@ -6,8 +6,22 @@ module Lib = Lib_vcs
 (*****************************************************************************)
 (* Helpers *)
 (*****************************************************************************)
+
+let with_tmp_dir f =
+  let tmp_dir =
+    Filename.temp_file (spf "with-tmp-dir-%d" (Unix.getpid ())) ""
+  in
+  Unix.unlink tmp_dir;
+  (* who cares about race *)
+  Unix.mkdir tmp_dir 0o755;
+  Common.finalize
+    (fun () -> f tmp_dir)
+    (fun () ->
+      Sys.command (spf "rm -f %s/*" tmp_dir) |> ignore;
+      Unix.rmdir tmp_dir)
+
 let with_tmp_directory f =
-  Common2.with_tmp_dir (fun tmp_dir ->
+  with_tmp_dir (fun tmp_dir ->
     Common.finalize (fun () ->
       f tmp_dir
     )

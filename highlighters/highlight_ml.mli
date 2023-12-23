@@ -5,5 +5,5 @@ val visit_program:
   Highlight_code.highlighter_preferences ->
   (*(Database_php.id * Common.filename * Database_php.database) option -> *)
   Fpath.t ->
-  Ast_ml.program * Parser_ml.token list ->
+  AST_ocaml.program * Parser_ml.token list ->
   unit
