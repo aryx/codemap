@@ -272,6 +272,7 @@ rule category = parse
 
   (* as in OCaml asmcomp/ directory *)
   | "x86"
+  | "x86_64"
   | "i386"
   | "i686"
 
@@ -284,6 +285,7 @@ rule category = parse
   | "m68k"
   | "sparc"
   | "amd64"
+  | "arm64"
   | b "arm" b
   | "hppa"
   (* linux source *)
@@ -329,6 +331,7 @@ rule category = parse
   (* commented when analyze linux itself *)
   | "linux"
   | "macos"
+  | "osx"
   | "win32"
 
   | "cygwin"
