@@ -31,8 +31,6 @@ module Style = Style2
 module FT = File_type
 module Parsing = Parsing2
 
-let logger = Logging.get_logger [__MODULE__]
-
 (*****************************************************************************)
 (* Prelude *)
 (*****************************************************************************)
@@ -196,7 +194,7 @@ let glyphs_of_file ~font_size ~font_size_real model_async file
 
   match FT.file_type_of_file (Fpath.v file) with
   | _ when use_fancy_highlighting file ->
-     logger#info "fancy highlighting for %s" file;
+     Logs.debug (fun m -> m "fancy highlighting for %s" file);
 
     let entities = 
       match Async.async_get_opt model_async with
@@ -241,7 +239,7 @@ let glyphs_of_file ~font_size ~font_size_real model_async file
     )
 
   | FT.PL _ | FT.Text _ | FT.Config _ ->
-     logger#info "black highlighting for %s" file;
+     Logs.debug (fun m -> m "black highlighting for %s" file);
       UCommon.cat file
       |> List.map (fun str -> 
         [{ M.str; font_size; color = "black"; categ=None; pos }])
@@ -249,7 +247,7 @@ let glyphs_of_file ~font_size ~font_size_real model_async file
       |> (fun x -> Some x)
 
   | _ ->
-     logger#info "no highlighting for %s" file;
+     Logs.debug (fun m -> m "no highlighting for %s" file);
      None
 
 let defs_of_glyphs glyphs =
@@ -432,7 +430,7 @@ let draw_treemap_rectangle_content_maybe cr clipping context tr  =
   then (* pr2 ("not drawing: " ^ file) *) None
   else begin
     let file = tr.T.tr_label in
-    logger#info "considering to draw %s" file;
+    Logs.debug (fun m -> m "considering to draw %s" file);
 
     (* if the file is not textual, or contain weird characters, then
      * it confuses cairo which then can confuse computation done in gtk

@@ -214,6 +214,7 @@ let visit_toplevel ~tag_hook _prefs _file (_ast, toks) =
              | _ -> tag ii TypeInt)
          | T.OPERATOR_EQ (_s, ii) -> tag ii Operator
          | T.IDENTIFIER (_s, _ii) -> ()
+         | T.METAVAR_ELLIPSIS _ -> ()
          (* keywords  *)
          | T.VOID ii -> tag ii TypeVoid
          | T.CLASS ii

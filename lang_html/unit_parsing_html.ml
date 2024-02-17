@@ -1,17 +1,18 @@
 open Ast_html
-module T = Alcotest_ext
+
+let t = Testo.create
 
 (*****************************************************************************)
 (* Unit tests *)
 (*****************************************************************************)
 
 let tests =
-  T.pack_tests "parsing_html"
+  Testo.categorize "parsing_html"
     [
-      ("lexing regular code", fun () -> ());
-      ("parsing regular code", fun () -> ());
-      ( "html tree correctness",
-        fun () ->
+      t "lexing regular code" (fun () -> ());
+      t "parsing regular code" (fun () -> ());
+      t "html tree correctness"
+        (fun () ->
           let s = "<div>a</div><div>b</div>" in
           let ast = Parse_html.html_tree_of_string s in
           match ast with

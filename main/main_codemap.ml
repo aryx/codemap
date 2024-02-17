@@ -11,8 +11,6 @@ module FT = File_type
 
 module Model = Model2
 
-let logger = Logging.get_logger [__MODULE__]
-
 (*****************************************************************************)
 (* Prelude *)
 (*****************************************************************************)
@@ -670,14 +668,9 @@ let main () =
   in
   let args = Arg_.parse_options (options()) usage_msg Sys.argv in
 
-  if Sys.file_exists !log_config_file
-  then begin
-    Logging.load_config_file !log_config_file;
-    logger#info "loaded %s" !log_config_file;
-  end;
   (* TODO: call setup_logging, use cmdliner and parse --debug, --info ... *)
   Logs_.enable_logging();
-
+  Logs.info (fun m -> m "Starting logging");
     
   (* must be done after Arg.parse, because Common.profile is set by it *)
   Profiling.profile_code "Main total" (fun () -> 
