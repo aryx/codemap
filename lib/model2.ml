@@ -134,7 +134,7 @@ type drawing = {
   (* coupling: = List.length treemap *)
   nb_rects: int; 
   (* Used to display readable paths. When fully zoomed it's a filename. *)
-  current_root: string (* filename *);
+  current_root: string;
 
   mutable layers: Layer_code.layers_with_index;
 

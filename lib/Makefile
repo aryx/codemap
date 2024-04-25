@@ -32,7 +32,7 @@ SRC_VIEWS=$(SRC_VIEWS_WITH_MLI) $(SRC_VIEWS_WITH_MLI:ml=mli) $(SRC_VIEWS_JUST_ML
 #SRC_VIEWS=$(SRC_MLI) $(SRC_ML) ../main_codemap.ml
 
 
-include ~/semgrep-internals/Makefile.common
+include ~/github/semgrep-internals/Makefile.common
 
 
 #INDEXER=~/github/syncweb/indexer/_build/default/main_indexer.exe
