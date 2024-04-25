@@ -4,23 +4,25 @@ VERSION=4
 DOC=Visual
 
 SRC_ORIG=Visual.nw
+TOP=../..
+LIB=$(TOP)/lib/
 
-SRC_VIEWS_WITH_MLI=cairo_helpers.ml async.ml \
-    style2.ml help.ml \
-    parsing2.ml \
-    editor_connection.ml \
-    model_database_code.ml model_graph_code.ml \
-    model2.ml controller2.ml \
-    draw_labels.ml draw_legend.ml \
-    draw_macrolevel.ml draw_microlevel.ml  \
-    view_mainmap.ml view_minimap.ml view_overlays.ml \
-    ui_search.ml ui_navigation.ml ui_layers.ml \
-    view2.ml \
+SRC_VIEWS_WITH_MLI=$(LIB)/cairo_helpers.ml $(LIB)/async.ml \
+    $(LIB)/style2.ml $(LIB)/help.ml \
+    $(LIB)/parsing2.ml \
+    $(LIB)/editor_connection.ml \
+    $(LIB)/model_database_code.ml $(LIB)/model_graph_code.ml \
+    $(LIB)/model2.ml $(LIB)/controller2.ml \
+    $(LIB)/draw_labels.ml $(LIB)/draw_legend.ml \
+    $(LIB)/draw_macrolevel.ml $(LIB)/draw_microlevel.ml  \
+    $(LIB)/view_mainmap.ml $(LIB)/view_minimap.ml $(LIB)/view_overlays.ml \
+    $(LIB)/ui_search.ml $(LIB)/ui_navigation.ml $(LIB)/ui_layers.ml \
+    $(LIB)/view2.ml \
 
 SRC_VIEWS_JUST_ML= \
-   flag_visual.ml \
-   completion2.ml \
-   ../bin/main_codemap.ml
+   $(LIB)/flag_visual.ml \
+   $(LIB)/completion2.ml \
+   $(TOP)/bin/main_codemap.ml
 
 SRC_VIEWS=$(SRC_VIEWS_WITH_MLI) $(SRC_VIEWS_WITH_MLI:ml=mli) $(SRC_VIEWS_JUST_ML)
 

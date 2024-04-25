@@ -1,5 +1,4 @@
 _build
-.merlin
 
 /project.el
 /skip_list.txt
@@ -8,12 +7,12 @@ _build
 
 # syncweb
 *.md5sum_*
-/lib/Visual.aux
-/lib/Visual.bbl
-/lib/Visual.blg
-/lib/Visual.brf
-/lib/Visual.log
-/lib/Visual.out
-/lib/Visual.tex
-/lib/Visual.toc
+/docs/literate/Visual.aux
+/docs/literate/Visual.bbl
+/docs/literate/Visual.blg
+/docs/literate/Visual.brf
+/docs/literate/Visual.log
+/docs/literate/Visual.out
+/docs/literate/Visual.tex
+/docs/literate/Visual.toc
 Visual-*.pdf
