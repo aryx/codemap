@@ -497,17 +497,17 @@ type model = {
   (* for translating the absolute filenames in tr_label in readable so
    * one can access the node in the model for a tr_rectangle 
    *)
-  root: Common.dirname; 
+  root: string; 
 
   db: Database_code.database option;
   <<model fields hook>>
 
   (* for microlevel use/def information *)
-  g: Graph_code.graph option;
+  g: Graph_code.t option;
   (* for macrolevel use/def information, only for Dir and File *)
-  hfile_deps_of_node: (Graph_code.node, Common.filename deps) Hashtbl.t;
+  hfile_deps_of_node: (Graph_code.node, string (* filename *) deps) Hashtbl.t;
   (* we used to store line information there, but the file may have changed *)
-  hentities_of_file: (Common.filename, Graph_code.node list) Hashtbl.t;
+  hentities_of_file: (string (* filename *), Graph_code.node list) Hashtbl.t;
  }
 @
 
@@ -583,11 +583,11 @@ type drawing = {
 
   (* generated from dw.treemap, contains readable path relative to model.root *)
   readable_file_to_rect: 
-    (Common.filename, Treemap.treemap_rectangle) Hashtbl.t;
+    (string (* filename *), Treemap.treemap_rectangle) Hashtbl.t;
   (* coupling: = List.length treemap *)
   nb_rects: int; 
   (* Used to display readable paths. When fully zoomed it's a filename. *)
-  current_root: Common.path;
+  current_root: string;
 
   mutable layers: Layer_code.layers_with_index;
 
@@ -609,9 +609,9 @@ type drawing = {
 type context = {
   model2: model Async.t;
   nb_rects_on_screen: int;
-  grep_query: (Common.filename, line) Hashtbl.t;
+  grep_query: (string (* filename *), line) Hashtbl.t;
   layers_microlevel: 
-   (Common.filename, (int, Simple_color.emacs_color) Hashtbl.t) Hashtbl.t;
+   (string (* filename *), (int, Simple_color.emacs_color) Hashtbl.t) Hashtbl.t;
 }
 @ 
 
@@ -631,12 +631,12 @@ see section X and Y later)
 
 <<[[readable_to_absolute_filename_under_root]] sig>>=
 val readable_to_absolute_filename_under_root :
-  root:Common.path -> string -> string
+  root:string (* filename *) -> string -> string
 @
 
 <<[[actual_root_of_db]] sig>>=
 val actual_root_of_db : 
-  root:Common.path -> Database_code.database -> string
+  root:string (* filename *) -> Database_code.database -> string
 @
 
 
@@ -663,7 +663,7 @@ let readable_to_absolute_filename_under_root ~root filename =
 
   (* the root may be a filename *)
   let root_dir = 
-    if Common2.is_directory root then root
+    if UFile.is_directory (Fpath.v root) then root
     else Filename.dirname root
   in
 
@@ -700,7 +700,7 @@ let actual_root_of_db ~root db =
 
 <<hentities sig>>=
 val hentities :
-  Common.path -> Database_code.database option -> 
+  string (* filename *) -> Database_code.database option -> 
   (string, Database_code.entity) Hashtbl.t
 @
 <<model fields hook>>=
@@ -723,7 +723,7 @@ hentities : (string (* short name *), Database_code.entity) Hashtbl.t;
 let hentities root db_opt = 
   let hentities = Hashtbl.create 1001 in
 
-  db_opt |> Common.do_option (fun db ->
+  db_opt |> Option.iter (fun db ->
 
     let actual_root = actual_root_of_db ~root db in
 
@@ -747,10 +747,10 @@ let hentities root db_opt =
 val init_drawing :
   ?width:int ->
   ?height:int ->
-  (Common.path list -> Treemap.treemap_rendering) ->
+  (string (* filename *) list -> Treemap.treemap_rendering) ->
   Layer_code.layers_with_index ->
-  Common.path list -> 
-  Common.dirname (* root *) ->
+  string (* filename *) list -> 
+  string (* root *) ->
   drawing
 @
 
@@ -760,19 +760,19 @@ let init_drawing   ?(width = 600) ?(height = 600) func layers paths root =
   let paths = List.map Common2.relative_to_absolute paths in
   let current_root = Common2.common_prefix_of_files_or_dirs paths in
   let treemap = 
-    Common.profile_code "Visual.building the treemap" (fun () -> 
+    Profiling.profile_code "Visual.building the treemap" (fun () -> 
       func paths
     ) 
   in
   let readable_file_to_rect =
-    treemap |> Common.map_filter (fun rect ->
+    treemap |> List_.map_filter (fun rect ->
       if not rect.T.tr_is_node
       then 
         let file  = rect.T.tr_label in
-        let readable = Common.readable ~root file in
+        let readable = Filename_.readable ~root file in
         Some (readable, rect)
       else None
-    ) |> Common.hash_of_list
+    ) |> Hashtbl_.hash_of_list
   in
   {
     treemap;
@@ -916,12 +916,12 @@ let mk_gui ~screen_size ~legend test_mode w =
         fc#add_item "_Git grep" ~key:K._G ~callback:(fun () -> 
 
           let res = Ui_search.dialog_search_def w.model in
-          res |> Common.do_option (fun s ->
+          res |> Option.iter (fun s ->
             let root = w.root_orig in
             let matching_files = Ui_search.run_grep_query ~root s in
             let files = matching_files |> List.map fst |> Common2.uniq in
             let current_grep_query = 
-              Some (Common.hash_of_list matching_files)
+              Some (Hashtbl_.hash_of_list matching_files)
             in
             !Controller._go_dirs_or_file ~current_grep_query w files
           );
@@ -930,12 +930,12 @@ let mk_gui ~screen_size ~legend test_mode w =
         fc#add_item "_Tbgs query" ~key:K._T ~callback:(fun () -> 
 
           let res = Ui_search.dialog_search_def w.model in
-          res |> Common.do_option (fun s ->
+          res |> Option.iter (fun s ->
             let root = w.dw.current_root in
             let matching_files = Ui_search.run_tbgs_query ~root s in
             let files = matching_files |> List.map fst |> Common2.uniq in
             let current_grep_query = 
-              Some (Common.hash_of_list matching_files)
+              Some (Hashtbl_.hash_of_list matching_files)
             in
             !Controller._go_dirs_or_file ~current_grep_query w files
           );
@@ -968,7 +968,7 @@ let mk_gui ~screen_size ~legend test_mode w =
 
         fc#add_item "_Refresh" ~key:K._R ~callback:(fun () -> 
           let current_root = w.dw.current_root in
-          let _old_dw = Common2.pop2 w.dw_stack in
+          let _old_dw = Stack_.pop w.dw_stack in
           !Controller._go_dirs_or_file w [current_root];
         ) |> ignore;
 
@@ -1026,7 +1026,7 @@ let mk_gui ~screen_size ~legend test_mode w =
             match e.Db.e_kind with
             | Entity_code.MultiDirs ->
                 (* hack: coupling: with mk_multi_dirs_entity *)
-                Common.split "|" e.Db.e_file
+                String_.split ~sep:"|" e.Db.e_file
             | _ ->
                 [e.Db.e_file]
           in
@@ -1037,10 +1037,10 @@ let mk_gui ~screen_size ~legend test_mode w =
                  ~root:w.dw.current_root)
           in
 
-          pr2 (spf "e= %s, final_paths= %s" str(Common.join "|" final_paths));
+          pr2 (spf "e= %s, final_paths= %s" str(String.concat "|" final_paths));
           w.current_entity <- Some e;
-          Async.async_get_opt w.model |> Common.do_option (fun model ->
-            model.g |> Common.do_option (fun g ->
+          Async.async_get_opt w.model |> Option.iter (fun model ->
+            model.g |> Option.iter (fun g ->
               w.current_node_selected <- 
                 Model_graph_code.node_of_entity e g
             )
@@ -1100,7 +1100,7 @@ let mk_gui ~screen_size ~legend test_mode w =
       tb#insert_widget (G.mk (GButton.button ~stock:`GO_UP) (fun b -> 
         b#connect#clicked ~callback:(fun () -> 
           let current_root = w.dw.current_root in
-          !Controller._go_dirs_or_file w [Common2.dirname current_root];
+          !Controller._go_dirs_or_file w [Filename.dirname current_root];
         ) |> ignore;
       ));
 
@@ -1188,7 +1188,7 @@ let mk_gui ~screen_size ~legend test_mode w =
     (* old: before 3.11: Features.Backtrace.print(); *)
     let s = Printexc.get_backtrace () in
     pr2 s;
-    let pb = "pb: " ^ string_of_exn exn ^ "\n" ^ s in
+    let pb = "pb: " ^ Common.exn_to_s exn ^ "\n" ^ s in
     G.dialog_text ~text:pb ~title:"pb";
     raise exn
   );
@@ -1214,7 +1214,7 @@ let mk_gui ~screen_size ~legend test_mode w =
   win#show ();
 
   (* test *)
-  test_mode |> Common.do_option (fun _s -> 
+  test_mode |> Option.iter (fun _s -> 
     (* View_test.do_command s model *)
     ()
   );
@@ -1287,7 +1287,7 @@ let draw_treemap_rectangle2 ~cr ?(color=None) ?(alpha=1.) rect =
   ()
 
 let draw_treemap_rectangle ~cr ?color ?alpha a =
-  Common.profile_code "View.draw_treemap_rectangle" (fun () -> 
+  Profiling.profile_code "View.draw_treemap_rectangle" (fun () -> 
     draw_treemap_rectangle2 ~cr ?color ?alpha a)
 @ 
 
@@ -1545,7 +1545,7 @@ and try_draw_label ~font_size_orig ~color ~alpha ~cr ~rect txt =
   aux ~font_size:font_size_orig ~step:1 
 
 let draw_treemap_rectangle_label_maybe ~cr ~zoom ~color rect =
-  Common.profile_code "View.draw_label_maybe" (fun () ->
+  Profiling.profile_code "View.draw_label_maybe" (fun () ->
     draw_treemap_rectangle_label_maybe2 ~cr ~zoom ~color rect)
 @ 
 
@@ -1561,7 +1561,7 @@ This is kind of interfile "aspect"
 let draw_legend ~cr =
 
   let archis = Archi_code.source_archi_list in
-  let grouped_archis = archis |> Common.group_by_mapped_key (fun archi ->
+  let grouped_archis = archis |> Assoc.group_by_mapped_key (fun archi ->
     (* I tend to favor the darker variant of the color in treemap_pl.ml hence
      * the 3 below
      *)
@@ -1569,7 +1569,7 @@ let draw_legend ~cr =
   )
   in
   let grouped_archis = grouped_archis |> List.map (fun (color, kinds) ->
-    color, kinds |> List.map Archi_code.s_of_source_archi |> Common.join ", "
+    color, kinds |> List.map Archi_code.s_of_source_archi |> String.concat ", "
   ) in
   draw_legend_of_color_string_pairs ~cr grouped_archis
 
@@ -1691,7 +1691,7 @@ let optimal_nb_columns ~nblines ~chars_per_column ~w ~h =
 
 
 <<[[draw_column_bars]]>>=
-let draw_column_bars2 cr layout r = 
+let draw_column_bars cr layout r = 
   for i = 1 to int_of_float (layout.split_nb_columns - 1.) do
     let i = float_of_int i in
       
@@ -1709,9 +1709,7 @@ let draw_column_bars2 cr layout r =
     Cairo.line_to cr (r.p.x + layout.width_per_column * i) r.q.y;
     Cairo.stroke cr ;
   done
-let draw_column_bars cr layout rect =
-  Common.profile_code "View.draw_bars" (fun () ->
-    draw_column_bars2 cr layout rect)
+[@@profiling]
 @ 
 
 
@@ -1720,7 +1718,7 @@ let draw_column_bars cr layout rect =
 % thumbnails and actual source is same code! not like in visual studio
 
 <<[[draw_content]]>>=
-let draw_content2 cr layout context tr =
+let draw_content cr layout context tr =
 
   let r = tr.T.tr_rect in
   let file = tr.T.tr_label in
@@ -1773,7 +1771,7 @@ let draw_content2 cr layout context tr =
   let glyphs_opt = 
     glyphs_of_file ~font_size ~font_size_real context.model2 file in
 
-  glyphs_opt |> Common.do_option (fun glyphs ->
+  glyphs_opt |> Option.iter (fun glyphs ->
     glyphs |> Array.iteri (fun line_0_indexed _glyph ->
       let lc = line_to_line_in_column (Line line_0_indexed) layout in
       let x, y = line_in_column_to_bottom_pos lc r layout in
@@ -1817,27 +1815,25 @@ let draw_content2 cr layout context tr =
     content = glyphs_opt;
     defs = (match glyphs_opt with None -> [] | Some x -> defs_of_glyphs x);
   }
-
-let draw_content cr layout context tr =
-  Common.profile_code "View.draw_content" (fun () ->
-    draw_content2 cr layout context tr)
+[@@profiling]
 @
 
 
 <<[[draw_treemap_rectangle_content_maybe]]>>=
-let draw_treemap_rectangle_content_maybe2 cr clipping context tr  =
+let draw_treemap_rectangle_content_maybe cr clipping context tr  =
   let r = tr.T.tr_rect in
 
-  if F.intersection_rectangles r clipping = None
+  if F.intersection_rectangles r clipping =*= None
   then (* pr2 ("not drawing: " ^ file) *) None
   else begin
     let file = tr.T.tr_label in
+    Logs.debug (fun m -> m "considering to draw %s" file);
 
     (* if the file is not textual, or contain weird characters, then
      * it confuses cairo which then can confuse computation done in gtk
      * idle callbacks
      *)
-    if Common2.lfile_exists_eff file && File_type.is_textual_file file
+    if Common2.lfile_exists_eff file && File_type.is_textual_file (Fpath.v file)
     then begin
       let w = F.rect_width r in
       let h = F.rect_height r in
@@ -1888,10 +1884,8 @@ let draw_treemap_rectangle_content_maybe2 cr clipping context tr  =
       else None
     end
     else None
-  end
-let draw_treemap_rectangle_content_maybe cr clipping context rect = 
-  Common.profile_code "View.draw_content_maybe" (fun () ->
-    draw_treemap_rectangle_content_maybe2 cr clipping context rect)
+    end
+[@@profiling]
 @ 
 
 \section{Color code}
@@ -1912,7 +1906,7 @@ let paint_content_maybe_rect ~user_rect dw model rect =
    let microlevel_opt = 
      Draw_microlevel.draw_treemap_rectangle_content_maybe
        cr clipping context rect in
-   microlevel_opt |> Common.do_option (fun microlevel ->
+   microlevel_opt |> Option.iter (fun microlevel ->
      Hashtbl.replace dw.microlevel rect microlevel
    );
   (* have to redraw the label *)
@@ -1922,7 +1916,7 @@ let paint_content_maybe_rect ~user_rect dw model rect =
 
 (* todo: deadlock:  M.locked (fun () ->  ) dw.M.model.M.m *)
 let lazy_paint user_rect dw model () =
-  pr2 "Lazy Paint";
+  UCommon.pr2 "Lazy Paint";
   let start = Unix.gettimeofday () in
   while Unix.gettimeofday () - start < 0.3 do
     match !Ctl.current_rects_to_draw with
@@ -1930,11 +1924,11 @@ let lazy_paint user_rect dw model () =
     | x::xs ->
         Ctl.current_rects_to_draw := xs;
         if !debug
-        then pr2 (spf "Drawing: %s" (x.T.tr_label));
+        then UCommon.pr2 (spf "Drawing: %s" (x.T.tr_label));
         paint_content_maybe_rect ~user_rect dw model x;
   done;
   !Ctl._refresh_da ();
-  if !Ctl.current_rects_to_draw = []
+  if !Ctl.current_rects_to_draw =*= []
   then begin
     !Ctl.hook_finish_paint ();
     !Ctl._refresh_da ();
@@ -1943,14 +1937,14 @@ let lazy_paint user_rect dw model () =
   (* call me again *)
   else true
 
-let paint2 dw model = 
-  pr2 (spf "paint");
+let paint dw model = 
+  UCommon.pr2 (spf "paint");
   
-  !Ctl.paint_content_maybe_refresher |> Common.do_option GMain.Idle.remove;
+  !Ctl.paint_content_maybe_refresher |> Option.iter GMain.Idle.remove;
   Ctl.current_rects_to_draw := [];
 
   let user_rect = device_to_user_area dw in
-  pr2 (F.s_of_rectangle user_rect);
+  UCommon.pr2 (F.s_of_rectangle user_rect);
   let nb_rects = dw.nb_rects in
   let rects = dw.treemap in
 
@@ -1981,9 +1975,7 @@ let paint2 dw model =
           res
         ));
   end
-
-let paint a b = 
-  Common.profile_code "View.paint" (fun () -> paint2 a b)
+[@@profiling]
 @ 
 
 
@@ -1996,8 +1988,8 @@ let paint a b =
 
 <<[[hfiles_and_top_entities]] sig>>=
 val hfiles_and_top_entities :
-  Common.path -> Database_code.database option -> 
-  (Common.filename, Database_code.entity list) Hashtbl.t
+  string (* filename *) -> Database_code.database option -> 
+  (string (* filename *), Database_code.entity list) Hashtbl.t
 @
 
 <<[[hfiles_and_top_entities]]()>>=
@@ -2005,7 +1997,7 @@ val hfiles_and_top_entities :
 let hfiles_and_top_entities root db_opt =
   let hfiles = Hashtbl.create 1001 in
 
-  db_opt |> Common.do_option (fun db ->
+  db_opt |> Option.iter (fun db ->
     let ksorted = 
       Db.build_top_k_sorted_entities_per_file ~k:5 db.Db.entities in
     let actual_root = actual_root_of_db ~root db in
@@ -2043,7 +2035,7 @@ about aspects.
 
 <<ui_layers.mli>>=
 val choose_layer: 
-  root:Common.dirname ->
+  root:string ->
   string option (* layer title we want *) -> 
   Model2.world -> 
   unit
@@ -2064,7 +2056,7 @@ module L = Layer_code
 (*****************************************************************************)
 
 let choose_layer ~root layer_title_opt w =
-  pr2 "choose_layer()";
+  UCommon.pr2 "choose_layer()";
   let dw = w.dw in
 
   let original_layers = dw.M.layers.L.layers |> List.map fst in
@@ -2075,7 +2067,7 @@ let choose_layer ~root layer_title_opt w =
         layer, 
         match layer_title_opt with
         | None -> false
-        | Some title -> title =$= layer.L.title
+        | Some title -> title = layer.L.title
       ))
   in
   w.dw <- 
@@ -2120,18 +2112,18 @@ let button_action w ev =
   | `BUTTON_PRESS ->
       let button = GdkEvent.Button.button ev in
       let state = GdkEvent.Button.state ev in
-      pr2 (spf "button %d pressed" button);
+      UCommon.pr2 (spf "button %d pressed" button);
       (match button with
       | 1 -> 
-        r_opt |> Common.do_option (fun (r, _, _r_englobing) ->
+        r_opt |> Option.iter (fun (r, _, _r_englobing) ->
           let file = r.T.tr_label in
-          pr2 (spf "clicking on %s" file);
+          UCommon.pr2 (spf "clicking on %s" file);
         );
         true
       | 2 ->
-        r_opt |> Common.do_option (fun (r, _, _r_englobing) ->
+        r_opt |> Option.iter (fun (r, _, _r_englobing) ->
           let file = r.T.tr_label in
-          pr2 (spf "opening %s" file);
+          UCommon.pr2 (spf "opening %s" file);
           let line = 
             M.find_line_in_rectangle_at_user_point user r dw ||| (Line 0)
           in
@@ -2140,7 +2132,7 @@ let button_action w ev =
         true
 
       | 3 ->
-        r_opt |> Common.do_option (fun (tr, _, _r_englobing) ->
+        r_opt |> Option.iter (fun (tr, _, _r_englobing) ->
           (* actually file_or_dir *)
           let file = tr.T.tr_label in
 
@@ -2156,12 +2148,12 @@ let button_action w ev =
           let glyph_opt =
             M.find_glyph_in_rectangle_at_user_point user tr dw in
           let entity_def_opt = 
-            line_opt >>= (fun line ->
-              M.find_def_entity_at_line_opt line tr dw model) in
+            let* line = line_opt in
+            M.find_def_entity_at_line_opt line tr dw model in
           let entity_use_opt =
-            line_opt >>= (fun line -> 
-            glyph_opt >>= (fun glyph ->
-              M.find_use_entity_at_line_and_glyph_opt line glyph tr dw model))
+            let* line = line_opt in
+            let* glyph = glyph_opt in
+            M.find_use_entity_at_line_and_glyph_opt line glyph tr dw model
           in
           let entity_opt = 
             match entity_use_opt, entity_def_opt with
@@ -2179,7 +2171,7 @@ let button_action w ev =
             |> List.sort compare
             |> Common2.uniq
             (* todo: tfidf to filter files like common2.ml *)
-            |> Common.exclude (fun readable -> 
+            |> List_.exclude (fun readable -> 
                 readable =~ "commons/common2.ml"
                 (*readable =~ "external/.*"  *)
             )
@@ -2187,7 +2179,7 @@ let button_action w ev =
             (* less: print a warning when does not exist? *)
             |> List.filter Sys.file_exists
           in
-          let readable = Common.readable ~root:model.root file in
+          let readable = Filename_.readable ~root:model.root file in
           let readable =
             match entity_opt with
             | None -> readable
@@ -2232,7 +2224,7 @@ let button_action w ev =
                   let str =
                     ([Graph_code.string_of_node n] @
                     (users |> List.map Graph_code.string_of_node )
-                    ) |> Common.join "\n"
+                    ) |> String.concat "\n"
                   in
                   Gui.dialog_text ~text:str ~title:"Info entity";
                 ));
@@ -2253,15 +2245,15 @@ let button_action w ev =
       )
   | `BUTTON_RELEASE ->
       let button = GdkEvent.Button.button ev in
-      pr2 (spf "button %d released" button);
+      UCommon.pr2 (spf "button %d released" button);
       (match button with
       | 1 -> true
       | _ -> false
       )
 
   | `TWO_BUTTON_PRESS ->
-      pr2 ("double click");
-      r_opt |> Common.do_option (fun (_r, _, r_englobing) ->
+      UCommon.pr2 ("double click");
+      r_opt |> Option.iter (fun (_r, _, r_englobing) ->
         let path = r_englobing.T.tr_label in
         !Ctl._go_dirs_or_file w [path];
       );
@@ -2277,7 +2269,7 @@ let button_action w ev =
 <<[[go_dirs_or_file]]>>=
 let go_dirs_or_file ?(current_grep_query=None) w paths =
   let root = Common2.common_prefix_of_files_or_dirs paths in
-  pr2 (spf "zooming in %s" (Common.join "|" paths));
+  UCommon.pr2 (spf "zooming in %s" (String.concat "|" paths));
 
   (* reset the painter? not needed because will call draw below
    * which will reset it
@@ -2285,7 +2277,7 @@ let go_dirs_or_file ?(current_grep_query=None) w paths =
   let dw = w.dw in
   !Controller._set_title (Controller.title_of_path root);
 
-  Common.push w.dw w.dw_stack;
+  Stack_.push w.dw w.dw_stack;
   w.dw <- 
     Model2.init_drawing 
       ~width:dw.width
@@ -2327,10 +2319,10 @@ val find_rectangle_at_user_point :
  * current solution: just find pixel by iterating over all the rectangles
  * and check if it's inside.
  *)
-let find_rectangle_at_user_point2 user dw =
+let find_rectangle_at_user_point user dw =
 
   let rects = dw.treemap in
-  if List.length rects = 1
+  if List.length rects =|= 1
   then 
     (* we are fully zommed, this treemap will have tr_depth = 1 but we return
      * it *)
@@ -2345,17 +2337,14 @@ let find_rectangle_at_user_point2 user dw =
     (* opti: this should be far faster by using a quad tree to represent
      * the treemap
      *)
-    |> Common.sort_by_val_highfirst 
+    |> Assoc.sort_by_val_highfirst 
     |> List.map fst
    in
    match matching_rects with
    | [] -> None
    | [x] -> Some (x, [], x)
    | _ -> Some (Common2.head_middle_tail matching_rects)
-
-let find_rectangle_at_user_point a b = 
-  Common.profile_code "Model.find_rectangle_at_point" (fun () ->
-    find_rectangle_at_user_point2 a b)
+[@@profiling]
 @
 
 \section{Zooming in multiple directories}
@@ -2387,15 +2376,15 @@ let efunsclient_path = ref "efunsclient"
 
 (* you need to have done a M-x server-start first *)
 let run_emacsclient ~file ~line =
-  Common.command2 (spf "%s -n %s" !emacsclient_path file);
-  Common.command2 (spf 
+  Sys.command (spf "%s -n %s" !emacsclient_path file) |> ignore;
+  Sys.command (spf 
     "%s -e '(with-current-buffer (window-buffer (selected-window)) (goto-line %d))'"
-    !emacsclient_path line);
+    !emacsclient_path line) |> ignore;
   ()
 
 (* you need to have done a M-x server_start first *)
 let run_efunsclient ~file ~line =
-  Common.command2 (spf "%s %s -line %d" !efunsclient_path file line)
+  Sys.command (spf "%s %s -line %d" !efunsclient_path file line) |> ignore
 
 @
 
@@ -2417,10 +2406,10 @@ let go_back w =
   (* reset also the motion notifier ? less needed because
    * the next motion will reset it
    *)
-  !Controller.paint_content_maybe_refresher |> Common.do_option (fun x ->
+  !Controller.paint_content_maybe_refresher |> Option.iter (fun x ->
     GMain.Idle.remove x;
   );
-  let old_dw = Common2.pop2 w.dw_stack in
+  let old_dw = Stack_.pop w.dw_stack in
   w.dw <- old_dw;
  
   let path = w.dw.current_root in
@@ -2524,12 +2513,12 @@ let dialog_search_def model =
       )
       (fun () -> 
         let text = entry#text in 
-        pr2 text;
+        UCommon.pr2 text;
         text
       )
   in
-  res |> Common.do_option (fun s -> 
-    pr2 ("selected: " ^ s);
+  res |> Option.iter (fun s -> 
+    UCommon.pr2 ("selected: " ^ s);
   );
   res
 @ 
@@ -2547,7 +2536,7 @@ let run_grep_query ~root s =
   let cmd = 
     spf "cd %s; git grep %s %s" root git_grep_options s
   in
-  let xs = Common.cmd_to_list cmd in
+  let xs = UCmd.cmd_to_list cmd in
   let xs = xs |> List.map (fun s ->
     if s =~ "\\([^:]*\\):\\([0-9]+\\):.*"
     then
@@ -2567,7 +2556,7 @@ let run_tbgs_query ~root s =
   let cmd = 
     spf "cd %s; tbgs --stripdir %s" root s
   in
-  let xs = Common.cmd_to_list cmd in
+  let xs = UCmd.cmd_to_list cmd in
   let xs = xs |> List.map (fun s ->
     if s =~ "\\([^:]*\\):\\([0-9]+\\):.*"
     then
@@ -2587,7 +2576,7 @@ let run_tbgs_query ~root s =
 (* queries *)
 mutable current_query: string;
 mutable current_searched_rectangles: Treemap.treemap_rectangle list;
-mutable current_grep_query: (Common.filename, line) Hashtbl.t;
+mutable current_grep_query: (string (* filename *), line) Hashtbl.t;
 @
 
 \section{Definition search}
@@ -2605,7 +2594,7 @@ mutable current_grep_query: (Common.filename, line) Hashtbl.t;
  * an extra entity when have a fullname that is not empty
  *)
 val all_entities :
-  root:Common.dirname -> Common.filename list -> Database_code.database option->
+  root:string (* filename *) -> string (* filename *) list -> Database_code.database option->
   Database_code.entity list
 @
 
@@ -2673,7 +2662,7 @@ let all_entities ~root files db_opt =
   | Some db ->
       let nb_entities = Array.length db.Db.entities in
       let nb_files = List.length db.Db.files in
-      pr2 (spf "We got %d entities in %d files" nb_entities nb_files);
+      UCommon.pr2 (spf "We got %d entities in %d files" nb_entities nb_files);
 
       (* the db passed might be just about .ml files but we could be
        * called on a directory with non .ml files that we would
@@ -2751,7 +2740,7 @@ let color_of_entity_kind kind =
   let use = HC.SomeUse in
   let props = HC.info_of_entity_kind_and_usedef2 kind (HC.Def2 use) in
   let color = 
-    try props |> Common.find_some (function
+    try props |> List_.find_some (function
         | `FOREGROUND s -> Some s
         | _ -> None
       )
@@ -2784,7 +2773,7 @@ let col_color_fg = column_list#add Gobject.Data.string
 let col_color_bg = column_list#add Gobject.Data.string
 
 
-let model_of_list_pair_string_with_icon2 xs =
+let model_of_list_pair_string_with_icon xs =
 
   (* old: I was using before a custom_list 
    * (see custom_list_generic.ml in lablgtk2/examples)
@@ -2797,8 +2786,8 @@ let model_of_list_pair_string_with_icon2 xs =
   let model = GTree.tree_store column_list in
   let store_id_to_entity = Hashtbl.create 101 in
 
-  pr2 (spf "Size of model = %d" (List.length xs));
-  xs |> Common2.index_list_0 |> List.iter (fun (e, id) ->
+  UCommon.pr2 (spf "Size of model = %d" (List.length xs));
+  xs |> List_.index_list_0 |> List.iter (fun (e, id) ->
    
     let _has_unit_test =
       List.length e.Db.e_good_examples_of_use >= 1
@@ -2835,12 +2824,7 @@ let model_of_list_pair_string_with_icon2 xs =
     Hashtbl.add store_id_to_entity id e;
   );
   model, store_id_to_entity
-
-
-let model_of_list_pair_string_with_icon a =
-  Common.profile_code "Completion2.model_of_list" (fun () ->
-    model_of_list_pair_string_with_icon2 a
-  )
+[@@profiling]
 
 let model_col_of_prefix prefix_or_suffix idx =
   let xs = 
@@ -2884,7 +2868,7 @@ let fake_entity = {Database_code.
      e_fullname = "";
      e_file = "foo.php";
      e_kind = E.Function;
-     e_pos = { Common2.l = -1; c = -1 };
+     e_pos = { Pos.l = -1; c = -1 };
      e_number_external_users = 0;
      e_good_examples_of_use = [];
      e_properties = [];
@@ -2939,8 +2923,8 @@ let my_entry_completion_eff2 ~callback_selected ~callback_changed fn_idx =
       let id = !model#get ~row ~column:col_id in
       let entity = Hashtbl.find !store_id_to_entity id in
 
-      pr2 str;
-      pr2 file;
+      UCommon.pr2 str;
+      UCommon.pr2 file;
       callback_selected entry str file entity
 
   ) |> ignore;
@@ -2949,9 +2933,9 @@ let my_entry_completion_eff2 ~callback_selected ~callback_changed fn_idx =
 
   entry#connect#changed (fun () -> 
     let s = entry#text in
-    pr2 s;
+    UCommon.pr2 s;
     if s <> "" then begin
-      !current_timeout |> Common.do_option (fun x ->
+      !current_timeout |> Option.iter (fun x ->
         GMain.Timeout.remove x;
       );
       current_timeout :=
@@ -2960,7 +2944,7 @@ let my_entry_completion_eff2 ~callback_selected ~callback_changed fn_idx =
            ~callback:(fun _ -> 
             (* bugfix: reset it otherwise get Glib errors *)
             current_timeout := None;
-            pr2 "changing model";
+            UCommon.pr2 "changing model";
             let idx = fn_idx () in
             let (m,h) = model_col_of_prefix s idx in
             model := m;
@@ -3044,7 +3028,7 @@ let draw_englobing_rectangles_overlay ~dw (r, middle, r_englobing) =
   Draw_labels.draw_treemap_rectangle_label_maybe 
     ~cr:cr_overlay ~color:(Some "red") ~zoom:1.0 r_englobing;
 
-  middle |> Common.index_list_1 |> List.iter (fun (r, i) ->
+  middle |> List_.index_list_1 |> List.iter (fun (r, i) ->
     let color = 
       match i with
       | 1 -> "grey70"
@@ -3132,7 +3116,7 @@ let motion_refresher ev w =
     Cairo.device_to_user cr x y |> CairoH.cairo_point_to_point) in
   let r_opt = M.find_rectangle_at_user_point user dw in
 
-  r_opt |> Common.do_option (fun (tr, middle, r_englobing) ->
+  r_opt |> Option.iter (fun (tr, middle, r_englobing) ->
     (* coupling: similar code in right click handler in View_mainmap *)
     let line_opt = 
       M.find_line_in_rectangle_at_user_point user tr dw in
@@ -3140,14 +3124,14 @@ let motion_refresher ev w =
       M.find_glyph_in_rectangle_at_user_point user tr dw in
 
     let entity_def_opt = 
-      Async.async_get_opt w.model >>= (fun model ->
-      line_opt >>= (fun line ->
-        M.find_def_entity_at_line_opt line tr dw model)) in
+      let* model = Async.async_get_opt w.model in
+      let* line = line_opt in
+        M.find_def_entity_at_line_opt line tr dw model in
     let entity_use_opt =
-      Async.async_get_opt w.model >>= (fun model ->
-      line_opt >>= (fun line -> 
-      glyph_opt >>= (fun glyph ->
-        M.find_use_entity_at_line_and_glyph_opt line glyph tr dw model)))
+      let* model = Async.async_get_opt w.model in
+      let* line = line_opt in
+      let* glyph = glyph_opt in
+      M.find_use_entity_at_line_and_glyph_opt line glyph tr dw model
     in
     let entity_opt = 
       match entity_use_opt, entity_def_opt with
@@ -3180,21 +3164,21 @@ let motion_refresher ev w =
     );
 
     draw_englobing_rectangles_overlay ~dw (tr, middle, r_englobing);
-    Async.async_get_opt w.model |> Common.do_option (fun model ->
+    Async.async_get_opt w.model |> Option.iter (fun model ->
       draw_deps_files tr dw model;
-      entity_opt |> Common.do_option (fun _n -> w.current_node <- None);
-      entity_def_opt|>Common.do_option (fun n -> draw_deps_entities n dw model);
-      entity_use_opt|>Common.do_option (fun n -> draw_deps_entities n dw model);
+      entity_opt |> Option.iter (fun _n -> w.current_node <- None);
+      entity_def_opt|>Option.iter (fun n -> draw_deps_entities n dw model);
+      entity_use_opt|>Option.iter (fun n -> draw_deps_entities n dw model);
     );
   
     if w.settings.draw_searched_rectangles;
     then draw_searched_rectangles ~dw;
 
     !Controller.current_tooltip_refresher
-      |> Common.do_option GMain.Timeout.remove;
+      |> Option.iter GMain.Timeout.remove;
     Controller.current_tooltip_refresher := 
       Some (Gui.gmain_timeout_add ~ms:1000 ~callback:(fun _ ->
-        Async.async_get_opt w.model |> Common.do_option (fun model ->
+        Async.async_get_opt w.model |> Option.iter (fun model ->
           match entity_opt, model.g with
           | Some node, Some g ->
             draw_tooltip ~cr_overlay ~x ~y node g;
@@ -3220,7 +3204,7 @@ let motion_notify w ev =
   (* The motion code now takes time, so it's better do run it when the user
    * has finished moving his mouse, hence the use of gmain_idle_add below.
    *)
-  !Controller.current_motion_refresher |> Common.do_option GMain.Idle.remove;
+  !Controller.current_motion_refresher |> Option.iter GMain.Idle.remove;
   Controller.current_motion_refresher := 
     Some (Gui.gmain_idle_add ~prio:200 (fun () -> 
       let res = motion_refresher ev w in
@@ -3243,7 +3227,7 @@ let motion_notify w ev =
 \section{The [[configure]] event}
 
 <<configure>>=
-let configure2 w ev = 
+let configure w ev = 
   let dw = w.dw in
   let width = GdkEvent.Configure.width ev in
   let height = GdkEvent.Configure.height ev in
@@ -3253,10 +3237,7 @@ let configure2 w ev =
   dw.overlay <- Model2.new_surface ~alpha:true ~width ~height;
   View_mainmap.paint dw w.model;
   true
-
-
-let configure a b =
-  Common.profile_code "View.configure" (fun () -> configure2 a b)
+[@@profiling]
 @ 
 
 
@@ -3290,15 +3271,13 @@ let assemble_layers cr_final dw =
 (* opti: don't 'paint dw;' painting is the computation
  * heavy function. expose() just copy the "canvas" layers.
  *)
-let expose2 da w _ev = 
+let expose da w _ev = 
   let dw = w.dw in
   let gwin = da#misc#window in
   let cr = Cairo_gtk.create gwin in
   assemble_layers cr dw;
   true
-
-let expose a b c = 
-  Common.profile_code "View.expose" (fun () -> expose2 a b c)
+[@@profiling]
 @ 
 
 
@@ -3323,9 +3302,9 @@ diagram where see events, functions,  draw vs paint vs overlays.
 
 (* internally memoize the parsing part in _hmemo_file *)
 val tokens_with_categ_of_file:
-  Common.filename ->
+  string (* filename *) ->
   (string, Database_code.entity) Hashtbl.t ->
-  (string * Highlight_code.category option * Common2.filepos) list
+  (string * Highlight_code.category option * Pos.linecol) list
 
 (* helpers *)
 val use_arity_of_use_count: 
@@ -3342,10 +3321,10 @@ open Common
 
 open Highlight_code
 module FT = File_type
-module PI = Parse_info
 module HC = Highlight_code
 module Db = Database_code
 module Flag = Flag_visual
+module PH = Parse_and_highlight
 
 (*****************************************************************************)
 (* Prelude *)
@@ -3361,34 +3340,45 @@ module Flag = Flag_visual
 
 (* This type is needed if we want to use a single hashtbl to memoize
  * all the parsed file.
- * Now that a few language highlighters rely on the generic AST and
+ * Now that a few language highlighters rely internaly on a generic AST and
  * highlight_AST.ml, should we also memoized the (named) generic AST?
  *)
 type ast = 
-  (* functional *)
-  | ML  of (Ast_ml.program, Parser_ml.token) Parse_info.parsing_result
+  (* generic, which is used currently for: 
+   * - Rust
+   * - TODO Ruby
+   * - Jsonnet
+   * - Yaml
+   * - TODO Bash 
+   * - TODO Docker
+   * - Lisp/Scheme/Clojure/Sexp (but currently use Raw_tree so no
+   *   great highlighting for now)
+  *)
+  | Generic of (AST_generic.program * (Tok.t * Parse_languages.origin_info) list)
+(* old: was just lexer in old pfff
+  | Csharp of Parse_csharp.program_and_tokens
   | Hs  of Parse_hs.program_and_tokens
-  | Lisp of Parse_lisp.program_and_tokens
   | Erlang of Parse_erlang.program_and_tokens
-  | Skip  of Parse_skip.program_and_tokens
+*)
+
+  (* functional *)
+  | ML  of (AST_ocaml.program, Parser_ml.token) Parsing_result.t
+  | Scala of (AST_scala.program, Parser_scala.token) Parsing_result.t
 
   (* web *)
   | Html of Parse_html.program_and_tokens
-  | Js  of (Ast_js.program, Parser_js.token) Parse_info.parsing_result
-  | Php of (Cst_php.program, Parser_php.token) Parse_info.parsing_result
+  | Js  of (Ast_js.a_program, Parser_js.token) Parsing_result.t
+  | Php of (Cst_php.program, Parser_php.token) Parsing_result.t
 
   (* system *)
-  | Cpp of Parse_cpp.toplevels_and_tokens
-  | Rust of Parse_rust.program_and_tokens
-  | Go of (Ast_go.program, Parser_go.token) Parse_info.parsing_result
+  | Cpp of (Ast_cpp.program, Parser_cpp.token) Parsing_result.t
+  | Go of (Ast_go.program, Parser_go.token) Parsing_result.t
 
   (* mainstream *)
-  | Java of (Ast_java.program, Parser_java.token) Parse_info.parsing_result
-  | Csharp of Parse_csharp.program_and_tokens
+  | Java of (Ast_java.program, Parser_java.token) Parsing_result.t
 
   (* scripting *)
-  | Python of (AST_python.program, Parser_python.token) Parse_info.parsing_result
-  | Ruby of (Ast_ruby.program, Parser_ruby.token) Parse_info.parsing_result
+  | Python of (AST_python.program, Parser_python.token) Parsing_result.t
 
   (* documentation *)
   | Noweb of Parse_nw.program_and_tokens
@@ -3398,8 +3388,8 @@ let _hmemo_file = Hashtbl.create 101
 
 (* with directories with many files, this is useful *)
 let parse_cache parse_in extract file =
-  Common.profile_code "View.parse_cache" (fun () ->
-    let mtime = Common2.filemtime file in
+  Profiling.profile_code "View.parse_cache" (fun () ->
+    let mtime = UFile.filemtime (Fpath.v file) in
     let recompute = 
       if Hashtbl.mem _hmemo_file file
       then
@@ -3433,7 +3423,7 @@ let use_arity_of_use_count n =
   | _ when n > 20   -> LotsOfUse
   | _ when n >= 10  -> MultiUse
   | _ when n >= 2   -> SomeUse
-  | _ when n = 1    -> UniqueUse
+  | _ when n =|= 1    -> UniqueUse
   | _               -> NoUse
 
 let rewrite_categ_using_entities s categ file entities =
@@ -3452,7 +3442,7 @@ let rewrite_categ_using_entities s categ file entities =
          * 
          * update: TODO use Model2.readable_to_absolute_filename_under_root ?
          *)
-        Filename.basename e.Db.e_file =$= Filename.basename file &&
+        Filename.basename e.Db.e_file = Filename.basename file &&
         (* some file have both a function and class with the same name *)
         Database_code.matching_def_short_kind_kind e_kind e.Db.e_kind 
       )
@@ -3468,50 +3458,38 @@ let rewrite_categ_using_entities s categ file entities =
       | _x::_y::_xs ->
         (* TODO: handle __construct directly *)
         if not (List.mem s ["__construct"])
-        then pr2_once (spf "multi def found for %s in %s" s file);
+        then UCommon.pr2_once (spf "multi def found for %s in %s" s file);
         categ
 
 (*****************************************************************************)
 (* Helpers *)
 (*****************************************************************************)
-type ('ast, 'token) for_helper = {
-  parse: (Common.filename -> ('ast * 'token list) list);
-  highlight_visit:(tag_hook:(Parse_info.t -> HC.category -> unit) ->
-                   Highlight_code.highlighter_preferences ->
-                   'ast * 'token list -> unit);
-  info_of_tok:('token -> Parse_info.t);
-}
 
 let tokens_with_categ_of_file_helper 
-  {parse; highlight_visit; info_of_tok} file prefs hentities =
+  {PH.parse; highlight; info_of_tok} file prefs hentities =
   
-  if !Flag.verbose_visual then pr2 (spf "Parsing: %s" file);
-  let ast2 = parse file in
+  if !Flag.verbose_visual then UCommon.pr2 (spf "Parsing: %s" file);
+  let (ast, toks) = parse file in
 
-  if !Flag.verbose_visual then pr2 (spf "Highlighting: %s" file);
-  (* todo: ast2 should not be a list, should just be (ast, toks)
-   * but right now only a few parsers will satisfy this interface
-   *)
-  ast2 |> List.map (fun (ast, toks) ->
-
+  if !Flag.verbose_visual then UCommon.pr2 (spf "Highlighting: %s" file);
     let h = Hashtbl.create 101 in
 
     (* computing the token attributes *)
-    highlight_visit ~tag_hook:(fun info categ -> Hashtbl.add h info categ)
-      prefs (ast, toks);
+    highlight ~tag_hook:(fun info categ -> Hashtbl.add h info categ)
+      prefs (Fpath.v file) (ast, toks);
 
     (* getting the text *)
-    toks |> Common.map_filter (fun tok -> 
+    toks |> List_.map_filter (fun tok -> 
       let info = info_of_tok tok in
-      let s = PI.str_of_info info in
-      if not (PI.is_origintok info)
+      let s = Tok.content_of_tok info in
+      if not (Tok.is_origintok info)
       then None
       else 
-        let categ = Common2.hfind_option info h |> Common2.fmap (fun categ ->
+        let categ = Common2.hfind_option info h |> Option.map (fun categ ->
           rewrite_categ_using_entities s categ file hentities
         ) in
-        Some (s, categ,{ Common2.l = PI.line_of_info info; c = PI.col_of_info info; })
-    )) |> List.flatten
+        Some (s, categ,{ Pos.l = Tok.line_of_tok info; c = Tok.col_of_tok info; })
+    )
 
 (*****************************************************************************)
 (* Main entry point *)
@@ -3521,10 +3499,26 @@ let tokens_with_categ_of_file_helper
  * also in Draw_microlevel.draw_contents2.
  *)
 let tokens_with_categ_of_file file hentities = 
-  let ftype = FT.file_type_of_file file in
+  let ftype = FT.file_type_of_file (Fpath.v file) in
   let prefs = Highlight_code.default_highlighter_preferences in
   
   match ftype with
+  (* currently abusing the OCaml parser to also parse ATD files
+   * TODO? works also for Fsharp; at least the tokenizer 
+   *)
+  | FT.PL (FT.OCaml _) | FT.PL (FT.IDL FT.ATD) ->
+      tokens_with_categ_of_file_helper 
+        { parse = (parse_cache (fun file -> 
+             ML (Parse_languages.parse_ocaml file)
+         )
+         (function 
+         | ML {Parsing_result. ast; tokens; _} -> (ast, tokens)
+         | _ -> raise Impossible));
+        highlight = (fun ~tag_hook prefs file (ast, toks) -> 
+          Highlight_ml.visit_program ~tag_hook prefs file (ast, toks));
+        info_of_tok = Token_helpers_ml.info_of_tok;
+        }
+        file prefs hentities
   | FT.PL (FT.Web (FT.Php _)) ->
       tokens_with_categ_of_file_helper 
         { parse = (parse_cache (fun file ->
@@ -3547,9 +3541,9 @@ let tokens_with_categ_of_file file hentities =
             Php (Parse_php.parse file)
           ))
          (function  
-          | Php {PI. ast; tokens; _} -> [ast, tokens] 
+          | Php {Parsing_result. ast; tokens; _} -> (ast, tokens)
           | _ -> raise Impossible));
-         highlight_visit = (fun ~tag_hook prefs (ast, toks) ->
+         highlight = (fun ~tag_hook prefs _file (ast, toks) ->
           Highlight_php.visit_program ~tag:tag_hook prefs hentities 
             (ast, toks)
          );
@@ -3557,45 +3551,18 @@ let tokens_with_categ_of_file file hentities =
         }
         file prefs hentities
 
-  (* works also for Fsharp; at least the tokenizer *)
-  | FT.PL (FT.ML _) ->
+  | FT.PL (FT.Scala) ->
       tokens_with_categ_of_file_helper 
         { parse = (parse_cache (fun file -> 
            Common.save_excursion Flag_parsing.error_recovery true (fun()->
-             ML (Parse_ml.parse file)
+             Scala (Parse_scala.parse file)
          ))
          (function 
-         | ML {PI. ast; tokens; _} -> [ast, tokens] 
+         | Scala {Parsing_result. ast; tokens; _} -> (ast, tokens)
          | _ -> raise Impossible));
-        highlight_visit = (fun ~tag_hook prefs (ast, toks) -> 
-          Highlight_ml.visit_program ~tag_hook prefs file (ast, toks));
-        info_of_tok = Token_helpers_ml.info_of_tok;
-        }
-        file prefs hentities
-
-  | FT.PL (FT.Skip) ->
-      tokens_with_categ_of_file_helper 
-        { parse = (parse_cache (fun file -> 
-           Common.save_excursion Flag_parsing.error_recovery true (fun()->
-             Skip (Parse_skip.parse file |> fst))
-         )
-         (function 
-         | Skip (astopt, toks) -> [astopt, toks] 
-         | _ -> raise Impossible));
-        highlight_visit = (fun ~tag_hook prefs (ast, toks) -> 
-          Highlight_skip.visit_program ~tag_hook prefs (ast, toks));
-        info_of_tok = Token_helpers_skip.info_of_tok;
-        }
-        file prefs hentities
-
-  | FT.PL (FT.Haskell _) ->
-      tokens_with_categ_of_file_helper 
-        { parse = (parse_cache 
-         (fun file -> Hs (Parse_hs.parse file |> fst))
-         (function Hs (ast, toks) -> [ast, toks] | _ -> raise Impossible));
-        highlight_visit = (fun ~tag_hook prefs (ast, toks) -> 
-          Highlight_hs.visit_program ~tag_hook prefs (ast, toks));
-        info_of_tok = Parser_hs.info_of_tok;
+        highlight = (fun ~tag_hook prefs file (ast, toks) -> 
+          Highlight_scala.visit_program ~tag_hook prefs file (ast, toks));
+        info_of_tok = Token_helpers_scala.info_of_tok;
         }
         file prefs hentities
 
@@ -3606,49 +3573,92 @@ let tokens_with_categ_of_file file hentities =
              Python (Parse_python.parse file))
          )
          (function 
-         | Python {PI. ast; tokens; _} -> [Some ast, tokens] 
+         | Python {Parsing_result. ast; tokens; _} -> (Some ast, tokens)
          | _ -> raise Impossible
          ));
-        highlight_visit = (fun ~tag_hook prefs (ast, toks) -> 
+        highlight = (fun ~tag_hook prefs _file (ast, toks) -> 
           Highlight_python.visit_program ~tag_hook prefs (ast, toks));
         info_of_tok = Token_helpers_python.info_of_tok;
         }
         file prefs hentities
+
+  | FT.PL (FT.Rust) ->
+      let ph_with_cache = 
+        { PH.rust with parse = (parse_cache 
+              (fun file -> Generic (PH.rust.parse file))
+              (function Generic (ast, toks) -> ast, toks | _ -> raise Impossible))} in
+      tokens_with_categ_of_file_helper ph_with_cache
+        file prefs hentities
+(* TODO
   | FT.PL (FT.Ruby) ->
-      tokens_with_categ_of_file_helper 
-        { parse = (parse_cache (fun file -> 
-           Common.save_excursion Flag_parsing.error_recovery true (fun()->
-             Ruby (Parse_ruby.parse file))
-         )
-         (function 
-         | Ruby {PI. ast; tokens; _} -> [Some ast, tokens] 
-         | _ -> raise Impossible
-         ));
-        highlight_visit = (fun ~tag_hook prefs (ast, toks) -> 
-          Highlight_ruby.visit_program ~tag_hook prefs (ast, toks));
-        info_of_tok = Token_helpers_ruby.info_of_tok;
-        }
+      let ph_with_cache = 
+        { PH.ruby with parse = (parse_cache 
+              (fun file -> Generic (PH.ruby.parse file))
+              (function Generic (ast, toks) -> ast, toks | _ -> raise Impossible))} in
+      tokens_with_categ_of_file_helper ph_with_cache
+        file prefs hentities
+ *)
+
+  | FT.Config (FT.Jsonnet) ->
+      let ph_with_cache = 
+        { PH.jsonnet with parse = (parse_cache 
+              (fun file -> Generic (PH.jsonnet.parse file))
+              (function Generic (ast, toks) -> ast, toks | _ -> raise Impossible))} in
+      tokens_with_categ_of_file_helper ph_with_cache
         file prefs hentities
 
+  | FT.Config (FT.Yaml) ->
+      let ph_with_cache = 
+        { PH.yaml with parse = (parse_cache 
+              (fun file -> Generic (PH.yaml.parse file))
+              (function Generic (ast, toks) -> ast, toks | _ -> raise Impossible))} in
+      tokens_with_categ_of_file_helper ph_with_cache
+        file prefs hentities
+
+  | FT.Config (FT.Dockerfile) ->
+      let ph_with_cache = 
+        { PH.dockerfile with parse = (parse_cache 
+              (fun file -> Generic (PH.dockerfile.parse file))
+              (function Generic (ast, toks) -> ast, toks | _ -> raise Impossible))} in
+      tokens_with_categ_of_file_helper ph_with_cache
+        file prefs hentities
+
+  | FT.PL (FT.Lisp _) | FT.Config (FT.Sexp) ->
+      let ph_with_cache = 
+        { PH.lisp with parse = (parse_cache 
+              (fun file -> Generic (PH.lisp.parse file))
+              (function Generic (ast, toks) -> ast, toks | _ -> raise Impossible))} in
+      tokens_with_categ_of_file_helper ph_with_cache
+        file prefs hentities
+
+  | FT.PL (FT.Script _) ->
+      let ph_with_cache = 
+        { PH.bash with parse = (parse_cache 
+              (fun file -> Generic (PH.bash.parse file))
+              (function Generic (ast, toks) -> ast, toks | _ -> raise Impossible))} in
+      tokens_with_categ_of_file_helper ph_with_cache
+        file prefs hentities
+
+(*
   | FT.PL (FT.Csharp) ->
       tokens_with_categ_of_file_helper 
         { parse = (parse_cache 
          (fun file -> Csharp (Parse_csharp.parse file |> fst))
          (function Csharp (ast, toks) -> [ast, toks] | _ -> raise Impossible));
-        highlight_visit = (fun ~tag_hook prefs (ast, toks) -> 
+        highlight = (fun ~tag_hook prefs (ast, toks) -> 
           Highlight_csharp.visit_program ~tag_hook prefs (ast, toks));
         info_of_tok = Token_helpers_csharp.info_of_tok;
         }
         file prefs hentities
 
-  | FT.PL (FT.Rust) ->
+  | FT.PL (FT.Haskell _) ->
       tokens_with_categ_of_file_helper 
         { parse = (parse_cache 
-         (fun file -> Rust (Parse_rust.parse file |> fst))
-         (function Rust (ast, toks) -> [ast, toks] | _ -> raise Impossible));
-        highlight_visit = (fun ~tag_hook prefs (ast, toks) -> 
-          Highlight_rust.visit_program ~tag_hook prefs (ast, toks));
-        info_of_tok = Token_helpers_rust.info_of_tok;
+         (fun file -> Hs (Parse_hs.parse file |> fst))
+         (function Hs (ast, toks) -> [ast, toks] | _ -> raise Impossible));
+        highlight = (fun ~tag_hook prefs (ast, toks) -> 
+          Highlight_hs.visit_program ~tag_hook prefs (ast, toks));
+        info_of_tok = Parser_hs.info_of_tok;
         }
         file prefs hentities
 
@@ -3657,20 +3667,46 @@ let tokens_with_categ_of_file file hentities =
         { parse = (parse_cache 
          (fun file -> Erlang (Parse_erlang.parse file |> fst))
          (function Erlang x -> [x] | _ -> raise Impossible));
-        highlight_visit = Highlight_erlang.visit_program;
+        highlight = Highlight_erlang.visit_program;
         info_of_tok = Token_helpers_erlang.info_of_tok;
         }
         file prefs hentities
-
+ *)
   | FT.PL (FT.Java) ->
       tokens_with_categ_of_file_helper 
         { parse = (parse_cache 
          (fun file -> Java (Parse_java.parse file))
           (function 
-          | Java {PI. ast; tokens; _} -> [ast, tokens] 
+          | Java {Parsing_result. ast; tokens; _} -> (ast, tokens)
           | _ -> raise Impossible));
-        highlight_visit = Highlight_java.visit_toplevel;
+        highlight = Highlight_java.visit_toplevel;
         info_of_tok = Token_helpers_java.info_of_tok;
+        }
+        file prefs hentities
+
+  | FT.PL (FT.Cplusplus _ | FT.C _ | FT.ObjectiveC _)
+  (* TODO? for Protobuf we could now use the one in tree-sitter
+   * TODO: does not work yet because got a Failure ("not a C/C++ file ...")
+   *)  
+  | FT.PL (FT.IDL (FT.Thrift | FT.Protobuf))
+     ->
+      tokens_with_categ_of_file_helper 
+        { parse = (parse_cache 
+         (fun file -> 
+          Common.save_excursion Flag_parsing.error_recovery true (fun () ->
+           (* work by side effect on ast2 too *)
+(* TODO? or Naming_AST.ml now better anyway?
+           Check_variables_cpp.check_and_annotate_program
+             ast;
+*)
+           Cpp (Parse_cpp.parse (Fpath.v file))
+         ))
+         
+         (function 
+         | Cpp {Parsing_result. ast; tokens; _} -> (ast, tokens)
+         | _ -> raise Impossible));
+        highlight = Highlight_cpp.visit_toplevel;
+        info_of_tok = Token_helpers_cpp.info_of_tok;
         }
         file prefs hentities
 
@@ -3679,22 +3715,10 @@ let tokens_with_categ_of_file file hentities =
         { parse = (parse_cache 
          (fun file -> Go (Parse_go.parse file))
           (function 
-          | Go {PI. ast; tokens; _} -> [ast, tokens] 
+          | Go {Parsing_result. ast; tokens; _} -> (ast, tokens)
           | _ -> raise Impossible));
-        highlight_visit = Highlight_go.visit_program;
+        highlight = Highlight_go.visit_program;
         info_of_tok = Token_helpers_go.info_of_tok;
-        }
-        file prefs hentities
-
-  | FT.PL (FT.Lisp _) ->
-      tokens_with_categ_of_file_helper 
-        { parse = (parse_cache 
-         (fun file -> Lisp (Parse_lisp.parse file |> fst))
-         (function
-         |  Lisp (ast, toks) -> [Common2.some ast, toks]
-         | _ -> raise Impossible));
-        highlight_visit = Highlight_lisp.visit_toplevel;
-        info_of_tok = Parser_lisp.info_of_tok;
         }
         file prefs hentities
 
@@ -3702,29 +3726,12 @@ let tokens_with_categ_of_file file hentities =
       tokens_with_categ_of_file_helper 
         { parse = (parse_cache 
          (fun file -> Noweb (Parse_nw.parse file |> fst))
-         (function Noweb x -> [x] | _ -> raise Impossible));
-        highlight_visit = Highlight_nw.visit_program;
+         (function Noweb x -> x | _ -> raise Impossible));
+        highlight = Highlight_nw.visit_program;
         info_of_tok = Token_helpers_nw.info_of_tok;
         }
         file prefs hentities
 
-  | FT.PL (FT.Cplusplus _ | FT.C _ | FT.Thrift | FT.ObjectiveC _) ->
-      tokens_with_categ_of_file_helper 
-        { parse = (parse_cache 
-         (fun file -> 
-          Common.save_excursion Flag_parsing.error_recovery true (fun () ->
-           let (ast2, _stat) = Parse_cpp.parse file in
-           let ast = Parse_cpp.program_of_program2 ast2 in
-           (* work by side effect on ast2 too *)
-           Check_variables_cpp.check_and_annotate_program
-             ast;
-           Cpp ast2
-         ))
-         (function Cpp x -> x | _ -> raise Impossible));
-        highlight_visit = Highlight_cpp.visit_toplevel;
-        info_of_tok = Token_helpers_cpp.info_of_tok;
-        }
-        file prefs hentities
 
   | FT.PL (FT.Web (FT.Js | FT.Coffee | FT.TypeScript)) ->
       tokens_with_categ_of_file_helper 
@@ -3734,10 +3741,10 @@ let tokens_with_categ_of_file file hentities =
               Js (Parse_js.parse file))
           )
          (function 
-         | Js {PI. ast; tokens; _} -> [ast, tokens] 
+         | Js {Parsing_result. ast; tokens; _} -> ast, tokens
          | _ -> raise Impossible
          ));
-        highlight_visit = Highlight_js.visit_program;
+        highlight = Highlight_js.visit_program;
 (* TODO?
           let s = Token_helpers_js.str_of_tok tok in
           Ast_js.remove_quotes_if_present s
@@ -3751,9 +3758,9 @@ let tokens_with_categ_of_file file hentities =
         { parse = (parse_cache 
           (fun file -> Html (Parse_html.parse file))
           (function 
-          | Html (ast, toks) -> [ast, toks] 
+          | Html (ast, toks) -> ast, toks
           | _ -> raise Impossible));
-        highlight_visit = Highlight_html.visit_toplevel;
+        highlight = Highlight_html.visit_toplevel;
         info_of_tok = Token_helpers_html.info_of_tok;
         }
         file prefs hentities
@@ -3766,7 +3773,7 @@ let tokens_with_categ_of_file file hentities =
    * # -*- org   indication.
    * very pad and code-overlay specific.
    *)
-  | FT.Text ("txt") when Common2.basename file =$= "info.txt" ->
+  | FT.Text ("txt") when Filename.basename file = "info.txt" ->
       let org = Org_mode.parse file in
       Org_mode.highlight org
 
@@ -3836,7 +3843,7 @@ let async_get a =
   let rec go a =
     match !(a.v) with
     | None -> 
-        pr2 "not yet computed";
+        UCommon.pr2 "not yet computed";
         Condition.wait a.c a.m; 
         go a
     | Some v -> v
@@ -3993,6 +4000,7 @@ let size_font_multiplier_of_categ ~font_size_real categ =
     (* entities defs *)
 
     | HC.Entity (E.Module, (HC.Def2 use))   -> 5. *. multiplier_use use
+    | HC.Entity (E.Package, (HC.Def2 use))   -> 5. *. multiplier_use use
     | HC.Entity (E.Type, (HC.Def2 use))     -> 5. *. multiplier_use use
     | HC.Entity (E.Class, (HC.Def2 use))    -> 5. *. multiplier_use use
 
@@ -4264,16 +4272,14 @@ let prepare_string s =
   Bytes.to_string buf
 
 (* TODO: fast enough with those of_string and to_string? *)
-let show_text2 cr s =
+let show_text cr s =
   try 
     let s = prepare_string s in
     Cairo.show_text cr s
   with Cairo.Error status ->
     let s2 = Cairo.status_to_string status in
     failwith ("Cairo pb: " ^ s2 ^ " s = " ^ s)
-
-let show_text a b = 
-  Common.profile_code "View.cairo_show_text" (fun () -> show_text2 a b)
+[@@profiling]
 
 (*
 let fake_text_extents = 
@@ -4285,14 +4291,14 @@ let fake_text_extents =
 *)
 
 let text_extents cr s = 
-  Common.profile_code "CairoH.cairo_text_extent" (fun () -> 
+  Profiling.profile_code "CairoH.cairo_text_extent" (fun () -> 
     (*if s = ""  then fake_text_extents else *)
     Cairo.text_extents cr s
   )
 
 (* just wrap it here so that we can profile it *)
 let set_font_size cr font_size =
-  Common.profile_code "CairoH.set_font_size" (fun () ->
+  Profiling.profile_code "CairoH.set_font_size" (fun () ->
     Cairo.set_font_size cr font_size
   )
 
@@ -4869,21 +4875,21 @@ let _ =
 
 <<model_graph_code.mli>>=
 val build_filedeps_of_dir_or_file: 
-  Graph_code.graph ->
-  (Graph_code.node, Common.filename list * Common.filename list) Hashtbl.t
+  Graph_code.t ->
+  (Graph_code.node, string (* filename *) list * string (* filename *) list) Hashtbl.t
 
 (* the nodes are sorted by line numbers *)
 val build_entities_of_file:
-  Graph_code.graph ->
-  (Common.filename, Graph_code.node list) Common.assoc
+  Graph_code.t ->
+  (string (* filename *), Graph_code.node list) Assoc.t
 
 val add_headers_files_entities_of_file:
-  Common.dirname -> 
-  (Common.filename, Graph_code.node list) Common.assoc ->
-  (Common.filename, Graph_code.node list) Common.assoc
+  string (* filename *) (* a dir *) -> 
+  (string (* filename *), Graph_code.node list) Assoc.t ->
+  (string (* filename *), Graph_code.node list) Assoc.t
 
 val node_of_entity: 
-  Database_code.entity -> Graph_code.graph -> Graph_code.node option
+  Database_code.entity -> Graph_code.t -> Graph_code.node option
 @ 
 
 \section{[[model_database_code.mli]]}
@@ -4922,7 +4928,7 @@ module Db = Database_code
 let is_prefix prefix str =
   (* todo: have better than that? *)
   try 
-    String.sub str 0 (String.length prefix) =$= prefix
+    String.sub str 0 (String.length prefix) = prefix
   with Invalid_argument _ -> false
   
 
@@ -4985,7 +4991,7 @@ let build_entities_of_file g =
   g |> G.iter_nodes (fun n ->
     try 
       let info = G.nodeinfo n g in
-      let file = info.G.pos.Parse_info.file in
+      let file = info.G.pos.pos.file in
       (* old: let line = info.G.pos.Parse_info.line in *)
       Hashtbl.add h file n;
     with Not_found -> ()
@@ -5007,11 +5013,11 @@ let build_entities_of_file g =
  *)
 let add_headers_files_entities_of_file root xs =
   let headers =
-    xs |> Common.map_filter (fun (file, xs) ->
-      let (d,b,e) = Common2.dbe_of_filename_noext_ok file in
+    xs |> List_.map_filter (fun (file, xs) ->
+      let (d,b,e) = Filename_.dbe_of_filename_noext_ok file in
       match e with
       | "ml" -> 
-        let header_readable = Common2.filename_of_dbe (d,b,"mli") in
+        let header_readable = Filename_.filename_of_dbe (d,b,"mli") in
         let header = Filename.concat root header_readable in
         if Sys.file_exists header 
         (* todo: we add too many defs here, a mli can actually restrict
@@ -5124,13 +5130,13 @@ type microlevel = {
 
 type world = {
   mutable dw: drawing;
-  dw_stack: drawing Common.stack ref;
+  dw_stack: drawing Stack_.t;
 
   (* computed lazily, semantic information about the code *)
   model: model Async.t;
-  root_orig: Common.dirname;
+  root_orig: string;
   (* to compute a new treemap based on user's action *)
-  treemap_func: Common.path list -> Treemap.treemap_rendering;
+  treemap_func: string (* filename *) list -> Treemap.treemap_rendering;
   (* misc settings, not really used for now *)
   settings: settings;
 
@@ -5175,7 +5181,7 @@ val node_of_rect:
 
 val deps_readable_files_of_node:
   Graph_code.node -> model -> 
-  Common.filename (* readable *) deps
+  string (* readable *) deps
 
 val deps_rects_of_rect: 
   Treemap.treemap_rectangle -> drawing -> model ->
@@ -5281,15 +5287,15 @@ type microlevel = {
 (*****************************************************************************)
 type world = {
   mutable dw: drawing;
-  dw_stack: drawing stack ref;
+  dw_stack: drawing Stack_.t;
 
   (* computed lazily, semantic information about the code *)
   model: model Async.t;
 
-  root_orig: Common.dirname;
+  root_orig: string (* filename *);
 
   (* to compute a new treemap based on user's action *)
-  treemap_func: Common.path list -> Treemap.treemap_rendering;
+  treemap_func: string (* filename *) list -> Treemap.treemap_rendering;
   (* misc settings, not really used for now *)
   settings: settings;
 
@@ -5338,28 +5344,28 @@ let find_line_in_rectangle_at_user_point user r dw =
   with Not_found -> None
 
 let find_glyph_in_rectangle_at_user_point user r dw =
-  find_line_in_rectangle_at_user_point user r dw >>= (fun line ->
+  let* line = find_line_in_rectangle_at_user_point user r dw in
     let microlevel = Hashtbl.find dw.microlevel r in
-    microlevel.content >>= (fun glyphs ->
+    let* glyphs = microlevel.content in
       let (Line line) = line in
       if line >= Array.length glyphs
       then None
       else
         let glyphs = glyphs.(line) in
         (* find the best one *)
-        glyphs |> List.rev |> Common.find_opt (fun glyph ->
+        glyphs |> List.rev |> List.find_opt (fun glyph ->
           let pos = glyph.pos in
           user.Figures.x >= pos.Figures.x
         )
-    )
-  )
+    
+  
 
 (*****************************************************************************)
 (* Graph code integration *)
 (*****************************************************************************)
 
 let match_short_vs_node (str, short_kind) node =
-  Graph_code.shortname_of_node node =$= str &&
+  Graph_code.shortname_of_node node = str &&
   Database_code.matching_def_short_kind_kind short_kind (snd node)
 
 (* when in a file we have both the prototype (forward decl) and
@@ -5376,24 +5382,24 @@ let rank_entity_kind = function
  *)
 let find_def_entity_at_line_opt line tr dw model =
   let file = tr.T.tr_label in
-  let readable = Common.readable ~root:model.root file in
+  let readable = Filename_.readable ~root:model.root file in
   try 
     let nodes = Hashtbl.find model.hentities_of_file readable in
     let microlevel = Hashtbl.find dw.microlevel tr in
     let short_node = List.assoc line microlevel.defs in
     (* try to match the possible shortname str with a fully qualified node 
     *)
-    nodes |> Common.map_filter (fun node ->
+    nodes |> List_.map_filter (fun node ->
       if match_short_vs_node short_node node
       then Some node
       else None
     ) |> List.map (fun (s, kind) -> ((s, kind), rank_entity_kind kind))
-      |> Common.sort_by_val_highfirst
+      |> Assoc.sort_by_val_highfirst
       |> List.hd |> fst |> (fun x -> Some x)
   with Not_found | Failure _ (* "hd"*) -> None
 
 let find_use_entity_at_line_and_glyph_opt line glyph tr dw model =
-  model.g >>= (fun g ->
+  let* g = model.g in
     (* find enclosing def line *)
     let microlevel = Hashtbl.find dw.microlevel tr in
     (* try because maybe have no enclosing defs *)
@@ -5403,21 +5409,20 @@ let find_use_entity_at_line_and_glyph_opt line glyph tr dw model =
           line >= line2
         )
       in
-      find_def_entity_at_line_opt line_def tr dw model >>= (fun node ->
+      let* node = find_def_entity_at_line_opt line_def tr dw model in
         let uses = Graph_code.succ node Graph_code.Use g in
-        uses |> Common.find_opt (fun node ->
+        uses |> List.find_opt (fun node ->
           let s = Graph_code.shortname_of_node node in
           let categ =  glyph.categ ||| Highlight_code.Normal in
-          glyph.str =$= s &&
+          glyph.str = s &&
           Database_code.matching_use_categ_kind categ (snd node)
         )
-      )
     with Not_found -> None
-  )
+
 
 let node_of_rect tr model =
   let file = tr.Treemap.tr_label in
-  let readable = Common.readable ~root:model.root file in
+  let readable = Filename_.readable ~root:model.root file in
   let kind = if tr.Treemap.tr_is_node then E.Dir else E.File in
   readable, kind
 
@@ -5431,25 +5436,25 @@ let deps_readable_files_of_node node model =
   | _, Some g ->
       let succ = Graph_code.succ node Graph_code.Use g in
       let pred = Graph_code.pred node Graph_code.Use g in
-      succ |> Common.map_filter (fun n ->
+      succ |> List_.map_filter (fun n ->
         try Some (Graph_code.file_of_node n g) with Not_found -> None
       ),
-      pred |> Common.map_filter (fun n ->
+      pred |> List_.map_filter (fun n ->
         try Some (Graph_code.file_of_node n g) with Not_found -> None
       )
 
 let deps_rects_of_rect tr dw model =
   let node = node_of_rect tr model in
   let uses, users = deps_readable_files_of_node node model in
-  uses |> Common.map_filter (fun file -> 
+  uses |> List_.map_filter (fun file -> 
     Common2.optionise (fun () -> Hashtbl.find dw.readable_file_to_rect file)
   ),
-  users |> Common.map_filter (fun file ->
+  users |> List_.map_filter (fun file ->
     Common2.optionise (fun () ->Hashtbl.find dw.readable_file_to_rect file)
   )
 
 let line_and_microlevel_of_node_opt n dw model =
-  model.g >>= (fun g ->
+  let* g = model.g in
     try 
       let file = Graph_code.file_of_node n g in
       (* rectangles not on the screen will be automatically "clipped"
@@ -5462,14 +5467,14 @@ let line_and_microlevel_of_node_opt n dw model =
       ) |> fst in
       Some (n, line, microlevel)
     with Not_found -> None
-  )
+  
 
 let uses_or_users_of_node node dw fsucc model =
   match model.g with
   | None -> []
   | Some g ->
     let succ = fsucc node Graph_code.Use g in
-    succ |> Common.map_filter (fun n -> 
+    succ |> List_.map_filter (fun n -> 
       line_and_microlevel_of_node_opt n dw model
     )
 
@@ -5498,10 +5503,10 @@ let lines_where_used_node node startl microlevel =
       let xs = glypys.(line) in
       if xs |> List.exists (fun glyph ->
         let categ =  glyph.categ ||| Highlight_code.Normal in
-        glyph.str =$= s &&
+        glyph.str = s &&
         Database_code.matching_use_categ_kind categ (snd node)
       )
-      then Common.push (Line line) res
+      then Stack_.push (Line line) res
     done;
     !res
 
@@ -5585,7 +5590,7 @@ val _refresh_legend: (unit -> unit) ref
 val _go_back: (Model2.world -> unit) ref
 val _go_dirs_or_file: 
   (?current_grep_query: (string, Model2.line) Hashtbl.t option ->
-    Model2.world -> Common.path list -> unit
+    Model2.world -> string (* filename *) list -> unit
   ) ref
 
 val _statusbar_addtext: (string -> unit) ref
@@ -5769,6 +5774,7 @@ val draw_magnify_line:
 <<draw_microlevel.ml>>=
 <<Facebook copyright>>
 open Common
+open Either
 open Common2.ArithFloatInfix
 
 open Figures (* for the fields *)
@@ -5828,14 +5834,21 @@ let is_big_file_with_few_lines ~nblines file =
 
 (* coupling: with parsing2.ml, todo move in parsing2.ml? *)
 let use_fancy_highlighting file =
-  match FT.file_type_of_file file with
-  | ( FT.PL (FT.Web (FT.Php _))
-    | FT.PL (FT.Web (FT.Js))
-    | FT.PL (FT.Web (FT.Html))
-    | FT.PL (FT.ML _)
-    | FT.PL (FT.Cplusplus _ | FT.C _ | FT.ObjectiveC _)
-    | FT.PL (FT.Thrift)
+  match FT.file_type_of_file (Fpath.v file) with
+  (* not yet *)
+  | FT.PL (FT.IDL FT.Protobuf) -> false
+
+  (* the one handled by parsing2.ml *)
+  | ( FT.PL (FT.OCaml _)
     | FT.Text ("nw" | "tex"  | "texi" | "web" | "org")
+    | FT.PL (FT.Web (FT.Php _ | FT.Js | FT.TypeScript | FT.Html))
+    | FT.PL (FT.IDL _)
+    (* TODO: FT.Makefile, but not tree-sitter-make yet
+     * TODO: Yaml, but bad tokens still in Parse_languages.ml
+     *)
+    | FT.Config (FT.Dockerfile | FT.Jsonnet | FT.Sexp)
+    | FT.PL (FT.Cplusplus _ | FT.C _ | FT.ObjectiveC _)
+    | FT.PL (FT.Scala)
     | FT.PL (FT.Lisp _)
     | FT.PL (FT.Haskell _)
     | FT.PL (FT.Python)
@@ -5843,14 +5856,13 @@ let use_fancy_highlighting file =
     | FT.PL (FT.Java)
     (*    | FT.PL (FT.Prolog _) *)
     | FT.PL (FT.Erlang)
-    | FT.PL (FT.Opa)
     | FT.PL (FT.Rust)
     | FT.PL (FT.Skip)
-    | FT.PL (FT.Web (FT.TypeScript))
     | FT.PL (FT.Go)
     | FT.PL (FT.Ruby)
+    | FT.PL (FT.Script _)
     ) -> true
-  | (FT.Text "txt") when Common2.basename file =$= "info.txt" -> true
+  | (FT.Text "txt") when Filename.basename file = "info.txt" -> true
   | _ -> false
 
 (*****************************************************************************)
@@ -5905,7 +5917,7 @@ let color_of_categ categ =
     | None ->       Highlight_code.info_of_category Highlight_code.Normal
     | Some categ -> Highlight_code.info_of_category categ
   in
-  attrs |> Common.find_some (fun attr ->
+  attrs |> List_.find_some (fun attr ->
     match attr with
     | `FOREGROUND s 
     | `BACKGROUND s (* todo: should really draw the background of the text *)
@@ -5920,8 +5932,9 @@ let glyphs_of_file ~font_size ~font_size_real model_async file
   (* real position is set later in draw_content *)
   let pos = { Figures.x = 0.; y = 0. } in
 
-  match FT.file_type_of_file file with
+  match FT.file_type_of_file (Fpath.v file) with
   | _ when use_fancy_highlighting file ->
+     Logs.debug (fun m -> m "fancy highlighting for %s" file);
 
     let entities = 
       match Async.async_get_opt model_async with
@@ -5949,10 +5962,10 @@ let glyphs_of_file ~font_size ~font_size_real model_async file
 
       let xs = Common2.lines_with_nl_either s in
       xs |> List.iter (function
-      | Common2.Left str ->
-          Common.push { M. str; font_size=final_font_size; color; categ;pos } 
+      | Left str ->
+          Stack_.push { M. str; font_size=final_font_size; color; categ;pos } 
             acc;
-      | Common2.Right () ->
+      | Right () ->
           arr.(!line) <- List.rev !acc;
           acc := [];
           incr line;
@@ -5965,23 +5978,26 @@ let glyphs_of_file ~font_size ~font_size_real model_async file
       failwith (spf "try on %s, nblines = %d, line = %d" file nblines !line)
     )
 
-  | FT.PL _ | FT.Text _ ->      
-      Common.cat file
+  | FT.PL _ | FT.Text _ | FT.Config _ ->
+     Logs.debug (fun m -> m "black highlighting for %s" file);
+      UCommon.cat file
       |> List.map (fun str -> 
         [{ M.str; font_size; color = "black"; categ=None; pos }])
       |> Array.of_list
       |> (fun x -> Some x)
 
-  | _ -> None
+  | _ ->
+     Logs.debug (fun m -> m "no highlighting for %s" file);
+     None
 
 let defs_of_glyphs glyphs =
   let res = ref [] in
   glyphs |> Array.iteri (fun line_0_indexed glyphs ->
     glyphs |> List.iter (fun glyph ->
-      glyph.categ |> Common.do_option (fun categ ->
+      glyph.categ |> Option.iter (fun categ ->
         Database_code.entity_kind_of_highlight_category_def categ 
-        |> Common.do_option (fun kind ->
-              Common.push (Line line_0_indexed, (glyph.str, kind)) res
+        |> Option.iter (fun kind ->
+              Stack_.push (Line line_0_indexed, (glyph.str, kind)) res
         ))));
   List.rev !res
 
@@ -6120,7 +6136,7 @@ let draw_legend_of_color_string_pairs ~cr xs =
   Cairo.set_font_size cr (size * 0.6);
   Cairo.set_source_rgba cr 0. 0. 0.    1.0;
   
-  xs |> Common.index_list_1 |> List.iter (fun ((color,s), i) ->
+  xs |> List_.index_list_1 |> List.iter (fun ((color,s), i) ->
     let x = 10. in
     let y = float_of_int i * size in
 
@@ -6141,7 +6157,7 @@ let draw_legend_of_color_string_pairs ~cr xs =
 
 let draw_legend_layer ~cr layers_idx = 
   let pairs = 
-    layers_idx.L.layers |> Common.map_filter (fun (layer, is_active) ->
+    layers_idx.L.layers |> List_.map_filter (fun (layer, is_active) ->
       if is_active
       then Some layer.L.kinds
       else None
@@ -6322,13 +6338,13 @@ module Style = Style2
 
 let readable_txt_for_label txt current_root =
   let readable_txt = 
-    if current_root =$= txt (* when we are fully zoomed on one file *)
+    if current_root = txt (* when we are fully zoomed on one file *)
     then "root"
-    else Common.readable ~root:current_root txt 
+    else Filename_.readable ~root:current_root txt 
   in
   if String.length readable_txt > 25
   then 
-    let dirs = Filename.dirname readable_txt |> Common.split "/" in
+    let dirs = Filename.dirname readable_txt |> String_.split ~sep:"/" in
     let file = Filename.basename readable_txt in
     spf "%s/.../%s" (List.hd dirs) file
   else readable_txt
@@ -6387,7 +6403,7 @@ let draw_deps_entities n dw model =
  with_overlay dw (fun cr_overlay ->
 
    line_and_microlevel_of_node_opt n dw model 
-   |> Common.do_option (fun (_n2, line, microlevel) ->
+   |> Option.iter (fun (_n2, line, microlevel) ->
      let rectangle = microlevel.line_to_rectangle line in
      CairoH.draw_rectangle_figure ~cr:cr_overlay ~color:"white" rectangle
    );
@@ -6421,9 +6437,9 @@ let draw_tooltip ~cr_overlay ~x ~y n g =
   let succ = Graph_code.succ n Graph_code.Use g in
   let files = 
     pred 
-    |> Common.map_filter (fun n ->
+    |> List_.map_filter (fun n ->
         Common2.optionise (fun () -> (Graph_code.file_of_node n g)))
-    |> Common.sort |> Common2.uniq
+    |> List_.sort |> Common2.uniq
   in
   let str = spf "
  Entity: %s
@@ -6459,7 +6475,7 @@ let draw_tooltip ~cr_overlay ~x ~y n g =
     ();
 
   Cairo.set_source_rgba cr_overlay 1. 1. 1.    1.0;
-  xs |> Common.index_list_0 |> List.iter (fun (txt, line) ->
+  xs |> List_.index_list_0 |> List.iter (fun (txt, line) ->
     let line = float_of_int line in
     Cairo.move_to cr_overlay refx (refy + line * th);
     CairoH.show_text cr_overlay txt;
@@ -6489,12 +6505,12 @@ let paint_initial dw =
 let hook_finish_paint w =
   (* pr2 "Hook_finish_paint"; *)
   let dw = w.dw in
-  w.current_node |> Common.do_option (fun n -> 
-    Async.async_get_opt w.model |> Common.do_option (fun model ->
+  w.current_node |> Option.iter (fun n -> 
+    Async.async_get_opt w.model |> Option.iter (fun model ->
       draw_deps_entities n dw model
     ));
-  w.current_node_selected |> Common.do_option (fun n -> 
-    Async.async_get_opt w.model |> Common.do_option (fun model ->
+  w.current_node_selected |> Option.iter (fun n -> 
+    Async.async_get_opt w.model |> Option.iter (fun model ->
       draw_deps_entities n dw model
     ))
 
@@ -6560,8 +6576,8 @@ val go_back:
   Model2.world -> unit
 
 val go_dirs_or_file:
-  ?current_grep_query:(Common.filename, Model2.line) Hashtbl.t option ->
-  Model2.world -> Common.filename list -> unit
+  ?current_grep_query:(string (* filename *), Model2.line) Hashtbl.t option ->
+  Model2.world -> string (* filename *) list -> unit
 
 @ 
 
@@ -6683,7 +6699,6 @@ open Common
 
 <<async.ml>>=
 <<Facebook copyright>>
-open Common
 
 (*****************************************************************************)
 (* Prelude *)
