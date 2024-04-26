@@ -5,7 +5,7 @@ DOC=Visual
 
 SRC_ORIG=Visual.nw
 TOP=../..
-LIB=$(TOP)/lib/
+LIB=$(TOP)/src/gui/
 
 SRC_VIEWS_WITH_MLI=$(LIB)/cairo_helpers.ml $(LIB)/async.ml \
     $(LIB)/style2.ml $(LIB)/help.ml \

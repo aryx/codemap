@@ -8,4 +8,8 @@ test:
 install:
 	dune install
 
+# -filter semgrep
+visual:
+	./bin/codemap -screen_size 3 -efuns_client efuns_client -emacs_client /dev/null .
+
 .PHONY: all clean install test dump
