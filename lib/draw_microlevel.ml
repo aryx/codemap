@@ -240,7 +240,7 @@ let glyphs_of_file ~font_size ~font_size_real model_async file
 
   | FT.PL _ | FT.Text _ | FT.Config _ ->
      Logs.debug (fun m -> m "black highlighting for %s" file);
-      UCommon.cat file
+      UFile.Legacy.cat file
       |> List.map (fun str -> 
         [{ M.str; font_size; color = "black"; categ=None; pos }])
       |> Array.of_list

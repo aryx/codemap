@@ -85,9 +85,9 @@ type ast =
 let _hmemo_file = Hashtbl.create 101
 
 (* with directories with many files, this is useful *)
-let parse_cache parse_in extract file =
+let parse_cache parse_in extract (file : Fpath.t) =
   Profiling.profile_code "View.parse_cache" (fun () ->
-    let mtime = UFile.filemtime (Fpath.v file) in
+    let mtime = UFile.filemtime file in
     let recompute = 
       if Hashtbl.mem _hmemo_file file
       then
@@ -164,10 +164,10 @@ let rewrite_categ_using_entities s categ file entities =
 (*****************************************************************************)
 
 let tokens_with_categ_of_file_helper 
-  {PH.parse; highlight; info_of_tok} file prefs hentities =
+  {PH.parse; highlight; info_of_tok} (file : string) prefs hentities =
   
   if !Flag.verbose_visual then UCommon.pr2 (spf "Parsing: %s" file);
-  let (ast, toks) = parse file in
+  let (ast, toks) = parse (Fpath.v file) in
 
   if !Flag.verbose_visual then UCommon.pr2 (spf "Highlighting: %s" file);
     let h = Hashtbl.create 101 in
@@ -196,7 +196,7 @@ let tokens_with_categ_of_file_helper
 (* coupling: right now if you add a language here, you need to whitelist it
  * also in Draw_microlevel.draw_contents2.
  *)
-let tokens_with_categ_of_file file hentities = 
+let tokens_with_categ_of_file (file : string) hentities = 
   let ftype = FT.file_type_of_file (Fpath.v file) in
   let prefs = Highlight_code.default_highlighter_preferences in
   
@@ -397,7 +397,7 @@ let tokens_with_categ_of_file file hentities =
            Check_variables_cpp.check_and_annotate_program
              ast;
 *)
-           Cpp (Parse_cpp.parse (Fpath.v file))
+           Cpp (Parse_cpp.parse file)
          ))
          
          (function 

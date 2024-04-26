@@ -8,23 +8,23 @@ type origin_info =
   | Extra
 
 val parse_ocaml: 
-  string (* filename *) -> (AST_ocaml.program, Parser_ml.token) Parsing_result.t
+  Fpath.t -> (AST_ocaml.program, Parser_ml.token) Parsing_result.t
 
 val parse_rust:
-  string (* filename *) -> AST_generic.program * (Tok.t * origin_info) list
+  Fpath.t -> AST_generic.program * (Tok.t * origin_info) list
 
 val parse_jsonnet:
-  string (* filename *) -> AST_generic.program * (Tok.t * origin_info) list
+  Fpath.t -> AST_generic.program * (Tok.t * origin_info) list
 
 val parse_yaml:
-  string (* filename *) -> AST_generic.program * (Tok.t * origin_info) list
+  Fpath.t -> AST_generic.program * (Tok.t * origin_info) list
 
 val parse_bash:
-  string (* filename *) -> AST_generic.program * (Tok.t * origin_info) list
+  Fpath.t -> AST_generic.program * (Tok.t * origin_info) list
 
 val parse_dockerfile:
-  string (* filename *) -> AST_generic.program * (Tok.t * origin_info) list
+  Fpath.t -> AST_generic.program * (Tok.t * origin_info) list
 
 val parse_lisp:
-  string (* filename *) -> AST_generic.program * (Tok.t * origin_info) list
+  Fpath.t -> AST_generic.program * (Tok.t * origin_info) list
 

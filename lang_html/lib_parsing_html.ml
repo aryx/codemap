@@ -26,7 +26,7 @@ module V = Visitor_html
 (*****************************************************************************)
 
 let find_html_files_of_dir_or_files xs =
-  UCommon.files_of_dir_or_files_no_vcs_nofilter xs
+  UFile.Legacy.files_of_dirs_or_files_no_vcs_nofilter xs
   |> List.filter (fun filename ->
          let ftype = File_type.file_type_of_file (Fpath.v filename) in
          match ftype with

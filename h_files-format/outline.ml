@@ -38,7 +38,7 @@ let extract_outline_line ?(outline_regexp = outline_default_regexp) s =
  * the start of a new header or the end of the file.
  *)
 let parse_outline ?(outline_regexp = outline_default_regexp) file =
-  let xs = UCommon.cat file in
+  let xs = UFile.Legacy.cat file in
 
   (* just differentiate outline lines from regular lines *)
   let headers_or_not =
@@ -90,7 +90,7 @@ let parse_outline ?(outline_regexp = outline_default_regexp) file =
   | _ -> failwith "wierd, multiple roots"
 
 let write_outline outline file =
-  UCommon.with_open_outfile file (fun (pr_no_nl, _chan) ->
+  UFile.Legacy.with_open_outfile file (fun (pr_no_nl, _chan) ->
       let pr s = pr_no_nl (s ^ "\n") in
 
       outline

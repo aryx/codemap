@@ -128,14 +128,14 @@ let unittest =
 
          let tmpfile =
            Git.show ~basedir "bar.txt" commit_id in
-         let xs = UCommon.cat tmpfile in
+         let xs = UFile.cat tmpfile in
          assert_equal
            ~msg:"it should show the current content of the file"
            ["new_content"]
            xs;
          let tmpfile =
            Git.show ~basedir "bar.txt" previous_id in
-         let xs = UCommon.cat tmpfile in
+         let xs = UFile.cat tmpfile in
          assert_equal
            ~msg:"it should show the past content of the file"
            ["bar"]
@@ -189,14 +189,14 @@ let unittest =
 
          let tmpfile =
            Mercurial.show ~basedir "bar.txt" commit_id in
-         let xs = UCommon.cat tmpfile in
+         let xs = UFile.cat tmpfile in
          assert_equal
            ~msg:"it should show the current content of the file"
            ["new_content"]
            xs;
          let tmpfile =
            Mercurial.show ~basedir "bar.txt" previous_id in
-         let xs = UCommon.cat tmpfile in
+         let xs = UFile.cat tmpfile in
          assert_equal
            ~msg:"it should show the past content of the file"
            ["bar"]

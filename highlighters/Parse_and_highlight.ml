@@ -24,7 +24,7 @@ module PL = Parse_languages
 (*****************************************************************************)
 
 type ('ast, 'token) t = {
-  parse: (string (* filename *) -> ('ast * 'token list));
+  parse: (Fpath.t -> ('ast * 'token list));
   highlight:(tag_hook:(Tok.t -> HC.category -> unit) ->
                    Highlight_code.highlighter_preferences ->
                    Fpath.t ->

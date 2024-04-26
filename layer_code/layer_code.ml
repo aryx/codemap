@@ -443,7 +443,7 @@ let record_only_pairs_expected loc v =
 
   let save_json file json =
     let s = J.string_of_json json in
-    UCommon.write_file ~file s
+    UFile.Legacy.write_file ~file s
 end
 
 (* I have not yet an ocamltarzan script for the of_json ... but I have one

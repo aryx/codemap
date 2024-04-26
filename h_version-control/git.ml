@@ -14,7 +14,7 @@
  * license.txt for more details.
  *)
 open Common
-
+open Fpath_.Operators
 module Date = Common2
 open Lib_vcs 
 
@@ -284,9 +284,9 @@ let grep ~basedir str =
 *)
 
 let show ~basedir file commitid =
-  let tmpfile = UCommon.new_temp_file "git_show" ".cat" in
+  let tmpfile = UTmp.new_temp_file "git_show" ".cat" in
   let str_commit = Lib_vcs.s_of_versionid commitid in
-  let cmd = (spf "git show %s:%s > %s" str_commit file tmpfile) in
+  let cmd = (spf "git show %s:%s > %s" str_commit file !!tmpfile) in
   exec_cmd ~basedir cmd;
   tmpfile
   
@@ -384,7 +384,7 @@ let file_to_commits ~basedir commits =
  * responsible for the code in the file.
  *)
 let refactoring_commits ?(since="--since='1 year ago'") ?(threshold=50) repo =
-  let basedir = UCommon.fullpath repo in
+  let basedir = Unix.realpath repo in
   let commits = commits ~basedir ~extra_args:since () in
   pr2 (spf "#commits = %d" (List.length commits));
   
@@ -399,9 +399,10 @@ let refactoring_commits ?(since="--since='1 year ago'") ?(threshold=50) repo =
     List.length xs > threshold
   )
   in
+  (* TODO: use UTmp *)
   let tmpfile = "/tmp/refactoring_diffs.list" in
   pr2 (spf "writing data in %s" tmpfile);
-  UCommon.with_open_outfile tmpfile (fun (xpr, _chan) ->
+  UFile.Legacy.with_open_outfile tmpfile (fun (xpr, _chan) ->
     refactoring_ids |> List.iter (fun (id, s) ->
       UCommon.pr2_gen (id, s);
       xpr (spf "%s %s\n" (Lib_vcs.s_of_versionid id) s);
@@ -410,7 +411,7 @@ let refactoring_commits ?(since="--since='1 year ago'") ?(threshold=50) repo =
   ()
 
 let parse_skip_revs_file file =
-  file |> UCommon.cat |> List.map (fun s ->
+  file |> UFile.Legacy.cat |> List.map (fun s ->
     if s =~ "^\\([^ ]+\\) "
     (* git annotate returns commitid of length 8, so must match that *)
     then Lib_vcs.VersionId (String.sub (Common.matched1 s) 0 8)
@@ -422,11 +423,11 @@ let parse_skip_revs_file file =
 (*****************************************************************************)
 
 let apply_patch ~basedir patch_string_list = 
-  let tmpfile = UCommon.new_temp_file "git" ".patch" in
+  let tmpfile = UTmp.new_temp_file "git" ".patch" in
   let s = Common2.unlines patch_string_list in
-  UCommon.write_file ~file:tmpfile s;
+  UFile.write_file ~file:tmpfile s;
   
-  let cmd = (goto_dir basedir ^ "git apply "^tmpfile^" 2>&1") in
+  let cmd = (goto_dir basedir ^ "git apply " ^ !!tmpfile ^ " 2>&1") in
   let xs = UCmd.cmd_to_list cmd in
   xs |> List.iter UCommon.pr2;
   ()

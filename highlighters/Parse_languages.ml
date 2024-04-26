@@ -13,6 +13,7 @@
  * license.txt for more details.
 *)
 open Common2 (* <=> *)
+open Fpath_.Operators
 module R = Tree_sitter_run.Raw_tree
 module H = Parse_tree_sitter_helpers
 
@@ -57,7 +58,7 @@ let visit ~v_token ~v_any x =
  * we got from the CST.
  *)
 let add_extra_infos file (infos : Tok.t list) : (Tok.t * origin_info) list =
-  let bigstr = UCommon.read_file file in
+  let bigstr = UFile.Legacy.read_file file in
   let max = String.length bigstr in
   let conv = Pos.full_converters_large file in
 
@@ -105,17 +106,17 @@ let extract_infos_raw_tree file (raw : unit Tree_sitter_run.Raw_tree.t) : (Tok.t
   let infos = ref [] in
   let env = { H.file; conv = H.line_col_to_pos file; extra = () } in
   visit ~v_token:(fun tok -> Stack_.push (H.token env tok) infos) ~v_any:(fun _ -> ()) raw;
-  !infos |> List.rev |> add_extra_infos file
+  !infos |> List.rev |> add_extra_infos !!file
 
 (*****************************************************************************)
 (* Tree-sitter only *)
 (*****************************************************************************)
 (* LATER: factorize common code in all those parse_xxx *)
 
-let parse_rust file =
+let parse_rust ( file : Fpath.t) =
   let res = Parse_rust_tree_sitter.parse file in
   let tokens = 
-    let res = Tree_sitter_rust.Parse.file file in
+    let res = Tree_sitter_rust.Parse.file !!file in
     match res.Tree_sitter_run.Parsing_result.program with
     | None -> []
     | Some cst ->
@@ -131,10 +132,10 @@ let parse_rust file =
   in
   ast, tokens
 
-let parse_jsonnet ( file : string ) =
-  let res = Parse_jsonnet_tree_sitter.parse (Fpath.v file) in
+let parse_jsonnet ( file : Fpath.t ) =
+  let res = Parse_jsonnet_tree_sitter.parse file in
   let tokens = 
-    let res = Tree_sitter_jsonnet.Parse.file file in
+    let res = Tree_sitter_jsonnet.Parse.file !!file in
     match res.Tree_sitter_run.Parsing_result.program with
     | None -> []
     | Some cst ->
@@ -151,10 +152,10 @@ let parse_jsonnet ( file : string ) =
   in
   ast, tokens
 
-let parse_lisp file =
+let parse_lisp (file : Fpath.t) =
   let res = Parse_clojure_tree_sitter.parse file in
   let tokens = 
-    let res = Tree_sitter_clojure.Parse.file file in
+    let res = Tree_sitter_clojure.Parse.file !!file in
     match res.Tree_sitter_run.Parsing_result.program with
     | None -> []
     | Some cst ->
@@ -170,10 +171,10 @@ let parse_lisp file =
   in
   ast, tokens
 
-let parse_bash file =
+let parse_bash (file : Fpath.t) =
   let res = Parse_bash_tree_sitter.parse file in
   let tokens = 
-    let res = Tree_sitter_bash.Parse.file file in
+    let res = Tree_sitter_bash.Parse.file !!file in
     match res.Tree_sitter_run.Parsing_result.program with
     | None -> []
     | Some cst ->
@@ -190,10 +191,10 @@ let parse_bash file =
   in
   ast, tokens
 
-let parse_dockerfile file =
+let parse_dockerfile (file : Fpath.t) =
   let res = Parse_dockerfile_tree_sitter.parse file in
   let tokens = 
-    let res = Tree_sitter_dockerfile.Parse.file file in
+    let res = Tree_sitter_dockerfile.Parse.file !!file in
     match res.Tree_sitter_run.Parsing_result.program with
     | None -> []
     | Some cst ->
@@ -211,7 +212,7 @@ let parse_dockerfile file =
   ast, tokens
 
 (* We don't have a tree-sitter parser for YAML but use ocaml-yaml lib *)
-let parse_yaml file =
+let parse_yaml (file : Fpath.t) =
   let ast = Yaml_to_generic.program file in
   (* TODO: this does not really work yet in codemap; we get weird
    * '(' and ')' token displayed whereas they are not in the file!
@@ -221,7 +222,7 @@ let parse_yaml file =
     AST_generic_helpers.ii_of_any (AST_generic.Pr ast)
     |> List.filter Tok.is_origintok
     |> List.sort Tok.compare_pos
-    |>  add_extra_infos file
+    |>  add_extra_infos !!file
   in
   ast, toks
 
@@ -231,7 +232,7 @@ let parse_yaml file =
 (*****************************************************************************)
 
 (* TODO: move to semgrep/languages/ocaml/ at some point? *)
-let parse_ocaml file =
+let parse_ocaml (file : Fpath.t) =
   let res =
     Common.save_excursion Flag_parsing.error_recovery true (fun()->
         Parse_ml.parse file

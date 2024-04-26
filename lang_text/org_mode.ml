@@ -37,7 +37,7 @@ type org = org_line list
 (*****************************************************************************)
 
 let parse file =
-  let xs = UCommon.cat file in
+  let xs = UFile.Legacy.cat file in
   xs
   |> List.map (fun s ->
          let s = s ^ "\n" in

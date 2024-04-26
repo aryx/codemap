@@ -15,6 +15,7 @@
  *)
 open Common2
 open Common
+open Fpath_.Operators
 open Ast_html
 module Flag = Flag_parsing
 module Ast = Ast_html
@@ -284,10 +285,10 @@ type element_state = {
   excl : StringSet.t;
 }
 
-let parse file =
-  UCommon.with_open_infile file (fun chan ->
+let parse (file : Fpath.t) =
+  UFile.with_open_in file (fun chan ->
       let buf = Lexing.from_channel chan in
-      let table = Pos.full_converters_large file in
+      let table = Pos.full_converters_large !!file in
 
       let toks = ref [] in
       let call_scan scannerf =
@@ -299,7 +300,7 @@ let parse file =
                (* could assert pinfo.filename = file ? *)
                (match ii with
                 | Tok.OriginTok pi ->
-                         Tok.OriginTok (Tok.complete_location file table pi)
+                         Tok.OriginTok (Tok.complete_location !!file table pi)
                 | Tok.FakeTok _
                 | Tok.Ab
                 | Tok.ExpandedTok _ ->
@@ -585,8 +586,8 @@ let parse file =
 (* this function is useful mostly for our unit tests *)
 let (html_tree_of_string : string -> Ast_html.html_tree) =
  fun s ->
-  let tmpfile = UCommon.new_temp_file "pfff_html_tree_of_s" "html" in
-  UCommon.write_file tmpfile s;
+  let tmpfile = UTmp.new_temp_file "pfff_html_tree_of_s" "html" in
+  UFile.write_file tmpfile s;
   let ast, _toks = parse tmpfile in
-  UCommon.erase_this_temp_file tmpfile;
+  UTmp.erase_this_temp_file tmpfile;
   ast

@@ -7,7 +7,7 @@ let regexp_comment_line = "#.*"
 (*****************************************************************************)
 
 let cat_and_filter_comments file =
-  let xs = UCommon.cat file in
+  let xs = UFile.Legacy.cat file in
   let xs =
     xs |> List.map (Str.global_replace (Str.regexp regexp_comment_line) "")
   in

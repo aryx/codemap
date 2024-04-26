@@ -240,7 +240,7 @@ let mk_filter_file (root : Fpath.t) : (string (* filename *) -> bool) =
   (fun file ->
      !filter file &&
      let ppath =
-        match Ppath.in_project ~root (Fpath.v file) with
+        match Ppath.in_project ~root:(Rfpath.of_fpath_exn root) (Fpath.v file) with
         | Ok ppath -> ppath
         | Error err ->
               failwith (spf "could not find project path for %s with root = %s (errot = %s)"
@@ -290,7 +290,7 @@ let build_model root dbfile_opt graphfile_opt =
 
   let db_opt = dbfile_opt |> Option.map Database_code.load_database in
   let files = 
-    UCommon.files_of_dir_or_files_no_vcs_nofilter [root] |> List.filter !filter
+    UFile.Legacy.files_of_dirs_or_files_no_vcs_nofilter [root] |> List.filter !filter
   in
   let hentities = Model_database_code.hentities root db_opt in
   let all_entities = Model_database_code.all_entities ~root files db_opt in
@@ -440,7 +440,7 @@ let main_action xs =
  * and archi_code_lexer.mll which lower the important of some files?
  *)
 let test_loc print_top30 xs =
-  let xs = xs |> List.map UCommon.fullpath in
+  let xs = xs |> List.map Unix.realpath in
   let root = Common2.common_prefix_of_files_or_dirs xs in
 
   let filter_file = mk_filter_file (Fpath.v root) in
@@ -480,7 +480,7 @@ let test_loc print_top30 xs =
 let test_treemap_dirs () =
   let paths = 
     ["commons/common.ml"; "h_visualization"; "code_graph"] 
-    |> List.map UCommon.fullpath in
+    |> List.map Unix.realpath in
   let paths = List.sort String.compare paths in
   let tree = 
     paths |> Treemap.tree_of_dirs_or_files

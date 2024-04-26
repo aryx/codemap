@@ -1,6 +1,6 @@
 
 type ('ast, 'token) t = {
-  parse: (string (* filename *) -> ('ast * 'token list));
+  parse: (Fpath.t -> ('ast * 'token list));
 
   (* The highlight function is provided as a visitor. 
    * note: there is no guarantee in which order the hooks are called as

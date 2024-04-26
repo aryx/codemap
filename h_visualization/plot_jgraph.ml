@@ -50,7 +50,7 @@ let plot_matrix ~lines ~columns ~xlabel ~ylabel matrix =
   let limx = List.length columns - 1 in
   let limy = List.length lines - 1 in
 
-  UCommon.with_open_outfile tmpfile (fun (pr_no_nl, _chan) ->
+  UFile.Legacy.with_open_outfile tmpfile (fun (pr_no_nl, _chan) ->
       let pr s = pr_no_nl (s ^ "\n") in
 
       pr (prelude ());

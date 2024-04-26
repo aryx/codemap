@@ -1,6 +1,6 @@
 (* Yoann Padioleau
  *
- * Copyright (C) 2020-2023 r2c
+ * Copyright (C) 2020-2024 Semgrep Inc.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public License
@@ -159,8 +159,8 @@ let visit_program (already_tagged, tag) ast =
         match x with
         | ({ name = EN (Id (id, _)); attrs; _}, def) ->
             (match def with
-             | Signature ty ->
-                 tag_id id (kind_of_ty ty);
+             | Signature sig_ ->
+                 tag_id id (kind_of_ty sig_.sig_type);
                  super#visit_definition env x
 
              | ModuleDef { mbody = body } ->

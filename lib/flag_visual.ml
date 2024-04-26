@@ -1,5 +1,6 @@
 (*s: flag_visual.ml *)
 
+(* TODO: use Logs *)
 let verbose_visual = ref false
 
 (* It was 0.4, but on Linux the anti-aliasing seems to not be as good

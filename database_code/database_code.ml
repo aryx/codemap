@@ -333,7 +333,7 @@ let save_database database file =
   if File_type.is_json_filename (Fpath.v file) then
     database |> json_of_database
     |> J.string_of_json ~compact:false ~recursive:false ~allow_nan:true
-    |> UCommon.write_file ~file
+    |> UFile.Legacy.write_file ~file
   else Common2.write_value database file
 
 (*****************************************************************************)

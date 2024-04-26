@@ -13,8 +13,8 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the file
  * license.txt for more details.
  *)
-
 open Common
+open Fpath_.Operators
 
 (*****************************************************************************)
 (* Prelude *)
@@ -413,7 +413,7 @@ let (generate_patch:
  fun edition_cmds ~filename_in_project filename ->
 
    let indexed_lines = 
-     UCommon.cat filename |> List_.index_list_1 in
+     UFile.Legacy.cat filename |> List_.index_list_1 in
    
    let indexed_lines = 
      edition_cmds |> List.fold_left (fun indexed_lines edition_cmd ->
@@ -441,11 +441,11 @@ let (generate_patch:
    let lines' = indexed_lines |> List.map fst in
                                     
    (* generating diff *)
-   let tmpfile = UCommon.new_temp_file "genpatch" ".patch" in
-   UCommon.write_file ~file:tmpfile (Common2.unlines lines');
+   let tmpfile = UTmp.new_temp_file "genpatch" ".patch" in
+   UFile.write_file ~file:tmpfile (Common2.unlines lines');
    (* pr2 filename_in_project; *)
    let xs = UCmd.cmd_to_list 
-       (spf "diff -u -p  \"%s\" \"%s\"" filename tmpfile) 
+       (spf "diff -u -p  \"%s\" \"%s\"" filename !!tmpfile) 
    in
    
    let xs' = xs |> List.map (fun s ->

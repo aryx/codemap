@@ -3,7 +3,7 @@ class type vcs = object
 method basedir: string
 
 method grep: string -> string (* filename *) list
-method show: string (* filename *) -> Lib_vcs.versionid -> string (* filename *)
+method show: string (* filename *) -> Lib_vcs.versionid -> Fpath.t
 method files_involved_in_diff: Lib_vcs.versionid -> 
                                (Lib_vcs.file_commit_status * string (* filename *)) list
 end 

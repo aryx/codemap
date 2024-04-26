@@ -15,7 +15,7 @@ val grep:
   basedir:string -> string -> string (* filename *) list
 (* returns a temporary file containing the content of filename at versionid *)
 val show:
-  basedir:string -> string (* filename *) -> Lib_vcs.versionid -> string (* filename *)
+  basedir:string -> string (* filename *) -> Lib_vcs.versionid -> Fpath.t
 
 val files_involved_in_diff:
   basedir:string -> Lib_vcs.versionid -> 

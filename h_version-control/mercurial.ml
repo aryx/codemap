@@ -13,6 +13,7 @@
  * license.txt for more details.
  *)
 open Common
+open Fpath_.Operators
 
 open Lib_vcs 
 
@@ -185,9 +186,9 @@ let grep ~basedir str =
  
 
 let show ~basedir file commitid =
-  let tmpfile = UCommon.new_temp_file "hg_cat" ".cat" in
+  let tmpfile = UTmp.new_temp_file "hg_cat" ".cat" in
   let str_commit = Lib_vcs.s_of_versionid commitid in
-  let cmd = (spf "hg cat -r '%s' %s > %s" str_commit file tmpfile) in
+  let cmd = spf "hg cat -r '%s' %s > %s" str_commit file !!tmpfile in
   exec_cmd ~basedir cmd;
   tmpfile
 

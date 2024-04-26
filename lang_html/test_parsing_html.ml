@@ -10,7 +10,7 @@ let test_tokens_html file =
   Flag.verbose_lexing := true;
   Flag.verbose_parsing := true;
 *)
-  let _ast, toks = Parse_html.parse file in
+  let _ast, toks = Parse_html.parse (Fpath.v file) in
   toks |> List.iter (fun x -> UCommon.pr2_gen x);
   ()
 
@@ -29,7 +29,7 @@ let test_parse_html xs =
           * Common.push2 stat stat_list;
           *)
          try
-           let _tree = Parse_html.parse file in
+           let _tree = Parse_html.parse (Fpath.v file) in
            ()
          with
          | Parsing_error.Syntax_error info ->
@@ -84,7 +84,7 @@ let actions () =
   "-dump_html", "   <file>",
   Arg_.mk_action_1_arg test_dump_html;
 *)
-    ("-pp_html", "   <file>", Arg_.mk_action_1_arg test_pp_html)
+    ("-pp_html", "   <file>", Arg_.mk_action_1_conv Fpath.v test_pp_html)
     (*
   "-json_html", "   <file>",
   Arg_.mk_action_1_arg test_json_html;

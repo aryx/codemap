@@ -37,7 +37,7 @@ let test_dump_nw file =
 let actions () =
   [
     ("-tokens_nw", "   <file>", Arg_.mk_action_1_arg test_tokens_nw);
-    ("-parse_nw", "   <file>", Arg_.mk_action_1_arg test_parse_nw);
+    ("-parse_nw", "   <file>", Arg_.mk_action_1_conv Fpath.v test_parse_nw);
 (*    
     ("-dump_nw", "   <file>", Arg_.mk_action_1_arg test_dump_nw);
  *)

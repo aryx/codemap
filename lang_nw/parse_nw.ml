@@ -12,6 +12,7 @@
  * license.txt for more details.
  *
  *)
+open Fpath_.Operators
 
 module TH = Token_helpers_nw
 
@@ -60,8 +61,8 @@ let parse_fuzzy file =
 (* Main entry point *)
 (*****************************************************************************)
 
-let parse filename =
-  let stat = Parsing_stat.default_stat filename in
-  let ast, toks = parse_fuzzy filename in
+let parse (filename : Fpath.t) =
+  let stat = Parsing_stat.default_stat !!filename in
+  let ast, toks = parse_fuzzy !!filename in
   ((ast, toks), stat)
 [@@profiling]
