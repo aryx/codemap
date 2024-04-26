@@ -364,10 +364,10 @@ let legend = ref false
  *)
 
 (* if not specified, codemap will try to use files in the current directory *)
-let graph_file = ref (None: Common.filename option)
-let db_file    = ref (None: Common.filename option)
-let layer_file = ref (None: Common.filename option)
-let layer_dir  = ref (None: Common.dirname option)
+let graph_file = ref (None: string (* filename *) option)
+let db_file    = ref (None: string (* filename *) option)
+let layer_file = ref (None: string (* filename *) option)
+let layer_dir  = ref (None: string (* filename *) option)
 
 (* See also Gui.synchronous_actions *)
 let test_mode = ref (None: string option)
@@ -376,13 +376,14 @@ let test_mode = ref (None: string option)
 <<function [[main_action]]>>=
 let main_action xs = 
   set_gc ();
-  Logger.log Config_pfff.logger "codemap" None;
 
   (* this used to be done by linking with gtkInit.cmo, but better like this *)
   let _locale = GtkMain.Main.init () in
 
   let root = Common2.common_prefix_of_files_or_dirs xs in
-  pr2 (spf "Using root = %s" root);
+  UCommon.pr2 (spf "Using root = %s" root);
+
+  let filter_file = mk_filter_file (Fpath.v root) in
 
   let async_model = Async.async_make () in
 
@@ -416,8 +417,8 @@ let main_action xs =
       )
       | _ -> None
   in
-  db_file |> Common.do_option (fun db -> 
-    pr2 (spf "Using pfff light db: %s" db)
+  db_file |> Option.iter (fun db -> 
+    UCommon.pr2 (spf "Using pfff light db: %s" db)
   );
   let graph_file = 
     match !graph_file, xs with
@@ -432,23 +433,9 @@ let main_action xs =
       )
     | _ -> None
   in
-  graph_file |> Common.do_option (fun db -> 
-    pr2 (spf "Using graphcode: %s" db)
+  graph_file |> Option.iter (fun db -> 
+    UCommon.pr2 (spf "Using graphcode: %s" db)
   );
-  let skip_file = !skip_file ||| Filename.concat root "skip_list.txt" in
-  let skip_list =
-    if Sys.file_exists skip_file
-    then begin
-      pr2 (spf "Using skip file: %s" skip_file);
-      Skip_code.load skip_file
-    end
-    else []
-  in
-  let filter_files_skip_list = Skip_code.filter_files skip_list root in
-  let filter_file = (fun file -> 
-    !filter file && 
-    (skip_list = [] || filter_files_skip_list [file] <> []))
-  in
 
   let treemap_func = treemap_generator ~filter_file in
   let dw = Model.init_drawing  treemap_func layers_with_index xs root in
@@ -513,17 +500,17 @@ type model = {
 
 <<function [[build_model]]>>=
 (* this is currently called in the background *)
-let build_model2 root dbfile_opt graphfile_opt =   
+let build_model root dbfile_opt graphfile_opt =   
 
-  let db_opt = dbfile_opt |> Common.map_opt Database_code.load_database in
+  let db_opt = dbfile_opt |> Option.map Database_code.load_database in
   let files = 
-    Common.files_of_dir_or_files_no_vcs_nofilter [root] |> List.filter !filter
+    UFile.Legacy.files_of_dirs_or_files_no_vcs_nofilter [root] |> List.filter !filter
   in
   let hentities = Model_database_code.hentities root db_opt in
   let all_entities = Model_database_code.all_entities ~root files db_opt in
   let big_grep_idx = Completion2.build_completion_defs_index all_entities in
 
-  let g_opt = graphfile_opt |> Common.map_opt Graph_code.load in
+  let g_opt = graphfile_opt |> Option.map Graph_code.load in
   let hfile_deps_of_node, hentities_of_file =
     match g_opt with
     | None -> Hashtbl.create 0, Hashtbl.create 0
@@ -531,7 +518,7 @@ let build_model2 root dbfile_opt graphfile_opt =
       let a = Model_graph_code.build_filedeps_of_dir_or_file g in
       let b = Model_graph_code.build_entities_of_file g in
       let b = Model_graph_code.add_headers_files_entities_of_file root b in
-      a, Common.hash_of_list b
+      a, Hashtbl_.hash_of_list b
   in
   
   let model = { Model.
@@ -543,10 +530,7 @@ let build_model2 root dbfile_opt graphfile_opt =
   }
   in
   model
-
-let build_model a b c = 
-  Common.profile_code "View.build_model" (fun () ->
-    build_model2 a b c)
+[@@profiling]
 @ 
 
 
@@ -560,7 +544,7 @@ let treemap_generator ~filter_file =
   let algo = Treemap.Ordered Treemap.PivotByMiddle in
   let big_borders = !Flag.boost_label_size in
   let rects = Treemap.render_treemap ~algo ~big_borders treemap in
-  Common.pr2 (spf "%d rectangles to draw" (List.length rects));
+  UCommon.pr2 (spf "%d rectangles to draw" (List.length rects));
   rects
 @ 
 
@@ -3896,11 +3880,9 @@ let async_get_opt a =
   " <dir_with_layers>";
   "-filter", Arg.String (fun s -> filter := List.assoc s filters;), 
    spf " filter certain files (available = %s)" 
-    (filters |> List.map fst |> Common.join ", ");
+    (filters |> List.map fst |> String.concat ", ");
   "-extra_filter", Arg.String (fun s -> Flag.extra_filter := Some s),
   " ";
-  "-skip_list", Arg.String (fun s -> skip_file := Some s), 
-  " <file> skip files or directories";
 
   "-ft", Arg.Set_float Flag.threshold_draw_content_font_size_real,
   " <float> threshold to draw content";
@@ -4126,29 +4108,29 @@ let extra_filter = ref (None: string option) (* regexp *)
 
 <<[[visual_commitid]]() action>>=
 let test_visual_commitid id =
-  let files = Common.cmd_to_list
+  let files = UCmd.cmd_to_list
     (spf "git show --pretty=\"format:\" --name-only %s"
         id) 
     (* not sure why git adds an extra empty line at the beginning but we
      * have to filter it
      *)
-    |> Common.exclude Common.null_string
+    |> List_.exclude String_.empty
   in
-  pr2_gen files;
+  UCommon.pr2_gen files;
   main_action files
 @
 
 <<actions>>=
   "-test_loc", " ",
-  Common.mk_action_n_arg (test_loc true);
+  Arg_.mk_action_n_arg (test_loc true);
   "-test_loc2", " ",
-  Common.mk_action_n_arg (test_loc false);
+  Arg_.mk_action_n_arg (test_loc false);
   "-test_cairo", " ",
-  Common.mk_action_0_arg (test_cairo);
+  Arg_.mk_action_0_arg (test_cairo);
   "-test_commitid", " <id>",
-  Common.mk_action_1_arg (test_visual_commitid);
+  Arg_.mk_action_1_arg (test_visual_commitid);
   "-test_treemap_dirs", " <id>",
-  Common.mk_action_0_arg (test_treemap_dirs);
+  Arg_.mk_action_0_arg (test_treemap_dirs);
 @
 
 
@@ -4424,6 +4406,7 @@ let draw_rectangle_bis ~cr ~color ~line_width r =
  * appearing just here.
  *)
 open Common
+open Fpath_.Operators
 
 module Flag = Flag_visual
 module FT = File_type
@@ -4543,64 +4526,67 @@ module Model = Model2
 
 (* see filters below, which filter files we are interested in *)
 let filter = ref (fun _file -> true)
-let skip_file  = ref (None: Common.filename option)
 (* less: a config file: GtkMain.Rc.add_default_file "/.../pfff_browser.rc"; *)
+
+(* TODO: switch to Logs *)
+let log_config_file = ref "log_config.json"
 
 (* action mode *)
 let action = ref ""
 
 (*****************************************************************************)
-(* Shortcuts *)
+(* File targeting *)
 (*****************************************************************************)
 
 let filters = [
-  (* pad-specific: ocaml related files *)
-  "pfff", (fun file ->
-    match FT.file_type_of_file file with
-    | FT.PL (FT.ML _ | FT.Prolog _) | FT.Config FT.Makefile -> 
-        not ( 
-                (* file =~ ".*commons/" || *)
-                (* file =~ ".*external/" || *)
-                file =~ ".*\\.md5sum_.*")
+  (* pad-specific: semgrep related files *)
+  "semgrep", (fun file ->
+    match FT.file_type_of_file (Fpath.v file) with
+    | FT.PL (FT.OCaml _ | FT.Python | FT.Web (FT.Js | FT.TypeScript))
+    | FT.PL (FT.IDL _)
+    | FT.PL (FT.Script _)
+    | FT.Config (FT.Makefile | FT.Dockerfile | FT.Jsonnet | FT.Yaml | FT.Sexp) -> 
+            true
     | _ -> false
   );
+  (* pad-specific: *)
   "xix", (fun file ->
-    match FT.file_type_of_file file with
-    | FT.PL ((FT.ML _) | (FT.C _ | FT.Asm)) | FT.Config FT.Makefile -> true
+    match FT.file_type_of_file (Fpath.v file) with
+    | FT.PL ((FT.OCaml _) | (FT.C _ | FT.Asm)) | FT.Config FT.Makefile -> true
     | _ -> false
   );
 
   "ocaml", (fun file ->
-    match File_type.file_type_of_file file with
-    | FT.PL (FT.ML _) | FT.Config (FT.Makefile)  -> true
+    match File_type.file_type_of_file (Fpath.v file) with
+    | FT.PL (FT.OCaml _) | FT.Config (FT.Makefile)  -> true
     | _ -> false
   );
   "mli", (fun file ->
-    match File_type.file_type_of_file file with
-    | FT.PL (FT.ML "mli") | FT.Config (FT.Makefile)   -> 
+    match File_type.file_type_of_file (Fpath.v file) with
+    | FT.PL (FT.OCaml "mli") | FT.Config (FT.Makefile)   -> 
       not (file =~ ".*/commons/")
     | _ -> false
   );
   "nw", (fun file -> 
-    match FT.file_type_of_file file with
+    match FT.file_type_of_file (Fpath.v file) with
     | FT.Text "nw" -> true | _ -> false
   );
   "doc", (fun file -> 
-    match FT.file_type_of_file file with
+    match FT.file_type_of_file (Fpath.v file) with
     | FT.Text _ -> true | _ -> false
   );
 
   (* other languages *)
   "php", (fun file ->
-    match File_type.file_type_of_file file with
+    match File_type.file_type_of_file (Fpath.v file) with
     | FT.PL (FT.Web (FT.Php _)) -> true  | _ -> false
   );
   "js", (fun file ->
-    match File_type.file_type_of_file file with
+    match File_type.file_type_of_file (Fpath.v file) with
     | FT.PL (FT.Web (FT.Js)) -> true  | _ -> false
   );
   "config", (fun file ->
-    match File_type.file_type_of_file file with
+    match File_type.file_type_of_file (Fpath.v file) with
     | FT.Config (FT.Yaml | FT.Json) -> true  | _ -> false
   );
 
@@ -4609,26 +4595,43 @@ let filters = [
       (* TODO: also add possible pfff_macros.h when there *)
       Parse_cpp.init_defs !Flag_parsing_cpp.macros_h
     );
-    match FT.file_type_of_file file with
+    match FT.file_type_of_file (Fpath.v file) with
     | FT.PL (FT.C _ | FT.Cplusplus _) -> true 
     | FT.PL FT.Asm -> true
     | _ -> false
   ));
 
-  (* exotic languages *)
-  "exotic", (fun file -> 
-    match FT.file_type_of_file file with
-    | FT.PL (FT.Opa | FT.Rust)  -> true
-(*    | FT.PL (FT.Web (_)) -> true *)
-    | _ -> false
-  );
-
   (* general categories *)
   "pl", (fun file ->
-    match File_type.file_type_of_file file with
+    match File_type.file_type_of_file (Fpath.v file) with
     | FT.PL _ -> true  | _ -> false
   );
 ]
+
+let mk_filter_file (root : Fpath.t) : (string (* filename *) -> bool) =
+  let gitignore_filter =
+    Gitignore_filter.create
+      ~gitignore_filenames:[
+      "gitignore", ".gitignore";
+      "codemapignore", ".codemapignore";
+      ]
+    ~project_root:root ()
+  in
+  (fun file ->
+     !filter file &&
+     let ppath =
+        match Ppath.in_project ~root:(Rfpath.of_fpath_exn root) (Fpath.v file) with
+        | Ok ppath -> ppath
+        | Error err ->
+              failwith (spf "could not find project path for %s with root = %s (errot = %s)"
+                file !!root err)
+     in
+     let (status, _events) =
+         Gitignore_filter.select gitignore_filter []
+          ppath
+     in
+     status =*= Gitignore.Not_ignored
+    )
 
 (*****************************************************************************)
 (* Helpers *)
@@ -4655,7 +4658,7 @@ let set_gc () =
 
 (* could also to parse all json files and filter the one which do not parse *)
 let layers_in_dir dir =
-  Common2.readdir_to_file_list dir |> Common.map_filter (fun file ->
+  Common2.readdir_to_file_list dir |> List_.map_filter (fun file ->
     if file =~ "layer.*json"
     then Some (Filename.concat dir file)
     else None
@@ -4675,21 +4678,10 @@ let layers_in_dir dir =
  * and archi_code_lexer.mll which lower the important of some files?
  *)
 let test_loc print_top30 xs =
-  let xs = xs |> List.map Common.fullpath in
+  let xs = xs |> List.map Unix.realpath in
   let root = Common2.common_prefix_of_files_or_dirs xs in
-  let skip_file = !skip_file ||| Filename.concat root "skip_list.txt" in
-  let skip_list =
-    if Sys.file_exists skip_file
-    then begin
-      pr2 (spf "Using skip file: %s" skip_file);
-      Skip_code.load skip_file
-    end
-    else []
-  in
-  let filter_files_skip_list = Skip_code.filter_files skip_list root in
-  let filter_file = (fun file -> 
-    !filter file && (skip_list = [] || filter_files_skip_list [file] <> []))
-  in
+
+  let filter_file = mk_filter_file (Fpath.v root) in
   let treemap = Treemap_pl.code_treemap ~filter_file xs in
 
   let res = ref [] in
@@ -4706,19 +4698,19 @@ let test_loc print_top30 xs =
           let multiplier = (float_of_int size /. float_of_int unix_size) in
           let multiplier = min multiplier 1.0 in
           let loc = Common2.nblines_with_wc file in
-          Common.push ((Common.readable ~root file), 
+          Stack_.push ((Filename_.readable ~root file), 
                        (float_of_int loc *. multiplier)) res;
         end
   in
   aux treemap;
   let total = !res |> List.map snd |> List.map int_of_float  |> Common2.sum in
-  pr2 (spf "LOC = %d (%d files)" total (List.length !res));
+  UCommon.pr2 (spf "LOC = %d (%d files)" total (List.length !res));
   if print_top30 then begin
     let topx = 30 in
-    pr2 (spf "Top %d:" topx);
-    !res |> Common.sort_by_val_highfirst |> Common.take_safe topx 
+    UCommon.pr2 (spf "Top %d:" topx);
+    !res |> Assoc.sort_by_val_highfirst |> List_.take_safe topx 
     |>  List.iter (fun (file, f) ->
-      pr2 (spf "%-40s: %d" file (int_of_float f))
+      UCommon.pr2 (spf "%-40s: %d" file (int_of_float f))
     )
   end
 
@@ -4726,7 +4718,7 @@ let test_loc print_top30 xs =
 let test_treemap_dirs () =
   let paths = 
     ["commons/common.ml"; "h_visualization"; "code_graph"] 
-    |> List.map Common.fullpath in
+    |> List.map Unix.realpath in
   let paths = List.sort String.compare paths in
   let tree = 
     paths |> Treemap.tree_of_dirs_or_files
@@ -4734,7 +4726,7 @@ let test_treemap_dirs () =
       ~filter_file:(fun file -> file =~ ".*\\.ml")
       ~file_hook:(fun _file -> 10)
   in
-  pr2_gen tree
+  UCommon.pr2_gen tree
 
 
 (* update: try to put ocamlgtk related tests in widgets/test_widgets.ml, not
@@ -4815,11 +4807,11 @@ let all_actions () =
 let options () = ([ 
   <<options>>
   ] @
-  Common.options_of_actions action (all_actions()) @
+  Arg_.options_of_actions action (all_actions()) @
   Common2.cmdline_flags_devel () @
   [
   "-version",   Arg.Unit (fun () -> 
-    pr2 (spf "CodeMap version: %s" Config_pfff.version);
+    UCommon.pr2 (spf "CodeMap version: %s" "TODO: version codemap");
     exit 0;
   ), 
     " guess what";
@@ -4835,19 +4827,23 @@ let main () =
       (Filename.basename Sys.argv.(0))
       "https://github.com/facebook/pfff/wiki/Codemap"
   in
-  let args = Common.parse_options (options()) usage_msg Sys.argv in
+  let args = Arg_.parse_options (options()) usage_msg Sys.argv in
 
+  (* TODO: call setup_logging, use cmdliner and parse --debug, --info ... *)
+  Logs_.enable_logging();
+  Logs.info (fun m -> m "Starting logging");
+    
   (* must be done after Arg.parse, because Common.profile is set by it *)
-  Common.profile_code "Main total" (fun () -> 
+  Profiling.profile_code "Main total" (fun () -> 
 
     (match args with
     (* --------------------------------------------------------- *)
     (* actions, useful to debug subpart *)
     (* --------------------------------------------------------- *)
-    | xs when List.mem !action (Common.action_list (all_actions())) -> 
-        Common.do_action !action xs (all_actions())
+    | xs when List.mem !action (Arg_.action_list (all_actions())) -> 
+        Arg_.do_action !action xs (all_actions())
 
-    | _ when not (Common.null_string !action) -> 
+    | _ when not (String_.empty !action) -> 
         failwith ("unrecognized action or wrong params: " ^ !action)
 
     (* --------------------------------------------------------- *)
@@ -4865,7 +4861,7 @@ let main () =
 
 (*****************************************************************************)
 let _ = 
-  Common.main_boilerplate (fun () ->
+  UCommon.main_boilerplate (fun () ->
     main ()
   )
 @ 

@@ -22,7 +22,7 @@ SRC_VIEWS_WITH_MLI=$(LIB)/cairo_helpers.ml $(LIB)/async.ml \
 SRC_VIEWS_JUST_ML= \
    $(LIB)/flag_visual.ml \
    $(LIB)/completion2.ml \
-   $(TOP)/bin/main_codemap.ml
+   $(TOP)/main/main_codemap.ml
 
 SRC_VIEWS=$(SRC_VIEWS_WITH_MLI) $(SRC_VIEWS_WITH_MLI:ml=mli) $(SRC_VIEWS_JUST_ML)
 
