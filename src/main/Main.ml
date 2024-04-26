@@ -1,4 +1,4 @@
-(*s: main_codemap.ml *)
+(*s: Main.ml *)
 (*
  * Please imagine a long and boring gnu-style copyright notice 
  * appearing just here.
@@ -703,4 +703,4 @@ let _ =
   UCommon.main_boilerplate (fun () ->
     main ()
   )
-(*e: main_codemap.ml *)
+(*e: Main.ml *)

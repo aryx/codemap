@@ -1,5 +1,5 @@
 (executables
- (names main_codemap)
+ (names Main)
  (libraries 
    ; stdlib deps
    str bigarray
@@ -40,9 +40,8 @@
  (preprocess (pps ppx_deriving.show profiling.ppx))
 )
 
-
 (install
  (package codemap)
  (section bin)
- (files (main_codemap.exe as codemap) )
+ (files (Main.exe as codemap) )
 )
