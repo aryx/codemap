@@ -1,6 +1,18 @@
 #-*- org -*-
 
-* Last 3
+* Last
+
+** Last 4
+
+*** Can't use search anymore, blocked
+
+*** add GHA checks, build, test, and semgrep
+
+*** RELAX use Fpath.t, Logs, GHA, and maybe even capabilities :)
+
+
+
+** Last 3
 
 *** codemap on Naming_AST.ml is ugly
 update to latest semgrep? don't parse the object code?
@@ -40,7 +52,7 @@ and after C-r it comes
 or use semgrep from codemap!!
 
 
-* Last2
+** Last 2
 
 *** problem with generated layers by codegraph_build, get ofv float exn
 when trying to read the layer in codemap
@@ -77,7 +89,7 @@ someone from Facebook recently wanted to use ocaml-tree-sitter for Pyre :)
 *** weird bug on deep-semgrep/src/core/sig/Name.ml where if
 last line does not contain a newline then no display
 
-* Last1
+** Last 1
 
 *** use model-view-update to simplify the code?
 
