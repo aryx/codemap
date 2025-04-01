@@ -5,6 +5,7 @@
  (libraries
 
    commons
+   commons2_
    lib_parsing
  )
  (preprocess (pps ppx_deriving.show profiling.ppx))
