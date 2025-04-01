@@ -712,7 +712,7 @@ let gmain_idle_add ~prio callback =
       try 
         callback ()
       with exn ->
-        UCommon.pr2 (Common2.exn_to_s_with_backtrace exn);
+        UCommon.pr2 (Common2_.exn_to_s_with_backtrace exn);
         raise exn
     )
   else begin
@@ -730,7 +730,7 @@ let gmain_timeout_add ~ms ~callback =
       try 
         callback ()
       with exn ->
-        UCommon.pr2 (Common2.exn_to_s_with_backtrace exn);
+        UCommon.pr2 (Common2_.exn_to_s_with_backtrace exn);
         raise exn
     )
   else begin

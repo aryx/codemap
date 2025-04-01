@@ -16,7 +16,7 @@
  *)
 (*e: Facebook copyright *)
 (* floats are the norm in graphics *)
-open Common2.ArithFloatInfix
+open Common2_.ArithFloatInfix
 
 open Figures
 module F = Figures

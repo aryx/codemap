@@ -55,9 +55,8 @@ let fake_no_use2 = (NoInfoPlace, UniqueDef, MultiUse)
 
 let _info_of_name ((_s, info), _nameinfo) = info
 
-let id_of_name = function
-  | Id (id, _) -> id
-  | IdQualified { name_last = (id, _); _} -> id
+let id_of_name (name : name) : ident =
+  AST_generic_helpers.id_of_name name |> fst
 
 (*****************************************************************************)
 (* AST helpers *)
@@ -196,7 +195,7 @@ let visit_program (already_tagged, tag) ast =
                  );
                  super#visit_definition env x
 
-             | VarDef { vinit = Some body; vtype = _ }  ->
+             | VarDef { vinit = Some body; vtype = _; vtok = _ }  ->
                  (if not !in_let
                   then tag_id id (kind_of_body attrs body)
                   else tag_id id (Local Def)
@@ -205,7 +204,7 @@ let visit_program (already_tagged, tag) ast =
                    super#visit_definition env x
                  )
 
-             | VarDef { vinit = None; vtype = _ }  ->
+             | VarDef { vinit = None; vtype = _; vtok = _ }  ->
                   super#visit_definition env x
 
              | FuncDef _ ->
@@ -261,12 +260,13 @@ let visit_program (already_tagged, tag) ast =
                tag_id id BadSmell
              | [] -> ()
              )
-         | ImportFrom (tk, DottedName xs, ys) ->
+         | ImportFrom (tk, DottedName xs, _ys) ->
               tag tk KeywordModule;
               tag_ids xs (Entity (Package, Use2 fake_no_use2));
               (* depend on language, Class in Scala, Module in OCaml *)
-              let kind =  Class in
-              ys |> List.iter (fun (id, opt) ->
+              let _kind = Class in
+              (* TODO now import_from_kind list type *)
+(*              ys |> List.iter (fun (id, opt) ->
               (match opt with
               | None ->
                 tag_id id (Entity (kind, Def2 fake_no_def2))
@@ -274,6 +274,8 @@ let visit_program (already_tagged, tag) ast =
                 tag_id id (Entity (kind, Use2 fake_no_use2));
                 tag_id id2 (Entity (kind, Def2 fake_no_def2))
              ));
+*)       
+             ()
               
          | G.Package (tk, xs) ->
             tag tk KeywordModule;
@@ -408,7 +410,7 @@ let visit_program (already_tagged, tag) ast =
             tag_id id categ;
             super#visit_expr env x
 
-        | IdSpecial (kind, info) ->
+        | Special (kind, info) ->
             (match kind with
              | Eval -> tag info BadSmell
              | _ -> tag info Builtin

@@ -3,7 +3,7 @@ open Entity_code
 type entity_id = int
 
 type entity = {
-  e_kind : entity_kind;
+  e_kind : kind;
   (* needs to be a shortname, e.g. "map", not "List.map", otherwise the
    * highlighter (which uses only a lexer/parser) will not enlarge the
    * corresponding token in the file.
@@ -67,14 +67,14 @@ val files_and_dirs_and_sorted_entities_for_completion :
 
 (* codemap collaboration, highlighter (lexer/parser) <-> semantic database *)
 val entity_kind_of_highlight_category_def :
-  Highlight_code.category -> entity_kind option
+  Highlight_code.category -> kind option
 
 val entity_kind_of_highlight_category_use :
-  Highlight_code.category -> entity_kind option
+  Highlight_code.category -> kind option
 
 val is_entity_def_category : Highlight_code.category -> bool
-val matching_def_short_kind_kind : entity_kind -> entity_kind -> bool
-val matching_use_categ_kind : Highlight_code.category -> entity_kind -> bool
+val matching_def_short_kind_kind : kind -> kind -> bool
+val matching_use_categ_kind : Highlight_code.category -> kind -> bool
 
 (* use vs def *)
 val entity_and_highlight_category_correpondance :

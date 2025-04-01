@@ -4,6 +4,6 @@
  (libraries
    lablgtk2
 
-   commons commons2 profiling
+   commons commons2_ profiling
  )
 )

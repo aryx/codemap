@@ -147,7 +147,7 @@ let visit_toplevel ~tag_hook _prefs _file (*db_opt *) (_ast, toks) =
           | [] -> ()
         in
         let same_line =
-          t1 :: xs |> Common2.take_while (fun t -> TH.line_of_tok t =|= line_t1)
+          t1 :: xs |> Common2_.take_while (fun t -> TH.line_of_tok t =|= line_t1)
         in
         find_ident_paren same_line;
         aux_toks xs

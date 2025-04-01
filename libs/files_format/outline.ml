@@ -11,7 +11,7 @@ type outline_node = {
   before_first_children : string list;
 }
 
-type outline = outline_node Common2.tree2
+type outline = outline_node Common2_.tree2
 
 let outline_default_regexp = "^\\(\\*+\\)[ ]*\\(.*\\)"
 let root_stars = ""
@@ -81,7 +81,7 @@ let parse_outline ?(outline_regexp = outline_default_regexp) file =
           let node = { stars; title; before_first_children } in
           let children_trees = aux_outline children in
 
-          Common2.Tree (node, children_trees) :: aux_outline rest
+          Common2_.Tree (node, children_trees) :: aux_outline rest
     in
     aux_outline headers
   in
@@ -94,7 +94,7 @@ let write_outline outline file =
       let pr s = pr_no_nl (s ^ "\n") in
 
       outline
-      |> Common2.tree2_iter (fun node ->
+      |> Common2_.tree2_iter (fun node ->
              if not (is_root_node node) then pr (node.stars ^ node.title);
 
              node.before_first_children |> List.iter pr))

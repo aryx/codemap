@@ -47,11 +47,11 @@ let git ~basedir =
  (object 
    method basedir = basedir
    method grep s =
-     Git.grep ~basedir s
+     Git_.grep ~basedir s
    method show file commitid = 
-     Git.show ~basedir file commitid
+     Git_.show ~basedir file commitid
    method files_involved_in_diff commitid = 
-     Git.files_involved_in_diff ~basedir commitid
+     Git_.files_involved_in_diff ~basedir commitid
   end : vcs)
 
 let hg ~basedir =

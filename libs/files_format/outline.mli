@@ -1,4 +1,4 @@
-type outline = outline_node Common2.tree2
+type outline = outline_node Common2_.tree2
 
 and outline_node = {
   stars : string;

@@ -15,10 +15,10 @@
  * license.txt for more details.
  *)
 (*e: Facebook copyright *)
-
 open Common
+open Fpath_.Operators
 (* floats are the norm in graphics *)
-open Common2.ArithFloatInfix
+open Common2_.ArithFloatInfix
 
 open Model2
 module CairoH = Cairo_helpers
@@ -256,13 +256,13 @@ let button_action w ev =
             (* less: print a warning when does not exist? *)
             |> List.filter Sys.file_exists
           in
-          let readable = Filename_.readable ~root:model.root file in
+          let readable = !!(Filename_.readable ~root:(Fpath.v model.root) (Fpath.v file)) in
           let readable =
             match entity_opt with
             | None -> readable
             | Some n -> 
-                let g = Common2.some model.g in
-                try Graph_code.file_of_node n g
+                let g = Common2_.some model.g in
+                try !!(Graph_code.file_of_node n g)
                 with Not_found -> readable
           in
           let entries = [
@@ -295,7 +295,7 @@ let button_action w ev =
             (match entity_opt with
             | None -> []
             | Some n ->
-                let g = Common2.some model.g in
+                let g = Common2_.some model.g in
                 [`I ("info entity", (fun () ->
                   let users = Graph_code.pred n (Graph_code.Use) g in
                   let str =
@@ -307,7 +307,7 @@ let button_action w ev =
                 ));
                  `I ("goto def", (fun () ->
                    w.current_node_selected <- entity_opt;
-                   let dest = Graph_code.file_of_node n g in
+                   let dest = !!(Graph_code.file_of_node n g) in
                    !Ctl._go_dirs_or_file w (paths_of_readables [dest])
                  ));                                              
                 ]

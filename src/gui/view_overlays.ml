@@ -16,8 +16,9 @@
  *)
 (*e: Facebook copyright *)
 open Common
+open Fpath_.Operators
 (* floats are the norm in graphics *)
-open Common2.ArithFloatInfix
+open Common2_.ArithFloatInfix
 
 open Model2
 module T = Treemap
@@ -44,7 +45,7 @@ let readable_txt_for_label txt current_root =
   let readable_txt = 
     if current_root = txt (* when we are fully zoomed on one file *)
     then "root"
-    else Filename_.readable ~root:current_root txt 
+    else !!(Filename_.readable ~root:(Fpath.v current_root) (Fpath.v txt))
   in
   if String.length readable_txt > 25
   then 
@@ -190,8 +191,8 @@ let draw_tooltip ~cr_overlay ~x ~y n g =
   let succ = Graph_code.succ n Graph_code.Use g in
   let files = 
     pred 
-    |> List_.map_filter (fun n ->
-        Common2.optionise (fun () -> (Graph_code.file_of_node n g)))
+    |> List_.filter_map (fun n ->
+        Common2_.optionise (fun () -> (Graph_code.file_of_node n g)))
     |> List_.sort |> Common2.uniq
   in
   let str = spf "
@@ -202,7 +203,7 @@ let draw_tooltip ~cr_overlay ~x ~y n g =
     (List.length pred) (List.length files)
     (List.length succ)
   in
-  let xs = Common2.lines str in
+  let xs = Common2_.lines str in
 
   (* copy paste of draw_label_overlay *)
   Cairo.select_font_face cr_overlay "serif" ~weight:Cairo.Normal;

@@ -16,6 +16,7 @@
  *)
 (*e: Facebook copyright *)
 open Common
+open Fpath_.Operators
 
 module F = Figures
 module T = Treemap
@@ -93,7 +94,7 @@ type microlevel = {
  (* Note that I don't use G.node because the string below is not fully
   * qualified so one must use match_short_vs_node when comparing with nodes.
   *)
-  and short_node = (string * Entity_code.entity_kind)
+  and short_node = (string * Entity_code.kind)
   and glyph = {
     str: string;
     categ: Highlight_code.category option;
@@ -220,19 +221,19 @@ let new_surface ~alpha ~width ~height =
 (*s: [[init_drawing]]() *)
 (* This is a first guess. The first configure ev will force a resize. *)
 let init_drawing   ?(width = 600) ?(height = 600) func layers paths root =
-  let paths = List.map Common2.relative_to_absolute paths in
-  let current_root = Common2.common_prefix_of_files_or_dirs paths in
+  let paths = List.map Common2_.relative_to_absolute paths in
+  let current_root = Common2_.common_prefix_of_files_or_dirs paths in
   let treemap = 
     Profiling.profile_code "Visual.building the treemap" (fun () -> 
       func paths
     ) 
   in
   let readable_file_to_rect =
-    treemap |> List_.map_filter (fun rect ->
+    treemap |> List_.filter_map (fun rect ->
       if not rect.T.tr_is_node
       then 
         let file  = rect.T.tr_label in
-        let readable = Filename_.readable ~root file in
+        let readable = !!(Filename_.readable ~root:(Fpath.v root) (Fpath.v file)) in
         Some (readable, rect)
       else None
     ) |> Hashtbl_.hash_of_list
@@ -314,7 +315,7 @@ let find_rectangle_at_user_point user dw =
    match matching_rects with
    | [] -> None
    | [x] -> Some (x, [], x)
-   | _ -> Some (Common2.head_middle_tail matching_rects)
+   | _ -> Some (Common2_.head_middle_tail matching_rects)
 [@@profiling]
 (*e: [[find_rectangle_at_user_point]]() *)
 
@@ -365,14 +366,14 @@ let rank_entity_kind = function
  *)
 let find_def_entity_at_line_opt line tr dw model =
   let file = tr.T.tr_label in
-  let readable = Filename_.readable ~root:model.root file in
+  let readable = !!(Filename_.readable ~root:(Fpath.v model.root) (Fpath.v file)) in
   try 
     let nodes = Hashtbl.find model.hentities_of_file readable in
     let microlevel = Hashtbl.find dw.microlevel tr in
     let short_node = List.assoc line microlevel.defs in
     (* try to match the possible shortname str with a fully qualified node 
     *)
-    nodes |> List_.map_filter (fun node ->
+    nodes |> List_.filter_map (fun node ->
       if match_short_vs_node short_node node
       then Some node
       else None
@@ -405,7 +406,7 @@ let find_use_entity_at_line_and_glyph_opt line glyph tr dw model =
 
 let node_of_rect tr model =
   let file = tr.Treemap.tr_label in
-  let readable = Filename_.readable ~root:model.root file in
+  let readable = !!(Filename_.readable ~root:(Fpath.v model.root) (Fpath.v file)) in
   let kind = if tr.Treemap.tr_is_node then E.Dir else E.File in
   readable, kind
 
@@ -419,27 +420,27 @@ let deps_readable_files_of_node node model =
   | _, Some g ->
       let succ = Graph_code.succ node Graph_code.Use g in
       let pred = Graph_code.pred node Graph_code.Use g in
-      succ |> List_.map_filter (fun n ->
-        try Some (Graph_code.file_of_node n g) with Not_found -> None
+      succ |> List_.filter_map (fun n ->
+        try Some !!(Graph_code.file_of_node n g) with Not_found -> None
       ),
-      pred |> List_.map_filter (fun n ->
-        try Some (Graph_code.file_of_node n g) with Not_found -> None
+      pred |> List_.filter_map (fun n ->
+        try Some !!(Graph_code.file_of_node n g) with Not_found -> None
       )
 
 let deps_rects_of_rect tr dw model =
   let node = node_of_rect tr model in
   let uses, users = deps_readable_files_of_node node model in
-  uses |> List_.map_filter (fun file -> 
-    Common2.optionise (fun () -> Hashtbl.find dw.readable_file_to_rect file)
+  uses |> List_.filter_map (fun file -> 
+    Common2_.optionise (fun () -> Hashtbl.find dw.readable_file_to_rect file)
   ),
-  users |> List_.map_filter (fun file ->
-    Common2.optionise (fun () ->Hashtbl.find dw.readable_file_to_rect file)
+  users |> List_.filter_map (fun file ->
+    Common2_.optionise (fun () ->Hashtbl.find dw.readable_file_to_rect file)
   )
 
 let line_and_microlevel_of_node_opt n dw model =
   let* g = model.g in
     try 
-      let file = Graph_code.file_of_node n g in
+      let file = !!(Graph_code.file_of_node n g) in
       (* rectangles not on the screen will be automatically "clipped"
        * as this may raise Not_found 
        *)
@@ -457,7 +458,7 @@ let uses_or_users_of_node node dw fsucc model =
   | None -> []
   | Some g ->
     let succ = fsucc node Graph_code.Use g in
-    succ |> List_.map_filter (fun n -> 
+    succ |> List_.filter_map (fun n -> 
       line_and_microlevel_of_node_opt n dw model
     )
 

@@ -12,7 +12,7 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the file
  * license.txt for more details.
 *)
-open Common2 (* <=> *)
+open Common2_ (* <=> *)
 open Fpath_.Operators
 module R = Tree_sitter_run.Raw_tree
 module H = Parse_tree_sitter_helpers
@@ -60,7 +60,7 @@ let visit ~v_token ~v_any x =
 let add_extra_infos file (infos : Tok.t list) : (Tok.t * origin_info) list =
   let bigstr = UFile.Legacy.read_file file in
   let max = String.length bigstr in
-  let conv = Pos.full_converters_large file in
+  let conv = Pos.full_converters_large (Fpath.v file) in
 
   let rec aux current xs =
     match xs with
@@ -69,7 +69,7 @@ let add_extra_infos file (infos : Tok.t list) : (Tok.t * origin_info) list =
        then 
           let (line, column) = conv.bytepos_to_linecol_fun current in
           let str = String.sub bigstr current (max - current) in
-          let loc = { Tok.pos = { Pos.file; line; column; bytepos = current}; str } in
+          let loc : Loc.t = { pos = { file = Fpath.v file; line; column; bytepos = current}; str } in
           [Tok.tok_of_loc loc, Extra]
        else []
     | x::xs ->
@@ -81,7 +81,7 @@ let add_extra_infos file (infos : Tok.t list) : (Tok.t * origin_info) list =
         | Inf ->
          let (line, column) = conv.bytepos_to_linecol_fun current in
          let str = String.sub bigstr current (loc.pos.bytepos - current) in
-         let loc2 = { Tok.pos = { Pos.file; line; column; bytepos = current; };
+         let loc2 : Loc.t = { pos = { file = Fpath.v file; line; column; bytepos = current; };
                       str } in
          (Tok.tok_of_loc loc2, Extra)::aux (loc.pos.bytepos) (x::xs)
       | Equal ->

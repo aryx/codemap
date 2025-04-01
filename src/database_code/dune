@@ -6,6 +6,7 @@
  (libraries
     commons profiling
     lib_parsing
+    commons2_
 
     ; now in codemap
     highlight_code

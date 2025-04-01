@@ -15,7 +15,7 @@
  * license.txt for more details.
  *)
 (*e: Facebook copyright *)
-open Common2
+open Common2_
 open Figures
 module Color = Simple_color
 
@@ -27,7 +27,7 @@ module Color = Simple_color
 (* Types *)
 (*****************************************************************************)
 
-type ('dir, 'file) tree = ('dir, 'file) Common2.tree
+type ('dir, 'file) tree = ('dir, 'file) Common2_.tree
 
 (*s: type treemap *)
 type ('dir, 'file) treemap = (treemap_data * 'dir, treemap_data * 'file) tree
@@ -242,7 +242,7 @@ let (slice_and_dicing_layout : ('a, 'b) layout_func) =
 
   let axis_split = (depth + 1) mod 2 in
 
-  let stotal = children |> List.map fst |> Common2.sum_float in
+  let stotal = children |> List.map fst |> Common2_.sum_float in
 
   let width = q.(axis_split) -. p.(axis_split) in
 
@@ -330,14 +330,14 @@ let _ = assert (ratio_rect_dim (4.0, 6.0) = 1.5)
  *)
 
 let worst elems_in_row size_side_row =
-  let s = Common2.sum_float elems_in_row in
-  let rplus = Common2.maximum elems_in_row in
-  let rminus = Common2.minimum elems_in_row in
+  let s = Common2_.sum_float elems_in_row in
+  let rplus = Common2_.maximum elems_in_row in
+  let rminus = Common2_.minimum elems_in_row in
 
   (* cf formula in paper *)
   max
-    (Common2.square size_side_row *. rplus /. Common2.square s)
-    (Common2.square s /. (Common2.square size_side_row *. rminus))
+    (Common2_.square size_side_row *. rplus /. Common2_.square s)
+    (Common2_.square s /. (Common2_.square size_side_row *. rminus))
 
 let _ = assert (worst [ 6.0 ] 4.0 = 8.0 /. 3.0) (* 2.66667 *)
 let _ = assert (worst [ 6.0; 6.0 ] 4.0 = 3.0 /. 2.0)
@@ -358,7 +358,7 @@ let layout row rect =
 
   let children = row in
 
-  let stotal = children |> List.map fst |> Common2.sum_float in
+  let stotal = children |> List.map fst |> Common2_.sum_float in
   let children =
     children
     |> List.map (fun (size, info) ->
@@ -434,8 +434,8 @@ let rec (squarify_orig :
         squarify_orig cs (current_row @ [ c ]) rect
       else
         (* optimal layout for the left row. We can fix it. *)
-        let srow = Common2.sum_float (floats current_row) in
-        let stotal = Common2.sum_float (floats (current_row @ children)) in
+        let srow = Common2_.sum_float (floats current_row) in
+        let stotal = Common2_.sum_float (floats (current_row @ children)) in
         let portion_for_row = srow /. stotal in
 
         let row_rect, remaining_rect =
@@ -473,7 +473,7 @@ let rec (squarify_orig :
 let squarify children rect =
   (* squarify_orig assume the sum of children = area rect *)
   let area = rect_area rect in
-  let total = Common2.sum_float (List.map fst children) in
+  let total = Common2_.sum_float (List.map fst children) in
   let children' =
     children |> List.map (fun (x, info) -> (x /. total *. area, info))
   in
@@ -485,9 +485,9 @@ let test_squarify () =
   UCommon.pr2_gen (worst [ 6.0 ] 4.0);
   UCommon.pr2_gen (worst [ 6.0; 6.0 ] 4.0);
   UCommon.pr2_gen (worst [ 6.0; 6.0; 4.0 ] 4.0);
-  Common2.pr2_xxxxxxxxxxxxxxxxx ();
+  Common2_.pr2_xxxxxxxxxxxxxxxxx ();
   squarify squarified_list_area_ex dim_rect_orig |> ignore;
-  Common2.pr2_xxxxxxxxxxxxxxxxx ();
+  Common2_.pr2_xxxxxxxxxxxxxxxxx ();
   squarify squarified_list_area_ex2 (rect_ortho ()) |> ignore;
   ()
 (*e: function test_squarify *)
@@ -530,10 +530,10 @@ let compute_rects_pivotized childs_pivotized rect spread =
   let x = childs_pivotized in
   let size =
     {
-      left = Common2.sum_float (List.map fst x.left);
-      right = Common2.sum_float (List.map fst x.right);
-      pivot = Common2.sum_float (List.map fst x.pivot);
-      above_pivot = Common2.sum_float (List.map fst x.above_pivot);
+      left = Common2_.sum_float (List.map fst x.left);
+      right = Common2_.sum_float (List.map fst x.right);
+      pivot = Common2_.sum_float (List.map fst x.pivot);
+      above_pivot = Common2_.sum_float (List.map fst x.above_pivot);
     }
   in
 
@@ -639,11 +639,11 @@ let orderify_children ?(pivotf = PivotBySize) xs rect =
         let left, pivot, right =
           match pivotf with
           | PivotBySize ->
-              let pivot_max = Common2.maximum (xs |> List.map fst) in
-              Common2.split_when (fun x -> fst x = pivot_max) xs
+              let pivot_max = Common2_.maximum (xs |> List.map fst) in
+              Common2_.split_when (fun x -> fst x = pivot_max) xs
           | PivotByMiddle ->
               let nmiddle = List.length xs / 2 in
-              let start, thend = Common2.splitAt nmiddle xs in
+              let start, thend = Common2_.splitAt nmiddle xs in
 
               (start, List.hd thend, List.tl thend)
         in
@@ -831,9 +831,9 @@ let tree_of_dir2
   let rec aux dir =
 
     let subdirs =
-      Common2.readdir_to_dir_list dir +> List.map (Filename.concat dir) in
+      Common2_.readdir_to_dir_list dir +> List.map (Filename.concat dir) in
     let files =
-      Common2.readdir_to_file_list dir +> List.map (Filename.concat dir) in
+      Common2_.readdir_to_file_list dir +> List.map (Filename.concat dir) in
 
     let subdirs =
       subdirs +> Common.map_filter (fun dir ->
@@ -892,7 +892,7 @@ let tree_of_dir3 ?(filter_file = fun _ -> true) ?(filter_dir = fun _ -> true)
     |> Array.iter (fun (_, f) ->
            let full = Filename.concat dir f in
 
-           let stat = Common2.unix_lstat_eff full in
+           let stat = Common2_.unix_lstat_eff full in
 
            match stat.Unix.st_kind with
            | Unix.S_REG ->
@@ -922,7 +922,7 @@ let tree_of_dir ?filter_file ?filter_dir ?sort ~file_hook a =
       tree_of_dir3 ?filter_file ?filter_dir ?sort ~file_hook a)
 
 let tree_of_dir_or_file ?filter_file ?filter_dir ?sort ~file_hook path =
-  if UFile.is_directory (Fpath.v path) then
+  if UFile.is_dir ~follow_symlinks:false (Fpath.v path) then
     tree_of_dir ?filter_file ?filter_dir ?sort ~file_hook path
   else Leaf (path, file_hook path)
 
@@ -931,7 +931,7 @@ let tree_of_dir_or_file ?filter_file ?filter_dir ?sort ~file_hook path =
  *)
 let add_intermediate_nodes root_path nodes =
   let root = chop_dirsymbol root_path in
-  if not (Common2.is_absolute root) then
+  if not (Common2_.is_absolute root) then
     failwith ("must pass absolute path, not: " ^ root);
 
   let root = String_.split ~sep:"/" root in
@@ -941,8 +941,8 @@ let add_intermediate_nodes root_path nodes =
     nodes
     |> List.map (fun x ->
            match x with
-           | Leaf (file, _) -> (Common2.dirs_and_base_of_file file, x)
-           | Node (dir, _) -> (Common2.dirs_and_base_of_file dir, x))
+           | Leaf (file, _) -> (Common2_.dirs_and_base_of_file file, x)
+           | Node (dir, _) -> (Common2_.dirs_and_base_of_file dir, x))
   in
   (* remove the root part *)
   let xs =
@@ -992,7 +992,7 @@ let tree_of_dirs_or_files2 ?filter_file ?filter_dir ?sort ~file_hook paths =
         |> List.map (fun x ->
                tree_of_dir_or_file ?filter_file ?filter_dir ?sort ~file_hook x)
       in
-      let root = Common2.common_prefix_of_files_or_dirs xs in
+      let root = Common2_.common_prefix_of_files_or_dirs xs in
       let nodes = add_intermediate_nodes root nodes in
       Node (root, nodes)
 
@@ -1137,7 +1137,7 @@ let (treemap_ex_ordered_2001 : (unit, unit) treemap) =
                },
                () ))
   in
-  let total_size = Common2.sum children in
+  let total_size = Common2_.sum children in
   Node
     ( ({ size = total_size; color = Color.black; label = "" }, ()),
       children_treemap )

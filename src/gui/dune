@@ -9,7 +9,8 @@
     cairo2-gtk
     
     ; pfff deps
-    commons 
+    commons
+    commons2_
     pfff-h_visualization gui
     lib_parsing
     graph_code  

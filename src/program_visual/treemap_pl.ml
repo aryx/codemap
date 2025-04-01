@@ -156,7 +156,7 @@ let color_of_webpl_type kind =
   | PL.Php _ | PL.Hack | PL.Opa -> "IndianRed"
 
 
-  | PL.Css -> "yellow"
+  | PL.Css | PL.Scss -> "yellow"
   | PL.Js | PL.Coffee | PL.TypeScript | PL.Vue -> "SpringGreen"
   | PL.Html | PL.Xml -> "sienna"
 
@@ -234,7 +234,7 @@ let treemap_file_size_hook2 ~root file =
 
   (* todo: should be passed to the hook!! *)
   let filesize = 
-    try (Common2.unix_stat_eff file).Unix.st_size
+    try (Common2_.unix_stat_eff file).Unix.st_size
     with Unix.Unix_error _ ->
       UCommon.pr2 (spf "PB stating %s" file);
       0
@@ -270,7 +270,7 @@ let treemap_file_size_hook ~root file =
     
 
 let code_treemap2 ~filter_file paths =
-  let root = Common2.common_prefix_of_files_or_dirs paths in
+  let root = Common2_.common_prefix_of_files_or_dirs paths in
   let tree = 
     paths |> Treemap.tree_of_dirs_or_files
       ~filter_dir:Lib_vcs.filter_vcs_dir

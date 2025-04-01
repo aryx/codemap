@@ -56,17 +56,17 @@ let unittest =
       let pfff_home = (* Config_pfff.path *) raise Todo in
       try
         assert_equal
-          (Git.find_root_from_absolute_path pfff_home)
+          (Git_.find_root_from_absolute_path pfff_home)
           pfff_home;
         assert_equal
-          (Git.find_root_from_absolute_path (pfff_home ^ "/"))
+          (Git_.find_root_from_absolute_path (pfff_home ^ "/"))
           pfff_home;
         assert_equal
-          (Git.find_root_from_absolute_path
+          (Git_.find_root_from_absolute_path
              (pfff_home ^ "/h_version-control/unit_version_control.ml"))
           pfff_home;
         assert_raises Not_found
-          (fun () -> Git.find_root_from_absolute_path "/");
+          (fun () -> Git_.find_root_from_absolute_path "/");
       with Not_found ->
         assert_failure "fail to find root for pfff_home";
     );
@@ -101,21 +101,21 @@ let unittest =
          let previous_id = Lib.VersionId "HEAD^" in
 
          let xs =
-           Git.files_involved_in_diff ~basedir commit_id in
+           Git_.files_involved_in_diff ~basedir commit_id in
          assert_equal 
            ~msg:"it should find all added files in a diff"
            [Lib.Added, "bar.txt"; Lib.Added, "foo.txt"]
            (List_.sort xs);
 
          let xs = 
-           Git.grep ~basedir "ba" in
+           Git_.grep ~basedir "ba" in
          assert_equal
            ~msg:"it should find files containing ba with git grep"
            ["bar.txt"]
            xs;
 
          let xs = 
-           Git.grep ~basedir "nothing" in
+           Git_.grep ~basedir "nothing" in
          assert_equal
            ~msg:"it should return an empty list when git grep found nothing"
            []
@@ -127,14 +127,14 @@ let unittest =
          ];
 
          let tmpfile =
-           Git.show ~basedir "bar.txt" commit_id in
+           Git_.show ~basedir "bar.txt" commit_id in
          let xs = UFile.cat tmpfile in
          assert_equal
            ~msg:"it should show the current content of the file"
            ["new_content"]
            xs;
          let tmpfile =
-           Git.show ~basedir "bar.txt" previous_id in
+           Git_.show ~basedir "bar.txt" previous_id in
          let xs = UFile.cat tmpfile in
          assert_equal
            ~msg:"it should show the past content of the file"

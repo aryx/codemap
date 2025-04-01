@@ -5,8 +5,8 @@
  (wrapped false)
  (libraries
     commons
-    commons2
     profiling
+    commons2_
  )
  (preprocess
    (pps

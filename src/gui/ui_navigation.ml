@@ -47,7 +47,7 @@ let go_back w =
 
 (*s: [[go_dirs_or_file]] *)
 let go_dirs_or_file ?(current_grep_query=None) w paths =
-  let root = Common2.common_prefix_of_files_or_dirs paths in
+  let root = Common2_.common_prefix_of_files_or_dirs paths in
   UCommon.pr2 (spf "zooming in %s" (String.concat "|" paths));
 
   (* reset the painter? not needed because will call draw below

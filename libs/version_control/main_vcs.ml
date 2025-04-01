@@ -50,9 +50,9 @@ let options () =
     " ";
   ] @
   Arg_.options_of_actions action (all_actions()) @
-  Common2.cmdline_flags_devel () @
-  Common2.cmdline_flags_verbose () @
-  Common2.cmdline_flags_other () @
+  Common2_.cmdline_flags_devel () @
+  Common2_.cmdline_flags_verbose () @
+  Common2_.cmdline_flags_other () @
   [
   "-version",   Arg.Unit (fun () -> 
     UCommon.pr2 (spf "vcs version: %s" version);

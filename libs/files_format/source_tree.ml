@@ -43,7 +43,7 @@ let change_organization_dirs_to_subsystems reorg basedir =
     else Sys.command s |> ignore in
   reorg
   |> List.iter (fun (SubSystem sub, dirs) ->
-         if not debug_source_tree then Common2.mkdir (spf "%s/%s" basedir sub);
+         if not debug_source_tree then Common2_.mkdir (spf "%s/%s" basedir sub);
 
          dirs
          |> List.iter (fun (Dir dir) ->
@@ -80,11 +80,11 @@ let (change_organization :
     |> List.map (fun s -> Sys.file_exists (Filename.concat dir s))
   in
   match () with
-  | _ when Common2.and_list subsystem_bools ->
-      assert (not (Common2.or_list dirs_bools));
+  | _ when Common2_.and_list subsystem_bools ->
+      assert (not (Common2_.or_list dirs_bools));
       change_organization_subsystems_to_dirs reorg dir
-  | _ when Common2.and_list dirs_bools ->
-      assert (not (Common2.or_list subsystem_bools));
+  | _ when Common2_.and_list dirs_bools ->
+      assert (not (Common2_.or_list subsystem_bools));
       change_organization_dirs_to_subsystems reorg dir
   | _ -> failwith "have a mix of subsystem and dirs, wierd"
 

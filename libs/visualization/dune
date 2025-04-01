@@ -6,6 +6,7 @@
    yojson ocamlgraph
 
    commons profiling
+   commons2_
    pfff-h_files-format
  )
  (preprocess (pps ppx_deriving.show profiling.ppx))

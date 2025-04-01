@@ -3,7 +3,7 @@ open Figures
 
 (* tree -> treemap -> treemap_rendering *)
 
-type ('dir, 'file) tree = ('dir, 'file) Common2.tree
+type ('dir, 'file) tree = ('dir, 'file) Common2_.tree
 
 (*s: type treemap *)
 type ('dir, 'file) treemap = (treemap_data * 'dir, treemap_data * 'file) tree

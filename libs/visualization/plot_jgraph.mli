@@ -3,5 +3,5 @@ val plot_matrix :
   columns:string list ->
   xlabel:string ->
   ylabel:string ->
-  float Common2.matrix ->
+  float Common2_.matrix ->
   unit

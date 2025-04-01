@@ -17,7 +17,7 @@
 (*e: Facebook copyright *)
 open Common
 open Either
-open Common2.ArithFloatInfix
+open Common2_.ArithFloatInfix
 
 open Figures (* for the fields *)
 open Model2 (* for the fields *)
@@ -73,7 +73,7 @@ type _point = Figures.point
 (*****************************************************************************)
 
 let is_big_file_with_few_lines ~nblines file = 
-  nblines < 20. && Common2.filesize_eff file > 4000
+  nblines < 20. && Common2_.filesize_eff file > 4000
 
 (* coupling: with parsing2.ml, todo move in parsing2.ml? *)
 let use_fancy_highlighting file =
@@ -167,7 +167,7 @@ let final_font_size_of_categ ~font_size ~font_size_real categ =
     | n when n < 10. -> 0.7 * multiplier
     | _ -> 0.5 * multiplier
   in
-  Common2.borne ~min:font_size ~max:(font_size * 30.) (font_size * multiplier)
+  Common2_.borne ~min:font_size ~max:(font_size * 30.) (font_size * multiplier)
 
 (*e: [[final_font_size_of_categ]] *)
 
@@ -220,7 +220,7 @@ let glyphs_of_file ~font_size ~font_size_real model_async file
       let color = 
         color_of_categ categ in
 
-      let xs = Common2.lines_with_nl_either s in
+      let xs = Common2_.lines_with_nl_either s in
       xs |> List.iter (function
       | Left str ->
           Stack_.push { M. str; font_size=final_font_size; color; categ;pos } 
@@ -391,7 +391,7 @@ let draw_content cr layout context tr =
 
       (* hmatching_lines comes from layer_microlevel which is 1-index based *)
       let line = line_0_indexed +.. 1 in
-      (match Common2.hfind_option line hmatching_lines with
+      (match Common2_.hfind_option line hmatching_lines with
       | None -> ()
       | Some color ->
         CairoH.fill_rectangle ~cr 
@@ -436,7 +436,7 @@ let draw_treemap_rectangle_content_maybe cr clipping context tr  =
      * it confuses cairo which then can confuse computation done in gtk
      * idle callbacks
      *)
-    if Common2.lfile_exists_eff file && File_type.is_textual_file (Fpath.v file)
+    if Common2_.lfile_exists_eff file && File_type.is_textual_file (Fpath.v file)
     then begin
       let w = F.rect_width r in
       let h = F.rect_height r in
@@ -449,7 +449,7 @@ let draw_treemap_rectangle_content_maybe cr clipping context tr  =
        (* Common.nblines_with_wc was really slow. Forking sucks.
         * alt: we could store the nblines of a file in the db.
         *)
-        let nblines = Common2.nblines_eff file |> float_of_int in
+        let nblines = Common2_.nblines_eff file |> float_of_int in
         
        (* Assume our code follow certain conventions. Could infer from file. 
         * We should put 80, but a font is higher than large, so I readjusted.

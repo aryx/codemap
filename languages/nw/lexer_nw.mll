@@ -120,7 +120,7 @@ let reset () =
 
 let rec current_mode () =
   try
-    Common2.top !_mode_stack
+    Common2_.top !_mode_stack
   with Failure("hd") ->
     UCommon.pr2("LEXER: mode_stack is empty, defaulting to INITIAL");
     reset();

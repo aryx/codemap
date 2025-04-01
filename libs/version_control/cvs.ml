@@ -36,9 +36,9 @@ let _ = assert ("1.208        (imp      07-Jan-05): /*-" =~ annotate_regexp)
 
 let annotate2 ?(basedir="") filename = 
 
-  let today = Common2.today () in
-  let dmy = today |> Common2.floattime_to_unixtime |> Common2.unixtime_to_dmy in
-  let (Common2.DMY (_,_,Common2.Year this_year)) = dmy in
+  let today = Common2_.today () in
+  let dmy = today |> Common2_.floattime_to_unixtime |> Common2_.unixtime_to_dmy in
+  let (Common2_.DMY (_,_,Common2_.Year this_year)) = dmy in
 
   (* TODO????: compute it from file directly ? *)
   (* ??? let date = "-D \"12 Feb\"" in *)
@@ -62,7 +62,7 @@ let annotate2 ?(basedir="") filename =
   (*let ys = Common.cat (Common.filename_of_db (basedir,filename)) in*)
 
   let annots = 
-    xs |> List_.map_filter (fun s -> 
+    xs |> List_.filter_map (fun s -> 
       match () with
       | () when s =~ annotate_regexp -> 
         let (rcsid, _, author, day, month_str, year) = Common.matched6 s in
@@ -73,9 +73,9 @@ let annotate2 ?(basedir="") filename =
 
         Some (Lib_vcs.VersionId rcsid,
               Lib_vcs.Author author,
-              Common2.mk_date_dmy 
+              Common2_.mk_date_dmy 
                 (s_to_i day) 
-                (Common2.int_of_month (Common2.month_of_string month_str))
+                (Common2_.int_of_month (Common2_.month_of_string month_str))
                 iyear)
       (* header *)
       | () when s = "***************" -> None
@@ -113,7 +113,7 @@ let annotate_raw ?(basedir="") filename =
   (*let ys = Common.cat (Common.filename_of_db (basedir,filename)) in*)
 
   let annots = 
-    xs |> List_.map_filter (fun s -> 
+    xs |> List_.filter_map (fun s -> 
       if s =~ annotate_regexp 
       then 
         Some s
@@ -153,12 +153,12 @@ let find_all_date cmd =
 
   (*todo: use find_some *)
   let xs' = 
-    xs |> List_.map_filter (fun s -> 
+    xs |> List_.filter_map (fun s -> 
       if s=~ date_regexp
       then 
         let (year, month, day) = matched3 s in
         Some (
-          Common2.mk_date_dmy 
+          Common2_.mk_date_dmy 
             (s_to_i day) 
             (s_to_i month)
             (s_to_i year) 
@@ -169,7 +169,7 @@ let find_all_date cmd =
         then 
           let (year, month, day) = matched3 s in
           Some (
-            Common2.mk_date_dmy 
+            Common2_.mk_date_dmy 
               (s_to_i day) 
               (s_to_i month)
               (s_to_i year) 
@@ -187,7 +187,7 @@ let find_date cmd =
 let find_date_min cmd = 
   let xs' = find_all_date cmd in
   match xs' with
-  | x::xs -> Some (Common2.minimum_dmy (x::xs))
+  | x::xs -> Some (Common2_.minimum_dmy (x::xs))
   | [] -> None
 
 let date_file_creation2 ?(basedir="") file = 

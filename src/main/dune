@@ -8,7 +8,6 @@
 
    ; semgrep deps
    commons
-   dyp ; still?
    ppx_deriving
    uucp uutf
    paths

@@ -21,7 +21,7 @@ type category =
   | Operator
   | Punctuation
   (* entities *)
-  | Entity of Entity_code.entity_kind * usedef2
+  | Entity of Entity_code.kind * usedef2
   | Local of usedef
   | Parameter of usedef
   | FunctionDecl of def_info
@@ -131,7 +131,7 @@ val info_of_def_arity :
 val info_of_place : 'a -> 'b
 
 val info_of_entity_kind_and_usedef2 :
-  Entity_code.entity_kind ->
+  Entity_code.kind ->
   usedef2 ->
   [> `FOREGROUND of string
   | `SCALE of [> `MEDIUM | `X_LARGE ]

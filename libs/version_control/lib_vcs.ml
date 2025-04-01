@@ -13,7 +13,7 @@
  * license.txt for more details.
  *)
 open Common
-module Date = Common2
+module Date = Common2_
 
 (*****************************************************************************)
 (* Types *)
@@ -25,7 +25,7 @@ type author =
   Author of string
 
 (* could also add author *)
-type line_annotation = versionid * author * Common2.date_dmy
+type line_annotation = versionid * author * Common2_.date_dmy
 
 type commit_patch = (string list) (* header *) * Patch.patchinfo
 
@@ -61,7 +61,7 @@ let s_of_versionid (VersionId s) = s
 let parse_commit_patch xs = 
   try 
     let (before, x, after) = 
-      Common2.split_when (fun l -> l =~ "^diff.*") xs 
+      Common2_.split_when (fun l -> l =~ "^diff.*") xs 
     in
     before, (Patch.parse_patch (x::after))
   with Not_found ->

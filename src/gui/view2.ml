@@ -15,7 +15,7 @@
  * license.txt for more details.
  *)
 (*e: Facebook copyright *)
-open Common2
+open Common2_
 open Common
 
 module G = Gui
@@ -35,7 +35,7 @@ module Db = Database_code
 (*****************************************************************************)
 (* Wrappers *)
 (*****************************************************************************)
-let pr2, _pr2_once = Common2.mk_pr2_wrappers Flag.verbose_visual
+let pr2, _pr2_once = Common2_.mk_pr2_wrappers Flag.verbose_visual
 
 (*****************************************************************************)
 (* Globals *)

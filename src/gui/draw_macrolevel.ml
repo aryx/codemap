@@ -15,7 +15,7 @@
  * license.txt for more details.
  *)
 (*e: Facebook copyright *)
-open Common2.ArithFloatInfix
+open Common2_.ArithFloatInfix
 
 open Figures (* for the fields *)
 module T = Treemap
@@ -96,7 +96,7 @@ let draw_trect_using_layers ~cr layers_with_index rect =
       with Not_found -> []
     in
     (* What to draw? TODO a splitted rectangle? *)
-    let sorted = Common2.sort_by_key_highfirst color_info in
+    let sorted = Common2_.sort_by_key_highfirst color_info in
     (match sorted with
     | [] -> ()
     | (_float, color)::_rest ->

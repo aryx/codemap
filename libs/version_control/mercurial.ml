@@ -31,7 +31,7 @@ open Lib_vcs
 (*****************************************************************************)
 (* Wrappers *)
 (*****************************************************************************)
-let pr2, _pr2_once = Common2.mk_pr2_wrappers Flag_version_control.verbose
+let pr2, _pr2_once = Common2_.mk_pr2_wrappers Flag_version_control.verbose
 
 (*****************************************************************************)
 (* Helpers *)
@@ -76,15 +76,15 @@ let annotate2 ?(basedir="") filename =
   (*let ys = Common.cat (Common.filename_of_db (basedir,filename)) in*)
 
   let annots = 
-    xs |> List_.map_filter (fun s -> 
+    xs |> List_.filter_map (fun s -> 
       if s =~ annotate_regexp 
       then 
         let (author, commitid, month_str, day, year) = Common.matched5 s in
         Some (VersionId commitid, 
               Author author,
-              Common2.mk_date_dmy 
+              Common2_.mk_date_dmy 
                 (s_to_i day) 
-                (Common2.int_of_month (Common2.month_of_string month_str))
+                (Common2_.int_of_month (Common2_.month_of_string month_str))
                 (s_to_i year))
       else begin 
         pr2 ("hg annotate wrong line: " ^ s);
@@ -105,7 +105,7 @@ let annotate_raw ?(basedir="") filename =
   let xs = UCmd.cmd_to_list cmd in
 
   let annots = 
-    xs |> List_.map_filter (fun s -> 
+    xs |> List_.filter_map (fun s -> 
       if s =~ annotate_regexp 
       then 
         Some s
@@ -147,9 +147,9 @@ let date_file_creation2 ?(basedir="") file =
     if s =~ date_regexp
     then 
       let (month_str, day, year) = Common.matched3 s in
-      Some (Common2.mk_date_dmy 
+      Some (Common2_.mk_date_dmy 
                (s_to_i day) 
-               (Common2.int_of_month (Common2.month_of_string month_str))
+               (Common2_.int_of_month (Common2_.month_of_string month_str))
                (s_to_i year))
     else None
   )
@@ -168,7 +168,7 @@ let grep ~basedir str =
   in
   UCmd.cmd_to_list cmd
 (*
-  let (xs, status) = Common2.cmd_to_list_and_status cmd in
+  let (xs, status) = Common2_.cmd_to_list_and_status cmd in
   (* According to grep man page, non-zero exit code is expected when
    * there are no matches.
    * According to xargs man page, it returns 123 if one of his subcommand
@@ -186,7 +186,7 @@ let grep ~basedir str =
  
 
 let show ~basedir file commitid =
-  let tmpfile = UTmp.new_temp_file "hg_cat" ".cat" in
+  let tmpfile = UTmp.new_temp_file ~prefix:"hg_cat" ~suffix:".cat" () in
   let str_commit = Lib_vcs.s_of_versionid commitid in
   let cmd = spf "hg cat -r '%s' %s > %s" str_commit file !!tmpfile in
   exec_cmd ~basedir cmd;

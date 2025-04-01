@@ -13,6 +13,7 @@
  * license.txt for more details.
  *)
 open Common
+open Fpath_.Operators
 module J = JSON
 
 (*****************************************************************************)
@@ -220,8 +221,8 @@ let heat_map_properties =
  * I doubt MySQL can be as fast and light as my JSON + hashtbl indexing.
  *)
 let build_index_of_layers ~root layers =
-  let hmicro = Common2.hash_with_default (fun () -> Hashtbl.create 101) in
-  let hmacro = Common2.hash_with_default (fun () -> []) in
+  let hmicro = Common2_.hash_with_default (fun () -> Hashtbl.create 101) in
+  let hmacro = Common2_.hash_with_default (fun () -> []) in
 
   layers
   |> List.filter (fun (_layer, active) -> active)
@@ -241,7 +242,7 @@ let build_index_of_layers ~root layers =
                  *)
                 let color_macro_level =
                   finfo.macro_level
-                  |> List_.map_filter (fun (kind, v) ->
+                  |> List_.filter_map (fun (kind, v) ->
                          (* some sanity checking *)
                          try Some (v, Hashtbl.find hkind kind) with
                          | Not_found ->
@@ -274,7 +275,7 @@ let build_index_of_layers ~root layers =
 (*****************************************************************************)
 (* Layers helpers *)
 (*****************************************************************************)
-let has_active_layers layers = layers.layers |> List.map snd |> Common2.or_list
+let has_active_layers layers = layers.layers |> List.map snd |> Common2_.or_list
 
 (*****************************************************************************)
 (* Meta *)
@@ -629,14 +630,14 @@ let load_layer file =
   (* pr2 (spf "loading layer: %s" file); *)
   if File_type.is_json_filename (Fpath.v file) 
   then UChan.with_open_in (Fpath.v file) J.json_of_chan |> layer_of_json
-  else Common2.get_value file
+  else Common2_.get_value file
 
 let save_layer layer file =
   if
     File_type.is_json_filename (Fpath.v file)
     (* layer +> vof_layer +> OCaml.string_of_v +> Common.write_file ~file *)
   then layer |> json_of_layer |> OCamlx.save_json file
-  else Common2.write_value layer file
+  else Common2_.write_value layer file
 
 (*****************************************************************************)
 (* Layer builder helper *)
@@ -659,8 +660,8 @@ let simple_layer_of_parse_infos ~root ~title ?(description = "") xs kinds =
     |> List.map (fun (tok, kind) ->
            let file = Tok.file_of_tok tok in
            let line = Tok.line_of_tok tok in
-           let file' = Common2.relative_to_absolute file in
-           (Filename_.readable ~root file', (line, kind)))
+           let file' = Common2_.relative_to_absolute !!file in
+           (!!(Filename_.readable ~root:(Fpath.v root) (Fpath.v file')), (line, kind)))
   in
 
   let (group_by_file : (string (* filename *) * (int * kind) list) list) =
@@ -759,7 +760,7 @@ let layer_red_green_and_heatmap ~root ~output xs =
  * just the line count.
  *)
 let stat_of_layer layer =
-  let h = Common2.hash_with_default (fun () -> 0) in
+  let h = Common2_.hash_with_default (fun () -> 0) in
 
   layer.kinds |> List.iter (fun (kind, _color) -> h#add kind 0);
   layer.files

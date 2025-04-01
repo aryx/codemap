@@ -201,9 +201,9 @@ let (parse_patch: (string list) -> patchinfo) = fun lines ->
    *)
   let double_splitted = 
     lines 
-      |> Common2.split_list_regexp "^xxx "  
+      |> Common2_.split_list_regexp "^xxx "  
       |> List.map (fun (s, group) -> 
-          (s, Common2.split_list_regexp "^@@" group) 
+          (s, Common2_.split_list_regexp "^@@" group) 
          )
   in
 
@@ -227,7 +227,7 @@ let (parse_patch: (string list) -> patchinfo) = fun lines ->
             | _ when 
                   s =~ "^@@ \\-\\([0-9]+\\),\\([0-9]+\\) \\+\\([0-9]+\\),\\([0-9]+\\) @@" ->
                 let (start1, plus1, _start2, _plus2) = matched4 s in
-                let (start1, plus1) = Common2.pair s_to_i (start1, plus1) in
+                let (start1, plus1) = Common2_.pair s_to_i (start1, plus1) in
                 ((start1, start1 + plus1), 
                 (* just put the +- into the string ? *)
                 group
@@ -237,7 +237,7 @@ let (parse_patch: (string list) -> patchinfo) = fun lines ->
             | _ when 
                   s =~ "^@@ \\-\\([0-9]+\\) \\+\\([0-9]+\\),\\([0-9]+\\) @@" ->
                 let (start1, _start2, _plus2) = matched3 s in
-                let (start1, plus1) = Common2.pair s_to_i (start1, "0") in
+                let (start1, plus1) = Common2_.pair s_to_i (start1, "0") in
                 ((start1, start1 + plus1), 
                 (* just put the +- into the string ? *)
                 group
@@ -247,7 +247,7 @@ let (parse_patch: (string list) -> patchinfo) = fun lines ->
             | _ when 
                   s =~ "^@@ \\-\\([0-9]+\\),\\([0-9]+\\) \\+\\([0-9]+\\) @@" ->
                 let (start1, plus1,  _start2) = matched3 s in
-                let (start1, plus1) = Common2.pair s_to_i (start1, plus1) in
+                let (start1, plus1) = Common2_.pair s_to_i (start1, plus1) in
                 ((start1, start1 + plus1), 
                 (* just put the +- into the string ? *)
                 group
@@ -275,7 +275,7 @@ let (parse_patch: (string list) -> patchinfo) = fun lines ->
 
 let hunk_containing_string s (pinfos: patchinfo) = 
   pinfos |> List_.find_some (fun (_file, fileinfo) -> 
-    Common2.optionise (fun () -> 
+    Common2_.optionise (fun () -> 
       fileinfo |> List_.find_some (fun (_limits, hunk) -> 
         let hunk' = hunk |> List.map remove_prefix_mark in
         if List.mem s hunk'
@@ -285,9 +285,9 @@ let hunk_containing_string s (pinfos: patchinfo) =
   )
 
 let hunks_containing_string s (pinfos: patchinfo) = 
-  pinfos |> List_.map_filter (fun (_file, fileinfo) -> 
+  pinfos |> List_.filter_map (fun (_file, fileinfo) -> 
     let res = 
-      (fileinfo |> List_.map_filter (fun (_limits, hunk) -> 
+      (fileinfo |> List_.filter_map (fun (_limits, hunk) -> 
         let hunk' = hunk |> List.map remove_prefix_mark in
         if List.mem s hunk'
         then Some hunk
@@ -303,7 +303,7 @@ let modified_lines fileinfo =
     let hunk = parse_hunk hunk in
     let noplus = hunk |> List_.exclude (function Plus _ -> true | _ -> false)
     in
-    List_.index_list noplus |> List_.map_filter (function
+    List_.index_list noplus |> List_.filter_map (function
     | Minus _, idx -> Some (idx + start)
     | _ -> None
     )
@@ -426,7 +426,7 @@ let (generate_patch:
          let lines_to_add_fake_indexed = 
            lines_to_add |> List.map (fun s -> s, -1) in
 
-         indexed_lines |> Common2.map_flatten (fun (line, idx) ->
+         indexed_lines |> Common2_.map_flatten (fun (line, idx) ->
            if idx =|= lineno 
            then 
              (match edition_cmd with
@@ -441,8 +441,8 @@ let (generate_patch:
    let lines' = indexed_lines |> List.map fst in
                                     
    (* generating diff *)
-   let tmpfile = UTmp.new_temp_file "genpatch" ".patch" in
-   UFile.write_file ~file:tmpfile (Common2.unlines lines');
+   let tmpfile = UTmp.new_temp_file ~prefix:"genpatch" ~suffix:".patch" () in
+   UFile.write_file ~file:tmpfile (Common2_.unlines lines');
    (* pr2 filename_in_project; *)
    let xs = UCmd.cmd_to_list 
        (spf "diff -u -p  \"%s\" \"%s\"" filename !!tmpfile) 

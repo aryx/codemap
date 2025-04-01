@@ -4,7 +4,7 @@
  (wrapped false)
  (libraries
    commons
-   commons2
+   commons2_
    profiling
  )
  (preprocess

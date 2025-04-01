@@ -211,7 +211,7 @@ let filters = [
   );
 
   "cpp", (let x = ref false in (fun file ->
-    Common2.once x (fun () -> 
+    Common2_.once x (fun () -> 
       (* TODO: also add possible pfff_macros.h when there *)
       Parse_cpp.init_defs !Flag_parsing_cpp.macros_h
     );
@@ -232,23 +232,22 @@ let mk_filter_file (root : Fpath.t) : (string (* filename *) -> bool) =
   let gitignore_filter =
     Gitignore_filter.create
       ~gitignore_filenames:[
-      "gitignore", ".gitignore";
-      "codemapignore", ".codemapignore";
+      Gitignore.{source_kind = "gitignore"; filename = ".gitignore"; format = Gitignore };
+      Gitignore.{source_kind = "codemapignore"; filename = ".codemapignore"; format = Gitignore };
       ]
     ~project_root:root ()
   in
   (fun file ->
      !filter file &&
      let ppath =
-        match Ppath.in_project ~root:(Rfpath.of_fpath_exn root) (Fpath.v file) with
+        match Ppath.in_project ~root:(Rfpath.of_fpath_exn root) (Rfpath.of_fpath_exn (Fpath.v file)) with
         | Ok ppath -> ppath
         | Error err ->
               failwith (spf "could not find project path for %s with root = %s (errot = %s)"
                 file !!root err)
      in
      let (status, _events) =
-         Gitignore_filter.select gitignore_filter []
-          ppath
+       Gitignore_filter.select gitignore_filter ppath
      in
      status =*= Gitignore.Not_ignored
     )
@@ -289,8 +288,9 @@ let treemap_generator ~filter_file =
 let build_model root dbfile_opt graphfile_opt =   
 
   let db_opt = dbfile_opt |> Option.map Database_code.load_database in
+  let caps = Cap.readdir_UNSAFE() in
   let files = 
-    UFile.Legacy.files_of_dirs_or_files_no_vcs_nofilter [root] |> List.filter !filter
+    UFile.Legacy.files_of_dirs_or_files_no_vcs_nofilter caps [root] |> List.filter !filter
   in
   let hentities = Model_database_code.hentities root db_opt in
   let all_entities = Model_database_code.all_entities ~root files db_opt in
@@ -321,7 +321,7 @@ let build_model root dbfile_opt graphfile_opt =
 
 (* could also to parse all json files and filter the one which do not parse *)
 let layers_in_dir dir =
-  Common2.readdir_to_file_list dir |> List_.map_filter (fun file ->
+  Common2_.readdir_to_file_list dir |> List_.filter_map (fun file ->
     if file =~ "layer.*json"
     then Some (Filename.concat dir file)
     else None
@@ -338,7 +338,7 @@ let main_action xs =
   (* this used to be done by linking with gtkInit.cmo, but better like this *)
   let _locale = GtkMain.Main.init () in
 
-  let root = Common2.common_prefix_of_files_or_dirs xs in
+  let root = Common2_.common_prefix_of_files_or_dirs xs in
   UCommon.pr2 (spf "Using root = %s" root);
 
   let filter_file = mk_filter_file (Fpath.v root) in
@@ -378,21 +378,22 @@ let main_action xs =
   db_file |> Option.iter (fun db -> 
     UCommon.pr2 (spf "Using pfff light db: %s" db)
   );
-  let graph_file = 
+  let graph_file : Fpath.t option = 
     match !graph_file, xs with
-    | Some file, _ -> Some file
+    | Some file, _ -> Some (Fpath.v file)
     | None, [dir] ->
       let candidates = [
-          Filename.concat dir Graph_code.default_filename;
+          Filename.concat dir !!Graph_code.default_filename;
       ] in
       (try 
-        Some (candidates |> List.find (fun file -> Sys.file_exists file))
+         let file = candidates |> List.find (fun file -> Sys.file_exists file) in
+         Some (Fpath.v file)
       with Not_found -> None
       )
     | _ -> None
   in
   graph_file |> Option.iter (fun db -> 
-    UCommon.pr2 (spf "Using graphcode: %s" db)
+    UCommon.pr2 (spf "Using graphcode: %s" !!db)
   );
 
   let treemap_func = treemap_generator ~filter_file in
@@ -441,7 +442,7 @@ let main_action xs =
  *)
 let test_loc print_top30 xs =
   let xs = xs |> List.map Unix.realpath in
-  let root = Common2.common_prefix_of_files_or_dirs xs in
+  let root = Common2_.common_prefix_of_files_or_dirs xs in
 
   let filter_file = mk_filter_file (Fpath.v root) in
   let treemap = Treemap_pl.code_treemap ~filter_file xs in
@@ -449,23 +450,23 @@ let test_loc print_top30 xs =
   let res = ref [] in
   let rec aux tree =
     match tree with
-    | Common2.Node (_dir, xs) ->
+    | Common2_.Node (_dir, xs) ->
         List.iter aux xs
-    | Common2.Leaf (leaf, _) ->
+    | Common2_.Leaf (leaf, _) ->
         let file = leaf.Treemap.label in
         let size = leaf.Treemap.size in
-        let unix_size = (Common2.unix_stat_eff file).Unix.st_size in
+        let unix_size = (Common2_.unix_stat_eff file).Unix.st_size in
         if unix_size > 0
         then begin
           let multiplier = (float_of_int size /. float_of_int unix_size) in
           let multiplier = min multiplier 1.0 in
-          let loc = Common2.nblines_with_wc file in
-          Stack_.push ((Filename_.readable ~root file), 
+          let loc = Common2_.nblines_with_wc file in
+          Stack_.push ((!!(Filename_.readable ~root:(Fpath.v root) (Fpath.v file))), 
                        (float_of_int loc *. multiplier)) res;
         end
   in
   aux treemap;
-  let total = !res |> List.map snd |> List.map int_of_float  |> Common2.sum in
+  let total = !res |> List.map snd |> List.map int_of_float  |> Common2_.sum in
   UCommon.pr2 (spf "LOC = %d (%d files)" total (List.length !res));
   if print_top30 then begin
     let topx = 30 in
@@ -647,7 +648,7 @@ let options () = ([
   (*e: options *)
   ] @
   Arg_.options_of_actions action (all_actions()) @
-  Common2.cmdline_flags_devel () @
+  Common2_.cmdline_flags_devel () @
   [
   "-version",   Arg.Unit (fun () -> 
     UCommon.pr2 (spf "CodeMap version: %s" "TODO: version codemap");
@@ -669,7 +670,7 @@ let main () =
   let args = Arg_.parse_options (options()) usage_msg Sys.argv in
 
   (* TODO: call setup_logging, use cmdliner and parse --debug, --info ... *)
-  Logs_.enable_logging();
+  Logs_.setup_basic ();
   Logs.info (fun m -> m "Starting logging");
     
   (* must be done after Arg.parse, because Common.profile is set by it *)

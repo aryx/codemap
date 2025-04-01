@@ -15,7 +15,7 @@
  * license.txt for more details.
  *)
 (*e: Facebook copyright *)
-open Common2.ArithFloatInfix
+open Common2_.ArithFloatInfix
 
 module CairoH = Cairo_helpers
 module L = Layer_code
@@ -74,7 +74,7 @@ let draw_legend ~cr =
 
 let draw_legend_layer ~cr layers_idx = 
   let pairs = 
-    layers_idx.L.layers |> List_.map_filter (fun (layer, is_active) ->
+    layers_idx.L.layers |> List_.filter_map (fun (layer, is_active) ->
       if is_active
       then Some layer.L.kinds
       else None

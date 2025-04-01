@@ -157,7 +157,7 @@ type category =
    * global/local dichotomy of scope. (But even if functions are globals,
    * still can have some global/local dichotomy but at the module level.
    *)
-  | Entity of Entity_code.entity_kind * usedef2
+  | Entity of Entity_code.kind * usedef2
   (* kind of specific case of Global of Local which we know are really
    * really local. Don't really need a def_arity and place here. *)
   | Local of usedef
