@@ -5,17 +5,14 @@
  *)
 open Common
 open Fpath_.Operators
-
 module Flag = Flag_visual
 module FT = File_type
-
 module Model = Model2
 
 (*****************************************************************************)
 (* Prelude *)
 (*****************************************************************************)
-(* 
- * This is the main entry point of codemap, a semantic source code visualizer
+(* This is the main entry point of codemap, a semantic source code visualizer
  * using treemaps and code thumbnails. The focus here is code understanding
  * not editing, so for instance even if features like autocompletion are
  * great for editing, they are not really helpful for understanding an existing
@@ -148,6 +145,9 @@ let test_mode = ref (None: string option)
 let filter = ref (fun _file -> true)
 (* less: a config file: GtkMain.Rc.add_default_file "/.../pfff_browser.rc"; *)
 
+(* for -debug, -verbose, -quiet *)
+let log_level = ref (Some Logs.Warning)
+
 (* action mode *)
 let action = ref ""
 
@@ -250,21 +250,6 @@ let mk_filter_file (root : Fpath.t) : (Fpath.t -> bool) =
     )
 
 (*****************************************************************************)
-(* Helpers *)
-(*****************************************************************************)
-
-let set_gc () =
-  if !Flag.debug_gc
-  then Gc.set { (Gc.get()) with Gc.verbose = 0x01F };
-  (* only relevant in bytecode, in native the stacklimit is the os stacklimit *)
-  Gc.set {(Gc.get ()) with Gc.stack_limit = 1000 * 1024 * 1024};
-  (* see www.elehack.net/michael/blog/2010/06/ocaml-memory-tuning *)
-  Gc.set { (Gc.get()) with Gc.minor_heap_size = 4_000_000 };
-  Gc.set { (Gc.get()) with Gc.major_heap_increment = 8_000_000 };
-  Gc.set { (Gc.get()) with Gc.space_overhead = 300 };
-  ()
-
-(*****************************************************************************)
 (* Model helpers *)
 (*****************************************************************************)
 
@@ -276,7 +261,7 @@ let treemap_generator ~filter_file =
   let algo = Treemap.Ordered Treemap.PivotByMiddle in
   let big_borders = !Flag.boost_label_size in
   let rects = Treemap.render_treemap ~algo ~big_borders treemap in
-  UCommon.pr2 (spf "%d rectangles to draw" (List.length rects));
+  Logs.debug (fun m -> m "%d rectangles to draw" (List.length rects));
   rects
 (*e: [[treemap_generator]] *)
 
@@ -286,8 +271,10 @@ let build_model root dbfile_opt graphfile_opt =
 
   let db_opt = dbfile_opt |> Option.map Database_code.load_database in
   let caps = Cap.readdir_UNSAFE() in
+  (* TODO: use List_files *)
   let files = 
-    UFile.Legacy.files_of_dirs_or_files_no_vcs_nofilter caps [root] |> List.filter (fun file -> !filter (Fpath.v file))
+    UFile.Legacy.files_of_dirs_or_files_no_vcs_nofilter caps [root] 
+    |> List.filter (fun file -> !filter (Fpath.v file))
   in
   let hentities = Model_database_code.hentities root db_opt in
   let all_entities = Model_database_code.all_entities ~root files db_opt in
@@ -330,8 +317,6 @@ let layers_in_dir dir =
 
 (*s: function [[main_action]] *)
 let main_action xs = 
-  set_gc ();
-
   (* this used to be done by linking with gtkInit.cmo, but better like this *)
   let _locale = GtkMain.Main.init () in
 
@@ -339,7 +324,7 @@ let main_action xs =
    * for advanced customization
    *)
   let root = Common2_.common_prefix_of_files_or_dirs xs in
-  UCommon.pr2 (spf "Using root = %s" root);
+  Logs.info (fun m -> m "Using root = %s" root);
 
   let filter_file = mk_filter_file (Fpath.v root) in
 
@@ -376,7 +361,7 @@ let main_action xs =
       | _ -> None
   in
   db_file |> Option.iter (fun db -> 
-    UCommon.pr2 (spf "Using pfff light db: %s" db)
+    Logs.info (fun m -> m "Using pfff light db: %s" db)
   );
   let graph_file : Fpath.t option = 
     match !graph_file, xs with
@@ -393,7 +378,7 @@ let main_action xs =
     | _ -> None
   in
   graph_file |> Option.iter (fun db -> 
-    UCommon.pr2 (spf "Using graphcode: %s" !!db)
+    Logs.info (fun m -> m "Using graphcode: %s" !!db)
   );
 
   let treemap_func = treemap_generator ~filter_file in
@@ -633,10 +618,14 @@ let options () = ([
   (* debugging helpers *)
   (*-------------------------------------------------------------------------*)
 
-    "-test", Arg.String (fun s -> test_mode := Some s),
-    " <str> execute an internal script";
-
-    "-verbose", Arg.Set Flag.verbose_visual,
+    "-verbose", Arg.Unit (fun () ->
+          log_level := Some Logs.Info;
+          Flag.verbose_visual := true;
+    ),
+    " ";
+    "-debug", Arg.Unit (fun () -> log_level := Some Logs.Debug),
+    " ";
+    "-quiet", Arg.Unit (fun () -> log_level := None),
     " ";
     "-debug_gc", Arg.Set Flag.debug_gc,
     " ";
@@ -645,6 +634,9 @@ let options () = ([
     (* "-disable_ancient", Arg.Clear Flag.use_ancient, " "; *)
     "-disable_fonts", Arg.Set Flag.disable_fonts,
     " ";
+
+    "-test", Arg.String (fun s -> test_mode := Some s),
+    " <str> execute an internal script";
   (*e: options *)
   ] @
   Arg_.options_of_actions action (all_actions()) @
@@ -667,10 +659,10 @@ let main () =
       (Filename.basename Sys.argv.(0))
       "https://github.com/facebook/pfff/wiki/Codemap"
   in
+  (* alt: use cmdliner and parse --debug, --info ... *)
   let args = Arg_.parse_options (options()) usage_msg Sys.argv in
 
-  (* TODO: call setup_logging, use cmdliner and parse --debug, --info ... *)
-  Logs_.setup_basic ();
+  Logs_.setup ~level:!log_level ();
   Logs.info (fun m -> m "Starting logging");
     
   (* must be done after Arg.parse, because Common.profile is set by it *)
