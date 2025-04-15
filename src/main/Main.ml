@@ -148,9 +148,6 @@ let test_mode = ref (None: string option)
 let filter = ref (fun _file -> true)
 (* less: a config file: GtkMain.Rc.add_default_file "/.../pfff_browser.rc"; *)
 
-(* TODO: switch to Logs *)
-let log_config_file = ref "log_config.json"
-
 (* action mode *)
 let action = ref ""
 
