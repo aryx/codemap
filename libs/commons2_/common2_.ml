@@ -495,6 +495,7 @@ let test_exn x s =
 (* related work:
  *  - http://cedeela.fr/quickcheck-for-ocaml.html
  *)
+module URandom = Random
 
 (*---------------------------------------------------------------------------*)
 (* generators *)
