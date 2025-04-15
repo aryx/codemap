@@ -158,7 +158,7 @@ let action = ref ""
 let filters = [
   (* pad-specific: semgrep related files *)
   "semgrep", (fun file ->
-    match FT.file_type_of_file (Fpath.v file) with
+    match FT.file_type_of_file file with
     | FT.PL (FT.OCaml _ | FT.Python | FT.Web (FT.Js | FT.TypeScript))
     | FT.PL (FT.IDL _)
     | FT.PL (FT.Script _)
@@ -168,42 +168,42 @@ let filters = [
   );
   (* pad-specific: *)
   "xix", (fun file ->
-    match FT.file_type_of_file (Fpath.v file) with
+    match FT.file_type_of_file file with
     | FT.PL ((FT.OCaml _) | (FT.C _ | FT.Asm)) | FT.Config FT.Makefile -> true
     | _ -> false
   );
 
   "ocaml", (fun file ->
-    match File_type.file_type_of_file (Fpath.v file) with
+    match File_type.file_type_of_file file with
     | FT.PL (FT.OCaml _) | FT.Config (FT.Makefile)  -> true
     | _ -> false
   );
   "mli", (fun file ->
-    match File_type.file_type_of_file (Fpath.v file) with
+    match File_type.file_type_of_file file with
     | FT.PL (FT.OCaml "mli") | FT.Config (FT.Makefile)   -> 
-      not (file =~ ".*/commons/")
+      not (!!file =~ ".*/commons/")
     | _ -> false
   );
   "nw", (fun file -> 
-    match FT.file_type_of_file (Fpath.v file) with
+    match FT.file_type_of_file file with
     | FT.Text "nw" -> true | _ -> false
   );
   "doc", (fun file -> 
-    match FT.file_type_of_file (Fpath.v file) with
+    match FT.file_type_of_file file with
     | FT.Text _ -> true | _ -> false
   );
 
   (* other languages *)
   "php", (fun file ->
-    match File_type.file_type_of_file (Fpath.v file) with
+    match File_type.file_type_of_file file with
     | FT.PL (FT.Web (FT.Php _)) -> true  | _ -> false
   );
   "js", (fun file ->
-    match File_type.file_type_of_file (Fpath.v file) with
+    match File_type.file_type_of_file file with
     | FT.PL (FT.Web (FT.Js)) -> true  | _ -> false
   );
   "config", (fun file ->
-    match File_type.file_type_of_file (Fpath.v file) with
+    match File_type.file_type_of_file file with
     | FT.Config (FT.Yaml | FT.Json) -> true  | _ -> false
   );
 
@@ -212,7 +212,7 @@ let filters = [
       (* TODO: also add possible pfff_macros.h when there *)
       Parse_cpp.init_defs !Flag_parsing_cpp.macros_h
     );
-    match FT.file_type_of_file (Fpath.v file) with
+    match FT.file_type_of_file file with
     | FT.PL (FT.C _ | FT.Cplusplus _) -> true 
     | FT.PL FT.Asm -> true
     | _ -> false
@@ -220,12 +220,12 @@ let filters = [
 
   (* general categories *)
   "pl", (fun file ->
-    match File_type.file_type_of_file (Fpath.v file) with
+    match File_type.file_type_of_file file with
     | FT.PL _ -> true  | _ -> false
   );
 ]
 
-let mk_filter_file (root : Fpath.t) : (string (* filename *) -> bool) =
+let mk_filter_file (root : Fpath.t) : (Fpath.t -> bool) =
   let gitignore_filter =
     Gitignore_filter.create
       ~gitignore_filenames:[
@@ -237,11 +237,11 @@ let mk_filter_file (root : Fpath.t) : (string (* filename *) -> bool) =
   (fun file ->
      !filter file &&
      let ppath =
-        match Ppath.in_project ~root:(Rfpath.of_fpath_exn root) (Rfpath.of_fpath_exn (Fpath.v file)) with
+        match Ppath.in_project ~root:(Rfpath.of_fpath_exn root) (Rfpath.of_fpath_exn file) with
         | Ok ppath -> ppath
         | Error err ->
               failwith (spf "could not find project path for %s with root = %s (errot = %s)"
-                file !!root err)
+                !!file !!root err)
      in
      let (status, _events) =
        Gitignore_filter.select gitignore_filter ppath
@@ -287,7 +287,7 @@ let build_model root dbfile_opt graphfile_opt =
   let db_opt = dbfile_opt |> Option.map Database_code.load_database in
   let caps = Cap.readdir_UNSAFE() in
   let files = 
-    UFile.Legacy.files_of_dirs_or_files_no_vcs_nofilter caps [root] |> List.filter !filter
+    UFile.Legacy.files_of_dirs_or_files_no_vcs_nofilter caps [root] |> List.filter (fun file -> !filter (Fpath.v file))
   in
   let hentities = Model_database_code.hentities root db_opt in
   let all_entities = Model_database_code.all_entities ~root files db_opt in
@@ -486,7 +486,7 @@ let test_treemap_dirs () =
   let tree = 
     paths |> Treemap.tree_of_dirs_or_files
       ~filter_dir:Lib_vcs.filter_vcs_dir
-      ~filter_file:(fun file -> file =~ ".*\\.ml")
+      ~filter_file:(fun file -> !!file =~ ".*\\.ml")
       ~file_hook:(fun _file -> 10)
   in
   UCommon.pr2_gen tree

@@ -86,7 +86,7 @@ val follow_symlinks : bool ref
 
 (* paths -> tree (see also Common.tree2_of_files) *)
 val tree_of_dirs_or_files :
-  ?filter_file:(string -> bool) ->
+  ?filter_file:(Fpath.t -> bool) ->
   ?filter_dir:(string (* a dir *) -> bool) ->
   ?sort:directory_sort ->
   file_hook:(string (* filename *) -> 'a) ->

@@ -896,7 +896,7 @@ let tree_of_dir3 ?(filter_file = fun _ -> true) ?(filter_dir = fun _ -> true)
 
            match stat.Unix.st_kind with
            | Unix.S_REG ->
-               if filter_file full then
+               if filter_file (Fpath.v full) then
                  Stack_.push (Leaf (full, file_hook full)) res
            | Unix.S_DIR -> if filter_dir full then Stack_.push (aux full) res
            | Unix.S_LNK ->
@@ -904,7 +904,7 @@ let tree_of_dir3 ?(filter_file = fun _ -> true) ?(filter_dir = fun _ -> true)
                  try
                    match (Unix.stat full).Unix.st_kind with
                    | Unix.S_REG ->
-                       if filter_file full then
+                       if filter_file (Fpath.v full) then
                          Stack_.push (Leaf (full, file_hook full)) res
                    | Unix.S_DIR ->
                        if filter_dir full then Stack_.push (aux full) res

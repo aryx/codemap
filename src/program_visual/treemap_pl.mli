@@ -11,6 +11,6 @@ val anamorphic_diviser_of_file:
 
 (* default treemap *)
 val code_treemap: 
-  filter_file: (string (* filename *) -> bool) ->
+  filter_file: (Fpath.t -> bool) ->
   string (* path *) list ->
   (string, string (* filename *) * int) Treemap.treemap
