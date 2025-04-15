@@ -1,8 +1,10 @@
+; this library used to be in pfff
+
 (library
- (name h_program_visual)
+ (name program_visual)
  (wrapped false)
  (libraries
-
+   ; semgrep deps
    commons 
    lib_parsing
 

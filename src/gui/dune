@@ -1,5 +1,5 @@
 (library
- (name codemap)
+ (name viewer)
  (wrapped false)
  (libraries
     ; stdlib deps
@@ -8,10 +8,9 @@
     cairo2
     cairo2-gtk
     
-    ; pfff deps
+    ; semgrep deps
     commons
     commons2_
-    visualization gui
     lib_parsing
     graph_code  
 
@@ -31,12 +30,13 @@
 
     ; now actually in codemap
     pfff-highlighters
+    visualization gui
     database_code
     layer_code
 
     ; local deps
     codemap_utils
-    h_program_visual
+    program_visual
  )
  (preprocess (pps ppx_deriving.show profiling.ppx))
 )

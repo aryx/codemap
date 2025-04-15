@@ -2,20 +2,19 @@
  (names Main)
  (libraries 
    ; stdlib deps
-   str bigarray
-   ocamlgraph
    logs
-
-   ; semgrep deps
-   commons
+   str
+   bigarray ocamlgraph
    ppx_deriving
    uucp uutf
+
+   ; semgrep libs/ deps 
+   commons
    paths
    gitignore
-
-   ; codemap lib deps
-   visualization gui
    lib_parsing
+
+   ; semgrep languages/ deps
    parser_python.menhir
    parser_javascript.menhir
    parser_php.menhir
@@ -29,8 +28,11 @@
    pfff-lang_html
    pfff-lang_text
 
+   ; codemap lib deps
+   visualization gui
+
    ; local deps
-   codemap
+   viewer
 
  )
  ; for ocamldebug
