@@ -338,6 +338,9 @@ let main_action xs =
   (* this used to be done by linking with gtkInit.cmo, but better like this *)
   let _locale = GtkMain.Main.init () in
 
+  (* TODO: remove, accept just a single root and rely on .codemapignore
+   * for advanced customization
+   *)
   let root = Common2_.common_prefix_of_files_or_dirs xs in
   UCommon.pr2 (spf "Using root = %s" root);
 
