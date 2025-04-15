@@ -1,6 +1,7 @@
+; this library used to be in pfff and called pfff-h_files_format
 (library
- (public_name pfff-h_files-format)
- (name pfff_h_files_format)
+ (public_name files-format)
+ (name files_format)
  (wrapped false)
  (libraries
    commons

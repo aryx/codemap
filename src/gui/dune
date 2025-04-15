@@ -11,7 +11,7 @@
     ; pfff deps
     commons
     commons2_
-    pfff-h_visualization gui
+    visualization gui
     lib_parsing
     graph_code  
 

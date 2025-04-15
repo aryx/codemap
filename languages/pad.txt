@@ -1,0 +1,3 @@
+Codemap relies a lot on the language parsers in Semgrep.
+The remaining directories here are for languages that were removed
+from Semgrep or didn't fit in Semgrep.

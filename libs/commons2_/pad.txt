@@ -1,0 +1,5 @@
+This used to be in Semgrep but got removed at some point and so
+it's reintroduced temporarily in Codemap which is still relying
+unfortunately on many functions from the Common2 module.
+The module was renamed and added an '_' suffix to make it differ
+from the Common2.ml that still exists in Semgrep.

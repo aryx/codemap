@@ -7,8 +7,8 @@
    lib_parsing
 
    ; local deps
-   pfff-h_visualization
-   h_version_control
+   visualization
+   version_control
    archi_code
    layer_code
  )

@@ -1,5 +1,6 @@
+; this library used to be in pfff too
 (library
- (name h_version_control)
+ (name version_control)
  (wrapped false)
  (libraries
    ounit2

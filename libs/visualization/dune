@@ -1,13 +1,14 @@
+; this library used to be in pfff and called pfff-h_visualization
 (library
- (public_name pfff-h_visualization)
- (name pfff_h_visualization)
+ (public_name visualization)
+ (name visualization)
  (wrapped false)
  (libraries
    yojson ocamlgraph
 
    commons profiling
    commons2_
-   pfff-h_files-format
+   files-format
  )
  (preprocess (pps ppx_deriving.show profiling.ppx))
 )

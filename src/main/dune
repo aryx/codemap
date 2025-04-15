@@ -14,7 +14,7 @@
    gitignore
 
    ; codemap lib deps
-   pfff-h_visualization gui
+   visualization gui
    lib_parsing
    parser_python.menhir
    parser_javascript.menhir
