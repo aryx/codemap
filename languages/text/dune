@@ -1,9 +1,9 @@
 (library
- (public_name pfff-lang_text)
- (name pfff_lang_text)
+ (public_name parser_text)
+ (name parser_text)
  (wrapped false)
  (libraries
-
+   ; semgre pdeps
    commons
    lib_parsing
 

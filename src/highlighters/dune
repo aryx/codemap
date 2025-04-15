@@ -1,16 +1,16 @@
 (library
- (public_name pfff-highlighters)
- (name pfff_highlighters)
+ (public_name highlighters)
+ (name highlighters)
  (wrapped false)
  (libraries
+   ; standard deps
    fpath
    logs
 
+   ; semgrep deps
    commons
    lib_parsing
-
    ast_generic ; now in semgrep
-   highlight_code ; now in codemap! local deps
 
    ; lang-specific
    parser_cpp.menhir parser_cpp.ast_generic
@@ -31,9 +31,10 @@
    parser_yaml.ast_generic
 
    ; now in codemap
-   pfff-lang_html
-   pfff-lang_nw
+   parser_html
+   parser_nw
 
+   highlight_code ; now in codemap! local deps
    ; for highlight_php
    database_code
 

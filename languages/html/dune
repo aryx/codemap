@@ -1,9 +1,9 @@
 (library
- (public_name pfff-lang_html)
- (name pfff_lang_html)
+ (public_name parser_html)
+ (name parser_html)
  (wrapped false)
  (libraries
-
+   ; semgrep deps
    commons
    commons2_
    lib_parsing

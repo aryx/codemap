@@ -1,9 +1,9 @@
 (library
- (public_name pfff-lang_nw)
- (name pfff_lang_nw)
+ (public_name parser_nw)
+ (name parser_nw)
  (wrapped false)
  (libraries
-
+   ; semgrep deps
    commons profiling
    commons2_
    lib_parsing

@@ -24,12 +24,12 @@
     parser_lisp.recursive_descent
 
     ; now in codemap
-    pfff-lang_nw
-    pfff-lang_html
-    pfff-lang_text
+    parser_nw
+    parser_html
+    parser_text
 
     ; now actually in codemap
-    pfff-highlighters
+    highlighters
     visualization gui
     database_code
     layer_code

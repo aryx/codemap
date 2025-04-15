@@ -2,19 +2,20 @@
  (names Main)
  (libraries 
    ; stdlib deps
+   str bigarray
+   ocamlgraph
    logs
-   str
-   bigarray ocamlgraph
+
+   ; semgrep deps
+   commons
    ppx_deriving
    uucp uutf
-
-   ; semgrep libs/ deps 
-   commons
    paths
    gitignore
-   lib_parsing
 
-   ; semgrep languages/ deps
+   ; codemap lib deps
+   visualization gui
+   lib_parsing
    parser_python.menhir
    parser_javascript.menhir
    parser_php.menhir
@@ -24,12 +25,9 @@
    parser_lisp.recursive_descent
 
    ; now in codemap
-   pfff-lang_nw
-   pfff-lang_html
-   pfff-lang_text
-
-   ; codemap lib deps
-   visualization gui
+   parser_nw
+   parser_html
+   parser_text
 
    ; local deps
    viewer
