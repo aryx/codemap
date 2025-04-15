@@ -1,8 +1,13 @@
+
+# TODO: add {,test} at some point
+default:
+	dune build _build/install/default/bin/codemap
 all:
 	dune build
-#	dune build ./_build/default/tests/test.bc
 clean:
 	dune clean
+	rm -f *.opam
+
 test:
 	dune runtest
 install:
