@@ -17,7 +17,7 @@
 (*e: Facebook copyright *)
 open Common2_
 open Common
-
+module Log = Log_viewer.Log
 module G = Gui
 module K = GdkKeysyms
 module T = Treemap
@@ -28,14 +28,10 @@ module Flag = Flag_visual
 module Style = Style2
 module Db = Database_code
 
+
 (*****************************************************************************)
 (* Prelude *)
 (*****************************************************************************)
-
-(*****************************************************************************)
-(* Wrappers *)
-(*****************************************************************************)
-let pr2, _pr2_once = Common2_.mk_pr2_wrappers Flag.verbose_visual
 
 (*****************************************************************************)
 (* Globals *)
@@ -335,7 +331,7 @@ let mk_gui ~screen_size ~legend test_mode w =
                  ~root:w.dw.current_root)
           in
 
-          pr2 (spf "e= %s, final_paths= %s" str(String.concat "|" final_paths));
+          Log.debug (fun m -> m "e= %s, final_paths= %s" str(String.concat "|" final_paths));
           w.current_entity <- Some e;
           Async.async_get_opt w.model |> Option.iter (fun model ->
             model.g |> Option.iter (fun g ->
@@ -482,10 +478,10 @@ let mk_gui ~screen_size ~legend test_mode w =
   (* Controller._before_quit_all_func |> Common.push2 Model.close_model; *)
 
   GtkSignal.user_handler := (fun exn -> 
-    pr2 "fucking callback";
+    Log.debug (fun m -> m "fucking callback");
     (* old: before 3.11: Features.Backtrace.print(); *)
     let s = Printexc.get_backtrace () in
-    pr2 s;
+    Log.debug (fun m-> m "%s" s);
     let pb = "pb: " ^ Common.exn_to_s exn ^ "\n" ^ s in
     G.dialog_text ~text:pb ~title:"pb";
     raise exn

@@ -150,7 +150,7 @@ let _highlight_funcall_simple ~tag ~hentities f _args info =
 *)
           ()
       | _x :: _y :: _xs ->
-          UCommon.pr2_once ("highlight_php: multiple entities for: " ^ f);
+          Logs.warn (fun m -> m "highlight_php: multiple entities for: %s" f);
           (* todo: place of id *)
           tag info (Entity (Function, Use2 fake_no_use2))
       | [] ->

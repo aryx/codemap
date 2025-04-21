@@ -17,6 +17,7 @@ open Common
 open Fpath_.Operators
 module Date = Common2_
 open Lib_vcs 
+module Log = Log_vcs.Log
 
 (*****************************************************************************)
 (* Prelude *)
@@ -27,11 +28,6 @@ open Lib_vcs
 (*****************************************************************************)
 
 let ext_git_annot_cache = ".git_annot"
-
-(*****************************************************************************)
-(* Wrappers *)
-(*****************************************************************************)
-let pr2, _pr2_once = Common2_.mk_pr2_wrappers Flag_version_control.verbose
 
 (*****************************************************************************)
 (* Helpers *)
@@ -80,7 +76,6 @@ let cleanup_cache_files dir =
     let files = Common2_.files_of_dir_or_files_no_vcs ext [dir] in
     files |> List.iter (fun file -> 
       assert(Filename_.filesuffix file = ext);
-      pr2 file;
       Sys.command (spf "rm -f %s" file) |> ignore;
     ));
   ()
@@ -98,7 +93,7 @@ let clean_git_patch xs =
 
 let exec_cmd ~basedir s =
   let cmd = Lib_vcs.goto_dir basedir^ s in
-  pr2 (spf "executing: %s" s);
+  Log.info (fun m -> m  "executing: %s" s);
   let ret = Sys.command cmd in
   if (ret <> 0) 
   then failwith ("pb with command: " ^ s)
@@ -161,7 +156,7 @@ let annotate2 ?(basedir="") ?(use_cache=false) ?(use_dash_C=true) filename =
                Author author,
                Common2_.mk_date_dmy (s_to_i day) (s_to_i month) (s_to_i year))
         else begin 
-          pr2 ("git annotate wrong line: " ^ s);
+          Log.warn (fun m -> m "git annotate wrong line: %s" s);
           None
         end
       ) 
@@ -371,7 +366,7 @@ let file_to_commits ~basedir commits =
         h#update filename (fun old -> (vid, fileinfo)::old)
       );
     with e -> 
-      pr2 (spf "PB with patch: %s, exn = %s" 
+      Log.warn (fun m -> m "PB with patch: %s, exn = %s" 
               (Lib_vcs.s_of_versionid vid)
               (Common.exn_to_s e)
       );
@@ -386,7 +381,7 @@ let file_to_commits ~basedir commits =
 let refactoring_commits ?(since="--since='1 year ago'") ?(threshold=50) repo =
   let basedir = Unix.realpath repo in
   let commits = commits ~basedir ~extra_args:since () in
-  pr2 (spf "#commits = %d" (List.length commits));
+  Log.info (fun m -> m "#commits = %d" (List.length commits));
   
   let refactoring_ids = 
   commits |> (* Console.progress (fun k -> *) List.filter (fun (id, _x) ->
@@ -401,7 +396,7 @@ let refactoring_commits ?(since="--since='1 year ago'") ?(threshold=50) repo =
   in
   (* TODO: use UTmp *)
   let tmpfile = "/tmp/refactoring_diffs.list" in
-  pr2 (spf "writing data in %s" tmpfile);
+  Log.info (fun m -> m "writing data in %s" tmpfile);
   UFile.Legacy.with_open_outfile tmpfile (fun (xpr, _chan) ->
     refactoring_ids |> List.iter (fun (id, s) ->
       UCommon.pr2_gen (id, s);

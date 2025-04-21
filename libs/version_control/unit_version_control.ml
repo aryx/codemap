@@ -88,7 +88,6 @@ let unittest =
 
     "git" >:: (fun () ->
        with_tmp_directory (fun basedir ->
-         Flag_version_control.verbose := false;
 
          exec_cmds ~basedir [
            "git init > /dev/null";
@@ -149,7 +148,6 @@ let unittest =
 (*****************************************************************************)
     "mercurial" >:: (fun () ->
        with_tmp_directory (fun basedir ->
-         Flag_version_control.verbose := false;
 
          exec_cmds ~basedir [
            "hg init > /dev/null";
@@ -223,7 +221,6 @@ let unittest =
 (*****************************************************************************)
     "generic vcs" >:: (fun () ->
        with_tmp_directory (fun basedir ->
-         Flag_version_control.verbose := false;
 
          exec_cmds ~basedir [
            "git init > /dev/null";

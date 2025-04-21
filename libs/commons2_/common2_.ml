@@ -208,19 +208,19 @@ let reset_pr_indent () = _tab_level_print := 0
 let pr2_gen x = pr2 (Dumper.dump x)
 
 (* ---------------------------------------------------------------------- *)
+(*
 let xxx_once f s =
   match () with
-  | _ when !UCommon.disable_pr2_once ->
-      (* nosemgrep: no-pr2 *)
-      UCommon.pr2 s
   | _ when not (Hashtbl.mem UCommon._already_printed s) ->
       Hashtbl.add UCommon._already_printed s true;
       f ("(ONCE) " ^ s)
   | _else_ -> ()
 
 let pr2_once s = xxx_once pr2 s
+*)
 
 (* ---------------------------------------------------------------------- *)
+(*
 let mk_pr2_wrappers aref =
   let fpr2 s =
     if !aref then pr2 s else (* just to the log file *)
@@ -228,7 +228,7 @@ let mk_pr2_wrappers aref =
   in
   let fpr2_once s = if !aref then pr2_once s else xxx_once out_chan_pr2 s in
   (fpr2, fpr2_once)
-
+*)
 (* ---------------------------------------------------------------------- *)
 (* could also be in File section *)
 
@@ -1772,7 +1772,7 @@ let grep_dash_v_str =
   "| grep -v /.hg/ |grep -v /CVS/ | grep -v /.git/ |grep -v /_darcs/"
   ^ "| grep -v /.svn/ | grep -v .git_annot | grep -v .marshall"
 
-let arg_symlink () = if !UFile.follow_symlinks then " -L " else ""
+let arg_symlink b = if b then " -L " else ""
 
 let files_of_dir_or_files_no_vcs ext xs =
   xs
@@ -1780,7 +1780,7 @@ let files_of_dir_or_files_no_vcs ext xs =
          if USys.is_directory x then
            (* nosemgrep: forbid-exec *)
            UCmd.cmd_to_list
-             ("find " ^ arg_symlink () ^ x ^ " -noleaf -type f -name \"*." ^ ext
+             ("find " ^ arg_symlink false ^ x ^ " -noleaf -type f -name \"*." ^ ext
             ^ "\"" ^ grep_dash_v_str)
          else [ x ])
   |> List_.flatten
@@ -4848,9 +4848,6 @@ let cmdline_flags_devel () =
 let cmdline_flags_verbose () =
   [
     ("-verbose_level", Arg.Set_int verbose_level, " <int> guess what");
-    ( "-disable_pr2_once",
-      Arg.Set UCommon.disable_pr2_once,
-      " to print more messages" );
   ]
 
 let cmdline_flags_other () =

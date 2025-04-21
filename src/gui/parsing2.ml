@@ -156,7 +156,7 @@ let rewrite_categ_using_entities s categ file entities =
       | _x::_y::_xs ->
         (* TODO: handle __construct directly *)
         if not (List.mem s ["__construct"])
-        then UCommon.pr2_once (spf "multi def found for %s in %s" s file);
+        then Logs.warn (fun m -> m "multi def found for %s in %s" s file);
         categ
 
 (*****************************************************************************)

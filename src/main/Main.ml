@@ -321,7 +321,9 @@ let main_action xs =
   let _locale = GtkMain.Main.init () in
 
   (* TODO: remove, accept just a single root and rely on .codemapignore
-   * for advanced customization
+   * for advanced customization? or nice to accept multiple so
+   * can compare size of different projects together easily?
+   * TODO: use Fpath_.common_parent at least
    *)
   let root = Common2_.common_prefix_of_files_or_dirs xs in
   Logs.info (fun m -> m "Using root = %s" root);

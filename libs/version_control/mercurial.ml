@@ -14,8 +14,8 @@
  *)
 open Common
 open Fpath_.Operators
-
 open Lib_vcs 
+module Log = Log_vcs.Log
 
 (*****************************************************************************)
 (* Prelude *)
@@ -29,18 +29,13 @@ open Lib_vcs
  *)
 
 (*****************************************************************************)
-(* Wrappers *)
-(*****************************************************************************)
-let pr2, _pr2_once = Common2_.mk_pr2_wrappers Flag_version_control.verbose
-
-(*****************************************************************************)
 (* Helpers *)
 (*****************************************************************************)
 
 (* less: factorize with Git.exec_cmd *)
 let exec_cmd ~basedir s =
   let cmd = Lib_vcs.goto_dir basedir^ s in
-  pr2 (spf "executing: %s" s);
+  Log.info (fun m -> m "executing: %s" s);
   let ret = Sys.command cmd in
   if (ret <> 0) 
   then failwith ("pb with command: " ^ s)
@@ -87,7 +82,7 @@ let annotate2 ?(basedir="") filename =
                 (Common2_.int_of_month (Common2_.month_of_string month_str))
                 (s_to_i year))
       else begin 
-        pr2 ("hg annotate wrong line: " ^ s);
+        Log.warn (fun m -> m "hg annotate wrong line: %s" s);
         None
       end
     ) 

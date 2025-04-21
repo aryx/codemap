@@ -43,7 +43,7 @@ let annotate2 ?(basedir="") filename =
   (* TODO????: compute it from file directly ? *)
   (* ??? let date = "-D \"12 Feb\"" in *)
   let date = "-D \"1 Sep\"" in
-  UCommon.pr2_once ("using Date for CVS:" ^ date);
+  Logs.debug (fun m -> m "using Date for CVS:%s"  date);
 
 
   (* bugfix: for eclipse files can have space and $ in filename *)

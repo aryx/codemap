@@ -250,7 +250,7 @@ let build_index_of_layers ~root layers =
                               * to be able to filter kinds in codemap by just editing the
                               * JSON file and removing certain kind definitions
                               *)
-                             UCommon.pr2_once (spf "PB: kind %s was not defined" kind);
+                             Logs.warn (fun m -> m "PB: kind %s was not defined" kind);
                              None)
                 in
                 hmacro#update file (fun old -> color_macro_level @ old);
@@ -269,7 +269,7 @@ let build_index_of_layers ~root layers =
                              oldh)
                        with
                        | Not_found ->
-                           UCommon.pr2_once (spf "PB: kind %s was not defined" kind))));
+                           Logs.warn (fun m -> m "PB: kind %s was not defined" kind))));
   { layers; root; macro_index = hmacro#to_h; micro_index = hmicro#to_h }
 
 (*****************************************************************************)
