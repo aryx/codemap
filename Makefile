@@ -1,3 +1,10 @@
+###############################################################################
+# Prelude
+###############################################################################
+
+###############################################################################
+# Main targets
+###############################################################################
 
 # TODO: add {,test} at some point
 default:
@@ -16,8 +23,15 @@ install:
 codemap.opam: dune-project
 	dune build $@
 
+.PHONY: all clean install test dump
+
+###############################################################################
+# Developer targets
+###############################################################################
+
 # -filter semgrep
 visual:
 	./bin/codemap -screen_size 3 -efuns_client efuns_client -emacs_client /dev/null .
 
-.PHONY: all clean install test dump
+sync:
+	echo go to docs/literate/

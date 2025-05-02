@@ -375,13 +375,16 @@ let test_mode = ref (None: string option)
 
 <<function [[main_action]]>>=
 let main_action xs = 
-  set_gc ();
-
   (* this used to be done by linking with gtkInit.cmo, but better like this *)
   let _locale = GtkMain.Main.init () in
 
-  let root = Common2.common_prefix_of_files_or_dirs xs in
-  UCommon.pr2 (spf "Using root = %s" root);
+  (* TODO: remove, accept just a single root and rely on .codemapignore
+   * for advanced customization? or nice to accept multiple so
+   * can compare size of different projects together easily?
+   * TODO: use Fpath_.common_parent at least
+   *)
+  let root = Common2_.common_prefix_of_files_or_dirs xs in
+  Logs.info (fun m -> m "Using root = %s" root);
 
   let filter_file = mk_filter_file (Fpath.v root) in
 
@@ -418,23 +421,24 @@ let main_action xs =
       | _ -> None
   in
   db_file |> Option.iter (fun db -> 
-    UCommon.pr2 (spf "Using pfff light db: %s" db)
+    Logs.info (fun m -> m "Using pfff light db: %s" db)
   );
-  let graph_file = 
+  let graph_file : Fpath.t option = 
     match !graph_file, xs with
-    | Some file, _ -> Some file
+    | Some file, _ -> Some (Fpath.v file)
     | None, [dir] ->
       let candidates = [
-          Filename.concat dir Graph_code.default_filename;
+          Filename.concat dir !!Graph_code.default_filename;
       ] in
       (try 
-        Some (candidates |> List.find (fun file -> Sys.file_exists file))
+         let file = candidates |> List.find (fun file -> Sys.file_exists file) in
+         Some (Fpath.v file)
       with Not_found -> None
       )
     | _ -> None
   in
   graph_file |> Option.iter (fun db -> 
-    UCommon.pr2 (spf "Using graphcode: %s" db)
+    Logs.info (fun m -> m "Using graphcode: %s" !!db)
   );
 
   let treemap_func = treemap_generator ~filter_file in
@@ -503,8 +507,11 @@ type model = {
 let build_model root dbfile_opt graphfile_opt =   
 
   let db_opt = dbfile_opt |> Option.map Database_code.load_database in
+  let caps = Cap.readdir_UNSAFE() in
+  (* TODO: use List_files *)
   let files = 
-    UFile.Legacy.files_of_dirs_or_files_no_vcs_nofilter [root] |> List.filter !filter
+    UFile.Legacy.files_of_dirs_or_files_no_vcs_nofilter caps [root] 
+    |> List.filter (fun file -> !filter (Fpath.v file))
   in
   let hentities = Model_database_code.hentities root db_opt in
   let all_entities = Model_database_code.all_entities ~root files db_opt in
@@ -544,7 +551,7 @@ let treemap_generator ~filter_file =
   let algo = Treemap.Ordered Treemap.PivotByMiddle in
   let big_borders = !Flag.boost_label_size in
   let rects = Treemap.render_treemap ~algo ~big_borders treemap in
-  UCommon.pr2 (spf "%d rectangles to draw" (List.length rects));
+  Logs.debug (fun m -> m "%d rectangles to draw" (List.length rects));
   rects
 @ 
 
@@ -647,15 +654,15 @@ let readable_to_absolute_filename_under_root ~root filename =
 
   (* the root may be a filename *)
   let root_dir = 
-    if UFile.is_directory (Fpath.v root) then root
+    if UFile.is_dir ~follow_symlinks:false (Fpath.v root) then root
     else Filename.dirname root
   in
 
   let root_and_parents =
-    Common2.inits_of_absolute_dir root_dir |> List.rev
+    Common2_.inits_of_absolute_dir root_dir |> List.rev
   in
   try 
-    root_and_parents |> Common2.return_when (fun dir ->
+    root_and_parents |> Common2_.return_when (fun dir ->
       let path = Filename.concat dir filename in
       if Sys.file_exists path
       then Some path
@@ -741,19 +748,19 @@ val init_drawing :
 <<[[init_drawing]]()>>=
 (* This is a first guess. The first configure ev will force a resize. *)
 let init_drawing   ?(width = 600) ?(height = 600) func layers paths root =
-  let paths = List.map Common2.relative_to_absolute paths in
-  let current_root = Common2.common_prefix_of_files_or_dirs paths in
+  let paths = List.map Common2_.relative_to_absolute paths in
+  let current_root = Common2_.common_prefix_of_files_or_dirs paths in
   let treemap = 
     Profiling.profile_code "Visual.building the treemap" (fun () -> 
       func paths
     ) 
   in
   let readable_file_to_rect =
-    treemap |> List_.map_filter (fun rect ->
+    treemap |> List_.filter_map (fun rect ->
       if not rect.T.tr_is_node
       then 
         let file  = rect.T.tr_label in
-        let readable = Filename_.readable ~root file in
+        let readable = !!(Filename_.readable ~root:(Fpath.v root) (Fpath.v file)) in
         Some (readable, rect)
       else None
     ) |> Hashtbl_.hash_of_list
@@ -1021,7 +1028,7 @@ let mk_gui ~screen_size ~legend test_mode w =
                  ~root:w.dw.current_root)
           in
 
-          pr2 (spf "e= %s, final_paths= %s" str(String.concat "|" final_paths));
+          Log.debug (fun m -> m "e= %s, final_paths= %s" str(String.concat "|" final_paths));
           w.current_entity <- Some e;
           Async.async_get_opt w.model |> Option.iter (fun model ->
             model.g |> Option.iter (fun g ->
@@ -1168,10 +1175,10 @@ let mk_gui ~screen_size ~legend test_mode w =
   (* Controller._before_quit_all_func |> Common.push2 Model.close_model; *)
 
   GtkSignal.user_handler := (fun exn -> 
-    pr2 "fucking callback";
+    Log.debug (fun m -> m "fucking callback");
     (* old: before 3.11: Features.Backtrace.print(); *)
     let s = Printexc.get_backtrace () in
-    pr2 s;
+    Log.debug (fun m-> m "%s" s);
     let pb = "pb: " ^ Common.exn_to_s exn ^ "\n" ^ s in
     G.dialog_text ~text:pb ~title:"pb";
     raise exn
@@ -1637,7 +1644,7 @@ let final_font_size_of_categ ~font_size ~font_size_real categ =
     | n when n < 10. -> 0.7 * multiplier
     | _ -> 0.5 * multiplier
   in
-  Common2.borne ~min:font_size ~max:(font_size * 30.) (font_size * multiplier)
+  Common2_.borne ~min:font_size ~max:(font_size * 30.) (font_size * multiplier)
 
 @ 
 
@@ -1772,7 +1779,7 @@ let draw_content cr layout context tr =
 
       (* hmatching_lines comes from layer_microlevel which is 1-index based *)
       let line = line_0_indexed +.. 1 in
-      (match Common2.hfind_option line hmatching_lines with
+      (match Common2_.hfind_option line hmatching_lines with
       | None -> ()
       | Some color ->
         CairoH.fill_rectangle ~cr 
@@ -1817,7 +1824,7 @@ let draw_treemap_rectangle_content_maybe cr clipping context tr  =
      * it confuses cairo which then can confuse computation done in gtk
      * idle callbacks
      *)
-    if Common2.lfile_exists_eff file && File_type.is_textual_file (Fpath.v file)
+    if Common2_.lfile_exists_eff file && File_type.is_textual_file (Fpath.v file)
     then begin
       let w = F.rect_width r in
       let h = F.rect_height r in
@@ -1830,7 +1837,7 @@ let draw_treemap_rectangle_content_maybe cr clipping context tr  =
        (* Common.nblines_with_wc was really slow. Forking sucks.
         * alt: we could store the nblines of a file in the db.
         *)
-        let nblines = Common2.nblines_eff file |> float_of_int in
+        let nblines = Common2_.nblines_eff file |> float_of_int in
         
        (* Assume our code follow certain conventions. Could infer from file. 
         * We should put 80, but a font is higher than large, so I readjusted.
@@ -2163,13 +2170,13 @@ let button_action w ev =
             (* less: print a warning when does not exist? *)
             |> List.filter Sys.file_exists
           in
-          let readable = Filename_.readable ~root:model.root file in
+          let readable = !!(Filename_.readable ~root:(Fpath.v model.root) (Fpath.v file)) in
           let readable =
             match entity_opt with
             | None -> readable
             | Some n -> 
-                let g = Common2.some model.g in
-                try Graph_code.file_of_node n g
+                let g = Common2_.some model.g in
+                try !!(Graph_code.file_of_node n g)
                 with Not_found -> readable
           in
           let entries = [
@@ -2202,7 +2209,7 @@ let button_action w ev =
             (match entity_opt with
             | None -> []
             | Some n ->
-                let g = Common2.some model.g in
+                let g = Common2_.some model.g in
                 [`I ("info entity", (fun () ->
                   let users = Graph_code.pred n (Graph_code.Use) g in
                   let str =
@@ -2214,7 +2221,7 @@ let button_action w ev =
                 ));
                  `I ("goto def", (fun () ->
                    w.current_node_selected <- entity_opt;
-                   let dest = Graph_code.file_of_node n g in
+                   let dest = !!(Graph_code.file_of_node n g) in
                    !Ctl._go_dirs_or_file w (paths_of_readables [dest])
                  ));                                              
                 ]
@@ -2252,7 +2259,7 @@ let button_action w ev =
 
 <<[[go_dirs_or_file]]>>=
 let go_dirs_or_file ?(current_grep_query=None) w paths =
-  let root = Common2.common_prefix_of_files_or_dirs paths in
+  let root = Common2_.common_prefix_of_files_or_dirs paths in
   UCommon.pr2 (spf "zooming in %s" (String.concat "|" paths));
 
   (* reset the painter? not needed because will call draw below
@@ -2327,7 +2334,7 @@ let find_rectangle_at_user_point user dw =
    match matching_rects with
    | [] -> None
    | [x] -> Some (x, [], x)
-   | _ -> Some (Common2.head_middle_tail matching_rects)
+   | _ -> Some (Common2_.head_middle_tail matching_rects)
 [@@profiling]
 @
 
@@ -3442,7 +3449,7 @@ let rewrite_categ_using_entities s categ file entities =
       | _x::_y::_xs ->
         (* TODO: handle __construct directly *)
         if not (List.mem s ["__construct"])
-        then UCommon.pr2_once (spf "multi def found for %s in %s" s file);
+        then Logs.warn (fun m -> m "multi def found for %s in %s" s file);
         categ
 
 (*****************************************************************************)
@@ -3463,13 +3470,13 @@ let tokens_with_categ_of_file_helper
       prefs (Fpath.v file) (ast, toks);
 
     (* getting the text *)
-    toks |> List_.map_filter (fun tok -> 
+    toks |> List_.filter_map (fun tok -> 
       let info = info_of_tok tok in
       let s = Tok.content_of_tok info in
       if not (Tok.is_origintok info)
       then None
       else 
-        let categ = Common2.hfind_option info h |> Option.map (fun categ ->
+        let categ = Common2_.hfind_option info h |> Option.map (fun categ ->
           rewrite_categ_using_entities s categ file hentities
         ) in
         Some (s, categ,{ Pos.l = Tok.line_of_tok info; c = Tok.col_of_tok info; })
@@ -3899,10 +3906,14 @@ let async_get_opt a =
 (* debugging helpers *)
 (*-------------------------------------------------------------------------*)
 
-  "-test", Arg.String (fun s -> test_mode := Some s),
-  " <str> execute an internal script";
-
-  "-verbose", Arg.Set Flag.verbose_visual,
+  "-verbose", Arg.Unit (fun () ->
+        log_level := Some Logs.Info;
+        Flag.verbose_visual := true;
+  ),
+  " ";
+  "-debug", Arg.Unit (fun () -> log_level := Some Logs.Debug),
+  " ";
+  "-quiet", Arg.Unit (fun () -> log_level := None),
   " ";
   "-debug_gc", Arg.Set Flag.debug_gc,
   " ";
@@ -3911,6 +3922,9 @@ let async_get_opt a =
   (* "-disable_ancient", Arg.Clear Flag.use_ancient, " "; *)
   "-disable_fonts", Arg.Set Flag.disable_fonts,
   " ";
+
+  "-test", Arg.String (fun s -> test_mode := Some s),
+  " <str> execute an internal script";
 @
 
 <<type settings>>=
@@ -4407,17 +4421,14 @@ let draw_rectangle_bis ~cr ~color ~line_width r =
  *)
 open Common
 open Fpath_.Operators
-
 module Flag = Flag_visual
 module FT = File_type
-
 module Model = Model2
 
 (*****************************************************************************)
 (* Prelude *)
 (*****************************************************************************)
-(* 
- * This is the main entry point of codemap, a semantic source code visualizer
+(* This is the main entry point of codemap, a semantic source code visualizer
  * using treemaps and code thumbnails. The focus here is code understanding
  * not editing, so for instance even if features like autocompletion are
  * great for editing, they are not really helpful for understanding an existing
@@ -4528,8 +4539,8 @@ module Model = Model2
 let filter = ref (fun _file -> true)
 (* less: a config file: GtkMain.Rc.add_default_file "/.../pfff_browser.rc"; *)
 
-(* TODO: switch to Logs *)
-let log_config_file = ref "log_config.json"
+(* for -debug, -verbose, -quiet *)
+let log_level = ref (Some Logs.Warning)
 
 (* action mode *)
 let action = ref ""
@@ -4541,7 +4552,7 @@ let action = ref ""
 let filters = [
   (* pad-specific: semgrep related files *)
   "semgrep", (fun file ->
-    match FT.file_type_of_file (Fpath.v file) with
+    match FT.file_type_of_file file with
     | FT.PL (FT.OCaml _ | FT.Python | FT.Web (FT.Js | FT.TypeScript))
     | FT.PL (FT.IDL _)
     | FT.PL (FT.Script _)
@@ -4551,51 +4562,51 @@ let filters = [
   );
   (* pad-specific: *)
   "xix", (fun file ->
-    match FT.file_type_of_file (Fpath.v file) with
+    match FT.file_type_of_file file with
     | FT.PL ((FT.OCaml _) | (FT.C _ | FT.Asm)) | FT.Config FT.Makefile -> true
     | _ -> false
   );
 
   "ocaml", (fun file ->
-    match File_type.file_type_of_file (Fpath.v file) with
+    match File_type.file_type_of_file file with
     | FT.PL (FT.OCaml _) | FT.Config (FT.Makefile)  -> true
     | _ -> false
   );
   "mli", (fun file ->
-    match File_type.file_type_of_file (Fpath.v file) with
+    match File_type.file_type_of_file file with
     | FT.PL (FT.OCaml "mli") | FT.Config (FT.Makefile)   -> 
-      not (file =~ ".*/commons/")
+      not (!!file =~ ".*/commons/")
     | _ -> false
   );
   "nw", (fun file -> 
-    match FT.file_type_of_file (Fpath.v file) with
+    match FT.file_type_of_file file with
     | FT.Text "nw" -> true | _ -> false
   );
   "doc", (fun file -> 
-    match FT.file_type_of_file (Fpath.v file) with
+    match FT.file_type_of_file file with
     | FT.Text _ -> true | _ -> false
   );
 
   (* other languages *)
   "php", (fun file ->
-    match File_type.file_type_of_file (Fpath.v file) with
+    match File_type.file_type_of_file file with
     | FT.PL (FT.Web (FT.Php _)) -> true  | _ -> false
   );
   "js", (fun file ->
-    match File_type.file_type_of_file (Fpath.v file) with
+    match File_type.file_type_of_file file with
     | FT.PL (FT.Web (FT.Js)) -> true  | _ -> false
   );
   "config", (fun file ->
-    match File_type.file_type_of_file (Fpath.v file) with
+    match File_type.file_type_of_file file with
     | FT.Config (FT.Yaml | FT.Json) -> true  | _ -> false
   );
 
   "cpp", (let x = ref false in (fun file ->
-    Common2.once x (fun () -> 
+    Common2_.once x (fun () -> 
       (* TODO: also add possible pfff_macros.h when there *)
       Parse_cpp.init_defs !Flag_parsing_cpp.macros_h
     );
-    match FT.file_type_of_file (Fpath.v file) with
+    match FT.file_type_of_file file with
     | FT.PL (FT.C _ | FT.Cplusplus _) -> true 
     | FT.PL FT.Asm -> true
     | _ -> false
@@ -4603,50 +4614,34 @@ let filters = [
 
   (* general categories *)
   "pl", (fun file ->
-    match File_type.file_type_of_file (Fpath.v file) with
+    match File_type.file_type_of_file file with
     | FT.PL _ -> true  | _ -> false
   );
 ]
 
-let mk_filter_file (root : Fpath.t) : (string (* filename *) -> bool) =
+let mk_filter_file (root : Fpath.t) : (Fpath.t -> bool) =
   let gitignore_filter =
     Gitignore_filter.create
       ~gitignore_filenames:[
-      "gitignore", ".gitignore";
-      "codemapignore", ".codemapignore";
+      Gitignore.{source_kind = "gitignore"; filename = ".gitignore"; format = Gitignore };
+      Gitignore.{source_kind = "codemapignore"; filename = ".codemapignore"; format = Gitignore };
       ]
     ~project_root:root ()
   in
   (fun file ->
      !filter file &&
      let ppath =
-        match Ppath.in_project ~root:(Rfpath.of_fpath_exn root) (Fpath.v file) with
+        match Ppath.in_project ~root:(Rfpath.of_fpath_exn root) (Rfpath.of_fpath_exn file) with
         | Ok ppath -> ppath
         | Error err ->
               failwith (spf "could not find project path for %s with root = %s (errot = %s)"
-                file !!root err)
+                !!file !!root err)
      in
      let (status, _events) =
-         Gitignore_filter.select gitignore_filter []
-          ppath
+       Gitignore_filter.select gitignore_filter ppath
      in
      status =*= Gitignore.Not_ignored
     )
-
-(*****************************************************************************)
-(* Helpers *)
-(*****************************************************************************)
-
-let set_gc () =
-  if !Flag.debug_gc
-  then Gc.set { (Gc.get()) with Gc.verbose = 0x01F };
-  (* only relevant in bytecode, in native the stacklimit is the os stacklimit *)
-  Gc.set {(Gc.get ()) with Gc.stack_limit = 1000 * 1024 * 1024};
-  (* see www.elehack.net/michael/blog/2010/06/ocaml-memory-tuning *)
-  Gc.set { (Gc.get()) with Gc.minor_heap_size = 4_000_000 };
-  Gc.set { (Gc.get()) with Gc.major_heap_increment = 8_000_000 };
-  Gc.set { (Gc.get()) with Gc.space_overhead = 300 };
-  ()
 
 (*****************************************************************************)
 (* Model helpers *)
@@ -4658,7 +4653,7 @@ let set_gc () =
 
 (* could also to parse all json files and filter the one which do not parse *)
 let layers_in_dir dir =
-  Common2.readdir_to_file_list dir |> List_.map_filter (fun file ->
+  Common2_.readdir_to_file_list dir |> List_.filter_map (fun file ->
     if file =~ "layer.*json"
     then Some (Filename.concat dir file)
     else None
@@ -4679,7 +4674,7 @@ let layers_in_dir dir =
  *)
 let test_loc print_top30 xs =
   let xs = xs |> List.map Unix.realpath in
-  let root = Common2.common_prefix_of_files_or_dirs xs in
+  let root = Common2_.common_prefix_of_files_or_dirs xs in
 
   let filter_file = mk_filter_file (Fpath.v root) in
   let treemap = Treemap_pl.code_treemap ~filter_file xs in
@@ -4687,23 +4682,23 @@ let test_loc print_top30 xs =
   let res = ref [] in
   let rec aux tree =
     match tree with
-    | Common2.Node (_dir, xs) ->
+    | Common2_.Node (_dir, xs) ->
         List.iter aux xs
-    | Common2.Leaf (leaf, _) ->
+    | Common2_.Leaf (leaf, _) ->
         let file = leaf.Treemap.label in
         let size = leaf.Treemap.size in
-        let unix_size = (Common2.unix_stat_eff file).Unix.st_size in
+        let unix_size = (Common2_.unix_stat_eff file).Unix.st_size in
         if unix_size > 0
         then begin
           let multiplier = (float_of_int size /. float_of_int unix_size) in
           let multiplier = min multiplier 1.0 in
-          let loc = Common2.nblines_with_wc file in
-          Stack_.push ((Filename_.readable ~root file), 
+          let loc = Common2_.nblines_with_wc file in
+          Stack_.push ((!!(Filename_.readable ~root:(Fpath.v root) (Fpath.v file))), 
                        (float_of_int loc *. multiplier)) res;
         end
   in
   aux treemap;
-  let total = !res |> List.map snd |> List.map int_of_float  |> Common2.sum in
+  let total = !res |> List.map snd |> List.map int_of_float  |> Common2_.sum in
   UCommon.pr2 (spf "LOC = %d (%d files)" total (List.length !res));
   if print_top30 then begin
     let topx = 30 in
@@ -4723,7 +4718,7 @@ let test_treemap_dirs () =
   let tree = 
     paths |> Treemap.tree_of_dirs_or_files
       ~filter_dir:Lib_vcs.filter_vcs_dir
-      ~filter_file:(fun file -> file =~ ".*\\.ml")
+      ~filter_file:(fun file -> !!file =~ ".*\\.ml")
       ~file_hook:(fun _file -> 10)
   in
   UCommon.pr2_gen tree
@@ -4808,7 +4803,7 @@ let options () = ([
   <<options>>
   ] @
   Arg_.options_of_actions action (all_actions()) @
-  Common2.cmdline_flags_devel () @
+  Common2_.cmdline_flags_devel () @
   [
   "-version",   Arg.Unit (fun () -> 
     UCommon.pr2 (spf "CodeMap version: %s" "TODO: version codemap");
@@ -4827,10 +4822,10 @@ let main () =
       (Filename.basename Sys.argv.(0))
       "https://github.com/facebook/pfff/wiki/Codemap"
   in
+  (* alt: use cmdliner and parse --debug, --info ... *)
   let args = Arg_.parse_options (options()) usage_msg Sys.argv in
 
-  (* TODO: call setup_logging, use cmdliner and parse --debug, --info ... *)
-  Logs_.enable_logging();
+  Logs_.setup ~level:!log_level ();
   Logs.info (fun m -> m "Starting logging");
     
   (* must be done after Arg.parse, because Common.profile is set by it *)
@@ -4910,6 +4905,7 @@ val node_of_entity:
 <<model_graph_code.ml>>=
 <<Facebook copyright>>
 open Common
+open Fpath_.Operators
 
 module G = Graph_code
 module E = Entity_code
@@ -4942,8 +4938,8 @@ let build_filedeps_of_dir_or_file g =
 
   g |> G.iter_use_edges (fun n1 n2 ->
     try 
-      let file1 = G.file_of_node n1 g in
-      let file2 = G.file_of_node n2 g in
+      let file1 = !!(G.file_of_node n1 g) in
+      let file2 = !!(G.file_of_node n2 g) in
       (* file to file deps *)
       if file1 <> file2 && not (Hashtbl.mem halready (file1, file2)) then begin
         Hashtbl.replace halready (file1, file2) true;
@@ -4955,8 +4951,8 @@ let build_filedeps_of_dir_or_file g =
        * a/b -> a/c/bar.c, but not a/ -> a/c/bar.c cos of is_prefix
        * a/c <- a/b/foo.c, but not a/ <- a/b/foo.c cos of is_prefix
        *)
-      let dirs_n1 = Common2.inits_of_relative_dir file1 in
-      let dirs_n2 = Common2.inits_of_relative_dir file2 in
+      let dirs_n1 = Common2_.inits_of_relative_dir file1 in
+      let dirs_n2 = Common2_.inits_of_relative_dir file2 in
       dirs_n1 |> List.iter (fun dir ->
         if not (is_prefix dir file2)
         then Hashtbl.add huses (dir, E.Dir) file2;
@@ -4969,7 +4965,7 @@ let build_filedeps_of_dir_or_file g =
     with Not_found -> ()
   );
   let hres = Hashtbl.create 101 in
-  let keys = Common2.union_set (Common2.hkeys huses) (Common2.hkeys husers) in
+  let keys = Common2_.union_set (Common2_.hkeys huses) (Common2_.hkeys husers) in
   keys |> List.iter (fun k ->
     let uses = try Hashtbl.find_all huses k with Not_found -> [] in
     let users = try Hashtbl.find_all husers k with Not_found -> [] in
@@ -4988,12 +4984,12 @@ let build_entities_of_file g =
   g |> G.iter_nodes (fun n ->
     try 
       let info = G.nodeinfo n g in
-      let file = info.G.pos.pos.file in
+      let file = !!(info.G.pos.pos.file) in
       (* old: let line = info.G.pos.Parse_info.line in *)
       Hashtbl.add h file n;
     with Not_found -> ()
   );
-  Common2.hkeys h |> List.map (fun k ->
+  Common2_.hkeys h |> List.map (fun k ->
     let xs = Hashtbl.find_all h k in
     k, xs
   )
@@ -5010,7 +5006,7 @@ let build_entities_of_file g =
  *)
 let add_headers_files_entities_of_file root xs =
   let headers =
-    xs |> List_.map_filter (fun (file, xs) ->
+    xs |> List_.filter_map (fun (file, xs) ->
       let (d,b,e) = Filename_.dbe_of_filename_noext_ok file in
       match e with
       | "ml" -> 
@@ -5121,7 +5117,7 @@ type microlevel = {
  (* Note that I don't use G.node because the string below is not fully
   * qualified so one must use match_short_vs_node when comparing with nodes.
   *)
-  and short_node = (string * Entity_code.entity_kind)
+  and short_node = (string * Entity_code.kind)
 
 <<type drawing>>
 
@@ -5204,6 +5200,7 @@ val lines_where_used_node:
 <<model2.ml>>=
 <<Facebook copyright>>
 open Common
+open Fpath_.Operators
 
 module F = Figures
 module T = Treemap
@@ -5257,7 +5254,7 @@ type microlevel = {
  (* Note that I don't use G.node because the string below is not fully
   * qualified so one must use match_short_vs_node when comparing with nodes.
   *)
-  and short_node = (string * Entity_code.entity_kind)
+  and short_node = (string * Entity_code.kind)
   and glyph = {
     str: string;
     categ: Highlight_code.category option;
@@ -5379,14 +5376,14 @@ let rank_entity_kind = function
  *)
 let find_def_entity_at_line_opt line tr dw model =
   let file = tr.T.tr_label in
-  let readable = Filename_.readable ~root:model.root file in
+  let readable = !!(Filename_.readable ~root:(Fpath.v model.root) (Fpath.v file)) in
   try 
     let nodes = Hashtbl.find model.hentities_of_file readable in
     let microlevel = Hashtbl.find dw.microlevel tr in
     let short_node = List.assoc line microlevel.defs in
     (* try to match the possible shortname str with a fully qualified node 
     *)
-    nodes |> List_.map_filter (fun node ->
+    nodes |> List_.filter_map (fun node ->
       if match_short_vs_node short_node node
       then Some node
       else None
@@ -5419,7 +5416,7 @@ let find_use_entity_at_line_and_glyph_opt line glyph tr dw model =
 
 let node_of_rect tr model =
   let file = tr.Treemap.tr_label in
-  let readable = Filename_.readable ~root:model.root file in
+  let readable = !!(Filename_.readable ~root:(Fpath.v model.root) (Fpath.v file)) in
   let kind = if tr.Treemap.tr_is_node then E.Dir else E.File in
   readable, kind
 
@@ -5433,27 +5430,27 @@ let deps_readable_files_of_node node model =
   | _, Some g ->
       let succ = Graph_code.succ node Graph_code.Use g in
       let pred = Graph_code.pred node Graph_code.Use g in
-      succ |> List_.map_filter (fun n ->
-        try Some (Graph_code.file_of_node n g) with Not_found -> None
+      succ |> List_.filter_map (fun n ->
+        try Some !!(Graph_code.file_of_node n g) with Not_found -> None
       ),
-      pred |> List_.map_filter (fun n ->
-        try Some (Graph_code.file_of_node n g) with Not_found -> None
+      pred |> List_.filter_map (fun n ->
+        try Some !!(Graph_code.file_of_node n g) with Not_found -> None
       )
 
 let deps_rects_of_rect tr dw model =
   let node = node_of_rect tr model in
   let uses, users = deps_readable_files_of_node node model in
-  uses |> List_.map_filter (fun file -> 
-    Common2.optionise (fun () -> Hashtbl.find dw.readable_file_to_rect file)
+  uses |> List_.filter_map (fun file -> 
+    Common2_.optionise (fun () -> Hashtbl.find dw.readable_file_to_rect file)
   ),
-  users |> List_.map_filter (fun file ->
-    Common2.optionise (fun () ->Hashtbl.find dw.readable_file_to_rect file)
+  users |> List_.filter_map (fun file ->
+    Common2_.optionise (fun () ->Hashtbl.find dw.readable_file_to_rect file)
   )
 
 let line_and_microlevel_of_node_opt n dw model =
   let* g = model.g in
     try 
-      let file = Graph_code.file_of_node n g in
+      let file = !!(Graph_code.file_of_node n g) in
       (* rectangles not on the screen will be automatically "clipped"
        * as this may raise Not_found 
        *)
@@ -5471,7 +5468,7 @@ let uses_or_users_of_node node dw fsucc model =
   | None -> []
   | Some g ->
     let succ = fsucc node Graph_code.Use g in
-    succ |> List_.map_filter (fun n -> 
+    succ |> List_.filter_map (fun n -> 
       line_and_microlevel_of_node_opt n dw model
     )
 
@@ -5521,9 +5518,9 @@ let lines_where_used_node node startl microlevel =
 
 <<view2.ml>>=
 <<Facebook copyright>>
-open Common2
+open Common2_
 open Common
-
+module Log = Log_viewer.Log
 module G = Gui
 module K = GdkKeysyms
 module T = Treemap
@@ -5534,14 +5531,10 @@ module Flag = Flag_visual
 module Style = Style2
 module Db = Database_code
 
+
 (*****************************************************************************)
 (* Prelude *)
 (*****************************************************************************)
-
-(*****************************************************************************)
-(* Wrappers *)
-(*****************************************************************************)
-let pr2, _pr2_once = Common2.mk_pr2_wrappers Flag.verbose_visual
 
 (*****************************************************************************)
 (* Globals *)
@@ -5687,7 +5680,7 @@ val draw_trect_using_layers:
 
 <<draw_macrolevel.ml>>=
 <<Facebook copyright>>
-open Common2.ArithFloatInfix
+open Common2_.ArithFloatInfix
 
 open Figures (* for the fields *)
 module T = Treemap
@@ -5742,7 +5735,7 @@ let draw_trect_using_layers ~cr layers_with_index rect =
       with Not_found -> []
     in
     (* What to draw? TODO a splitted rectangle? *)
-    let sorted = Common2.sort_by_key_highfirst color_info in
+    let sorted = Common2_.sort_by_key_highfirst color_info in
     (match sorted with
     | [] -> ()
     | (_float, color)::_rest ->
@@ -5772,7 +5765,7 @@ val draw_magnify_line:
 <<Facebook copyright>>
 open Common
 open Either
-open Common2.ArithFloatInfix
+open Common2_.ArithFloatInfix
 
 open Figures (* for the fields *)
 open Model2 (* for the fields *)
@@ -5827,7 +5820,7 @@ type _point = Figures.point
 (*****************************************************************************)
 
 let is_big_file_with_few_lines ~nblines file = 
-  nblines < 20. && Common2.filesize_eff file > 4000
+  nblines < 20. && Common2_.filesize_eff file > 4000
 
 (* coupling: with parsing2.ml, todo move in parsing2.ml? *)
 let use_fancy_highlighting file =
@@ -5957,7 +5950,7 @@ let glyphs_of_file ~font_size ~font_size_real model_async file
       let color = 
         color_of_categ categ in
 
-      let xs = Common2.lines_with_nl_either s in
+      let xs = Common2_.lines_with_nl_either s in
       xs |> List.iter (function
       | Left str ->
           Stack_.push { M. str; font_size=final_font_size; color; categ;pos } 
@@ -6079,7 +6072,7 @@ let draw_magnify_line ?(honor_color=true) cr line microlevel =
 
 <<draw_labels.ml>>=
 <<Facebook copyright>>
-open Common2.ArithFloatInfix
+open Common2_.ArithFloatInfix
 
 open Figures (* for the fields *)
 
@@ -6112,7 +6105,7 @@ val draw_legend_layer: cr:Cairo.context -> Layer_code.layers_with_index -> unit
 
 <<draw_legend.ml>>=
 <<Facebook copyright>>
-open Common2.ArithFloatInfix
+open Common2_.ArithFloatInfix
 
 module CairoH = Cairo_helpers
 module L = Layer_code
@@ -6154,7 +6147,7 @@ let draw_legend_of_color_string_pairs ~cr xs =
 
 let draw_legend_layer ~cr layers_idx = 
   let pairs = 
-    layers_idx.L.layers |> List_.map_filter (fun (layer, is_active) ->
+    layers_idx.L.layers |> List_.filter_map (fun (layer, is_active) ->
       if is_active
       then Some layer.L.kinds
       else None
@@ -6186,10 +6179,10 @@ val button_action:
 
 <<view_mainmap.ml>>=
 <<Facebook copyright>>
-
 open Common
+open Fpath_.Operators
 (* floats are the norm in graphics *)
-open Common2.ArithFloatInfix
+open Common2_.ArithFloatInfix
 
 open Model2
 module CairoH = Cairo_helpers
@@ -6309,8 +6302,9 @@ val hook_finish_paint:
 <<view_overlays.ml>>=
 <<Facebook copyright>>
 open Common
+open Fpath_.Operators
 (* floats are the norm in graphics *)
-open Common2.ArithFloatInfix
+open Common2_.ArithFloatInfix
 
 open Model2
 module T = Treemap
@@ -6337,7 +6331,7 @@ let readable_txt_for_label txt current_root =
   let readable_txt = 
     if current_root = txt (* when we are fully zoomed on one file *)
     then "root"
-    else Filename_.readable ~root:current_root txt 
+    else !!(Filename_.readable ~root:(Fpath.v current_root) (Fpath.v txt))
   in
   if String.length readable_txt > 25
   then 
@@ -6434,8 +6428,8 @@ let draw_tooltip ~cr_overlay ~x ~y n g =
   let succ = Graph_code.succ n Graph_code.Use g in
   let files = 
     pred 
-    |> List_.map_filter (fun n ->
-        Common2.optionise (fun () -> (Graph_code.file_of_node n g)))
+    |> List_.filter_map (fun n ->
+        Common2_.optionise (fun () -> (Graph_code.file_of_node n g)))
     |> List_.sort |> Common2.uniq
   in
   let str = spf "
@@ -6446,7 +6440,7 @@ let draw_tooltip ~cr_overlay ~x ~y n g =
     (List.length pred) (List.length files)
     (List.length succ)
   in
-  let xs = Common2.lines str in
+  let xs = Common2_.lines str in
 
   (* copy paste of draw_label_overlay *)
   Cairo.select_font_face cr_overlay "serif" ~weight:Cairo.Normal;
@@ -6728,7 +6722,7 @@ open Common
 <<cairo_helpers.ml>>=
 <<Facebook copyright>>
 (* floats are the norm in graphics *)
-open Common2.ArithFloatInfix
+open Common2_.ArithFloatInfix
 
 open Figures
 module F = Figures

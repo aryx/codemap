@@ -36,7 +36,6 @@ SRC_VIEWS=$(SRC_VIEWS_WITH_MLI) $(SRC_VIEWS_WITH_MLI:ml=mli) $(SRC_VIEWS_JUST_ML
 
 include ~/github/semgrep-internals/Makefile.common
 
-
 #INDEXER=~/github/syncweb/indexer/_build/default/main_indexer.exe
 #index:
 #	$(INDEXER) -lang cmt $(SRC_INDEX)  \
