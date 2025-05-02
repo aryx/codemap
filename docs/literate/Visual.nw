@@ -3907,13 +3907,13 @@ let async_get_opt a =
 (*-------------------------------------------------------------------------*)
 
   "-verbose", Arg.Unit (fun () ->
-        log_level := Some Logs.Info;
+        logs_level := Some Logs.Info;
         Flag.verbose_visual := true;
   ),
   " ";
-  "-debug", Arg.Unit (fun () -> log_level := Some Logs.Debug),
+  "-debug", Arg.Unit (fun () -> logs_level := Some Logs.Debug),
   " ";
-  "-quiet", Arg.Unit (fun () -> log_level := None),
+  "-quiet", Arg.Unit (fun () -> logs_level := None),
   " ";
   "-debug_gc", Arg.Set Flag.debug_gc,
   " ";
@@ -4540,7 +4540,7 @@ let filter = ref (fun _file -> true)
 (* less: a config file: GtkMain.Rc.add_default_file "/.../pfff_browser.rc"; *)
 
 (* for -debug, -verbose, -quiet *)
-let log_level = ref (Some Logs.Warning)
+let logs_level = ref (Some Logs.Warning)
 
 (* action mode *)
 let action = ref ""
@@ -4825,7 +4825,7 @@ let main () =
   (* alt: use cmdliner and parse --debug, --info ... *)
   let args = Arg_.parse_options (options()) usage_msg Sys.argv in
 
-  Logs_.setup ~level:!log_level ();
+  Logs_.setup ~level:!logs_level ();
   Logs.info (fun m -> m "Starting logging");
     
   (* must be done after Arg.parse, because Common.profile is set by it *)

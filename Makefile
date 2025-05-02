@@ -34,4 +34,4 @@ visual:
 	./bin/codemap -screen_size 3 -efuns_client efuns_client -emacs_client /dev/null .
 
 sync:
-	echo go to docs/literate/
+	@echo go to docs/literate/

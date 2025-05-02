@@ -1,9 +1,11 @@
-SYNCFLAGS=-md5sum_in_auxfile -less_marks -lang ocaml
+SYNCFLAGS=-md5sum_in_auxfile -less_marks -lang ocaml -verbose
 
 VERSION=4
 DOC=Visual
 
+#TODO? add a Visua_extra.nw?
 SRC_ORIG=Visual.nw
+
 TOP=../..
 LIB=$(TOP)/src/gui/
 
