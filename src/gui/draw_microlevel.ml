@@ -27,9 +27,7 @@ module T = Treemap
 module Color = Simple_color
 module CairoH = Cairo_helpers
 module Flag = Flag_visual
-module Style = Style2
 module FT = File_type
-module Parsing = Parsing2
 
 (*****************************************************************************)
 (* Prelude *)

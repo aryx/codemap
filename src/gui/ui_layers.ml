@@ -16,11 +16,8 @@
  *)
 (*e: Facebook copyright *)
 open Common
-
 open Model
 module M = Model
-module Controller = Controller2
-
 module L = Layer_code
 
 (*****************************************************************************)

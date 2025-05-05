@@ -43,7 +43,7 @@ let dialog_search_def model =
   )
   in
   let entry = 
-    Completion2.my_entry_completion_eff 
+    Completion.my_entry_completion_eff 
       ~callback_selected:(fun _entry _str _file _e ->
         true
       )

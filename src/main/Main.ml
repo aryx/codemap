@@ -277,7 +277,7 @@ let build_model root dbfile_opt graphfile_opt =
   in
   let hentities = Model_database_code.hentities root db_opt in
   let all_entities = Model_database_code.all_entities ~root files db_opt in
-  let big_grep_idx = Completion2.build_completion_defs_index all_entities in
+  let big_grep_idx = Completion.build_completion_defs_index all_entities in
 
   let g_opt = graphfile_opt |> Option.map Graph_code.load in
   let hfile_deps_of_node, hentities_of_file =
@@ -416,7 +416,7 @@ let main_action xs =
   }
   in
 
-  View2.mk_gui  ~screen_size:!screen_size ~legend:!legend !test_mode w
+  View.mk_gui  ~screen_size:!screen_size ~legend:!legend !test_mode w
 (*e: function [[main_action]] *)
   
 (*****************************************************************************)

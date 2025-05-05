@@ -16,9 +16,7 @@
  *)
 (*e: Facebook copyright *)
 open Common
-
 open Model
-module Controller = Controller2
 
 (*****************************************************************************)
 (* Prelude *)

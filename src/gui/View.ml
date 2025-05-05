@@ -23,11 +23,8 @@ module K = GdkKeysyms
 module T = Treemap
 module CairoH = Cairo_helpers
 open Model (* for the fields *)
-module Controller = Controller2
 module Flag = Flag_visual
-module Style = Style2
 module Db = Database_code
-
 
 (*****************************************************************************)
 (* Prelude *)
@@ -307,7 +304,7 @@ let mk_gui ~screen_size ~legend test_mode w =
       in
 
       let entry = 
-        Completion2.my_entry_completion_eff 
+        Completion.my_entry_completion_eff 
          ~callback_selected:(fun entry str _file e ->
           (* pb is that we may have run the visualizer on a subdir
            * of what is mentionned in the database code. We have

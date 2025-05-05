@@ -475,7 +475,7 @@ let main_action xs =
   }
   in
 
-  View2.mk_gui  ~screen_size:!screen_size ~legend:!legend !test_mode w
+  View.mk_gui  ~screen_size:!screen_size ~legend:!legend !test_mode w
 @
 
 \chapter{The Model}
@@ -515,7 +515,7 @@ let build_model root dbfile_opt graphfile_opt =
   in
   let hentities = Model_database_code.hentities root db_opt in
   let all_entities = Model_database_code.all_entities ~root files db_opt in
-  let big_grep_idx = Completion2.build_completion_defs_index all_entities in
+  let big_grep_idx = Completion.build_completion_defs_index all_entities in
 
   let g_opt = graphfile_opt |> Option.map Graph_code.load in
   let hfile_deps_of_node, hentities_of_file =
@@ -1004,7 +1004,7 @@ let mk_gui ~screen_size ~legend test_mode w =
       in
 
       let entry = 
-        Completion2.my_entry_completion_eff 
+        Completion.my_entry_completion_eff 
          ~callback_selected:(fun entry str _file e ->
           (* pb is that we may have run the visualizer on a subdir
            * of what is mentionned in the database code. We have
@@ -1907,15 +1907,14 @@ let paint_content_maybe_rect ~user_rect dw model rect =
 
 (* todo: deadlock:  M.locked (fun () ->  ) dw.M.model.M.m *)
 let lazy_paint user_rect dw model () =
-  UCommon.pr2 "Lazy Paint";
+  Logs.info (fun m -> m "Lazy Paint");
   let start = Unix.gettimeofday () in
   while Unix.gettimeofday () - start < 0.3 do
     match !Ctl.current_rects_to_draw with
     | [] -> ()
     | x::xs ->
         Ctl.current_rects_to_draw := xs;
-        if !debug
-        then UCommon.pr2 (spf "Drawing: %s" (x.T.tr_label));
+        Logs.debug (fun m -> m "Drawing: %s" (x.T.tr_label));
         paint_content_maybe_rect ~user_rect dw model x;
   done;
   !Ctl._refresh_da ();
@@ -1929,7 +1928,7 @@ let lazy_paint user_rect dw model () =
   else true
 
 let paint dw model = 
-  UCommon.pr2 (spf "paint");
+  Logs.info (fun m -> m "paint");
   
   !Ctl.paint_content_maybe_refresher |> Option.iter GMain.Idle.remove;
   Ctl.current_rects_to_draw := [];
@@ -2035,11 +2034,8 @@ val choose_layer:
 <<ui_layers.ml>>=
 <<Facebook copyright>>
 open Common
-
 open Model
 module M = Model
-module Controller = Controller2
-
 module L = Layer_code
 
 (*****************************************************************************)
@@ -2487,7 +2483,7 @@ let dialog_search_def model =
   )
   in
   let entry = 
-    Completion2.my_entry_completion_eff 
+    Completion.my_entry_completion_eff 
       ~callback_selected:(fun _entry _str _file _e ->
         true
       )
@@ -5508,11 +5504,8 @@ module K = GdkKeysyms
 module T = Treemap
 module CairoH = Cairo_helpers
 open Model (* for the fields *)
-module Controller = Controller2
 module Flag = Flag_visual
-module Style = Style2
 module Db = Database_code
-
 
 (*****************************************************************************)
 (* Prelude *)
@@ -5757,9 +5750,7 @@ module T = Treemap
 module Color = Simple_color
 module CairoH = Cairo_helpers
 module Flag = Flag_visual
-module Style = Style2
 module FT = File_type
-module Parsing = Parsing2
 
 (*****************************************************************************)
 (* Prelude *)
@@ -6165,16 +6156,13 @@ open Common
 open Fpath_.Operators
 (* floats are the norm in graphics *)
 open Common2_.ArithFloatInfix
-
 open Model
 module CairoH = Cairo_helpers
 module F = Figures
 module T = Treemap
 module Flag = Flag_visual
 module M = Model
-module Ctl = Controller2
-
-let debug = ref false
+module Ctl = Controller
 
 (*****************************************************************************)
 (* Prelude *)
@@ -6287,13 +6275,10 @@ open Common
 open Fpath_.Operators
 (* floats are the norm in graphics *)
 open Common2_.ArithFloatInfix
-
 open Model
 module T = Treemap
 module CairoH = Cairo_helpers
 module M = Model
-module Controller = Controller2
-module Style = Style2
 
 (*****************************************************************************)
 (* Prelude *)
@@ -6559,9 +6544,7 @@ val go_dirs_or_file:
 <<ui_navigation.ml>>=
 <<Facebook copyright>>
 open Common
-
 open Model
-module Controller = Controller2
 
 (*****************************************************************************)
 (* Prelude *)

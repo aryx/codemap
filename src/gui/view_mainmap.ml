@@ -19,16 +19,13 @@ open Common
 open Fpath_.Operators
 (* floats are the norm in graphics *)
 open Common2_.ArithFloatInfix
-
 open Model
 module CairoH = Cairo_helpers
 module F = Figures
 module T = Treemap
 module Flag = Flag_visual
 module M = Model
-module Ctl = Controller2
-
-let debug = ref false
+module Ctl = Controller
 
 (*****************************************************************************)
 (* Prelude *)
@@ -105,15 +102,14 @@ let paint_content_maybe_rect ~user_rect dw model rect =
 
 (* todo: deadlock:  M.locked (fun () ->  ) dw.M.model.M.m *)
 let lazy_paint user_rect dw model () =
-  UCommon.pr2 "Lazy Paint";
+  Logs.info (fun m -> m "Lazy Paint");
   let start = Unix.gettimeofday () in
   while Unix.gettimeofday () - start < 0.3 do
     match !Ctl.current_rects_to_draw with
     | [] -> ()
     | x::xs ->
         Ctl.current_rects_to_draw := xs;
-        if !debug
-        then UCommon.pr2 (spf "Drawing: %s" (x.T.tr_label));
+        Logs.debug (fun m -> m "Drawing: %s" (x.T.tr_label));
         paint_content_maybe_rect ~user_rect dw model x;
   done;
   !Ctl._refresh_da ();
@@ -127,7 +123,7 @@ let lazy_paint user_rect dw model () =
   else true
 
 let paint dw model = 
-  UCommon.pr2 (spf "paint");
+  Logs.info (fun m -> m "paint");
   
   !Ctl.paint_content_maybe_refresher |> Option.iter GMain.Idle.remove;
   Ctl.current_rects_to_draw := [];
