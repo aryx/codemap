@@ -166,10 +166,10 @@ let rewrite_categ_using_entities s categ file entities =
 let tokens_with_categ_of_file_helper 
   {PH.parse; highlight; info_of_tok} (file : string) prefs hentities =
   
-  if !Flag.verbose_visual then UCommon.pr2 (spf "Parsing: %s" file);
+  Logs.info (fun m -> m "Parsing: %s" file);
   let (ast, toks) = parse (Fpath.v file) in
 
-  if !Flag.verbose_visual then UCommon.pr2 (spf "Highlighting: %s" file);
+  Logs.info (fun m -> m "Highlighting: %s" file);
     let h = Hashtbl.create 101 in
 
     (* computing the token attributes *)

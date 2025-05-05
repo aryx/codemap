@@ -620,10 +620,7 @@ let options () = ([
   (* debugging helpers *)
   (*-------------------------------------------------------------------------*)
 
-    "-verbose", Arg.Unit (fun () ->
-          logs_level := Some Logs.Info;
-          Flag.verbose_visual := true;
-    ),
+    "-verbose", Arg.Unit (fun () -> logs_level := Some Logs.Info),
     " ";
     "-debug", Arg.Unit (fun () -> logs_level := Some Logs.Debug),
     " ";

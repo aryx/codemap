@@ -1,4 +1,5 @@
-SYNCFLAGS=-md5sum_in_auxfile -less_marks -lang ocaml -verbose
+# -verbose
+SYNCFLAGS=-md5sum_in_auxfile -less_marks -lang ocaml
 
 VERSION=4
 DOC=Visual

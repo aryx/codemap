@@ -1,11 +1,8 @@
 (*s: flag_visual.ml *)
 
-(* TODO: use Logs *)
-let verbose_visual = ref false
-
 (* It was 0.4, but on Linux the anti-aliasing seems to not be as good
  * as on Mac (possibly because I have only an old cairo lib on my 
- * Linux machine. 
+ * Linux machine). 
  * I've recently raised this number because
  * when too low it's just too much noise on the screen.
  * Let's draw the content when you can actually read things and
