@@ -26,13 +26,6 @@ let top_n = ref 100
 
 let boost_label_size = ref false
 
-let debug_gc = ref false
-
-(* Ancient does not interact well with hashtbl and ocaml polymorphic
- * equality and hash. Have to use a functorized hashtbl which sucks.
- *)
-let use_ancient = ref false
-
 let disable_fonts = ref false
 
 let extra_filter = ref (None: string option) (* regexp *)
