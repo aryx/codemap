@@ -15,7 +15,7 @@ SRC_VIEWS_WITH_MLI=$(LIB)/cairo_helpers.ml $(LIB)/async.ml \
     $(LIB)/parsing2.ml \
     $(LIB)/editor_connection.ml \
     $(LIB)/model_database_code.ml $(LIB)/model_graph_code.ml \
-    $(LIB)/model2.ml $(LIB)/controller2.ml \
+    $(LIB)/Model.ml $(LIB)/controller2.ml \
     $(LIB)/draw_labels.ml $(LIB)/draw_legend.ml \
     $(LIB)/draw_macrolevel.ml $(LIB)/draw_microlevel.ml  \
     $(LIB)/view_mainmap.ml $(LIB)/view_minimap.ml $(LIB)/view_overlays.ml \

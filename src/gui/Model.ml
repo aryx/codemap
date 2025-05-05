@@ -1,4 +1,4 @@
-(*s: model2.ml *)
+(*s: Model.ml *)
 (*s: Facebook copyright *)
 (* Yoann Padioleau
  * 
@@ -494,4 +494,4 @@ let lines_where_used_node node startl microlevel =
     done;
     !res
 
-(*e: model2.ml *)
+(*e: Model.ml *)

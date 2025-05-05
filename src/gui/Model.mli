@@ -1,4 +1,4 @@
-(*s: model2.mli *)
+(*s: Model.mli *)
 
 (*s: type model *)
 (* filename below should be in readable path format *)
@@ -225,4 +225,4 @@ val line_and_microlevel_of_node_opt:
 val lines_where_used_node:
   Graph_code.node -> line -> microlevel -> line list
 
-(*e: model2.mli *)
+(*e: Model.mli *)

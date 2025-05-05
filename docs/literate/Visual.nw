@@ -5054,9 +5054,9 @@ module Db = Database_code
 
 @ 
 
-\section{[[model2.mli]]}
+\section{[[Model.mli]]}
 
-<<model2.mli>>=
+<<Model.mli>>=
 
 <<type model>>
 and 'a deps = 'a list (* uses *) * 'a list (* users *)
@@ -5179,9 +5179,9 @@ val lines_where_used_node:
 
 @ 
 
-\section{[[model2.ml]]}
+\section{[[Model.ml]]}
 
-<<model2.ml>>=
+<<Model.ml>>=
 <<Facebook copyright>>
 open Common
 open Fpath_.Operators
