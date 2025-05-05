@@ -12,3 +12,6 @@ _build
 /docs/literate/Visual.tex
 /docs/literate/Visual.toc
 Visual-*.pdf
+
+# temporary
+/*.opam

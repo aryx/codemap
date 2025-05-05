@@ -1,4 +1,4 @@
-(*s: style2.mli *)
+(*s: Style.mli *)
 
 val windows_params : int -> int * int * int * int
 
@@ -13,4 +13,4 @@ val font_size_filename_cursor: float
 
 val font_text: string
 
-(*e: style2.mli *)
+(*e: Style.mli *)

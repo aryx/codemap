@@ -1,4 +1,4 @@
-(*s: view2.ml *)
+(*s: View.ml *)
 (*s: Facebook copyright *)
 (* Yoann Padioleau
  * 
@@ -517,4 +517,4 @@ let mk_gui ~screen_size ~legend test_mode w =
   ()
 (*e: [[mk_gui]]() *)
 
-(*e: view2.ml *)
+(*e: View.ml *)

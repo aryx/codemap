@@ -1,4 +1,4 @@
-(*s: controller2.ml *)
+(*s: Controller.ml *)
 (*s: Facebook copyright *)
 (* Yoann Padioleau
  * 
@@ -54,4 +54,4 @@ let _set_title = ref (fun _s ->
 
 let title_of_path s = "CodeMap: " ^ s
 
-(*e: controller2.ml *)
+(*e: Controller.ml *)

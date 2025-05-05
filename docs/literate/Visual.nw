@@ -2593,8 +2593,7 @@ val all_entities :
 
 \subsubsection{Completion building}
 
-<<completion2.mli>>=
-
+<<signature [[build_completion_defs_index]]>>=
 val build_completion_defs_index : 
   Database_code.entity list -> Big_grep.index
 @ 
@@ -2611,7 +2610,7 @@ let build_completion_defs_index all_entities =
 
 \subsubsection{Completion window}
 
-<<completion2.mli>>=
+<<signature [[my_entry_completion_eff]]>>=
 
 val my_entry_completion_eff :
   callback_selected:
@@ -2671,7 +2670,7 @@ let all_entities ~root files db_opt =
 
 
 
-<<completion2.ml>>=
+<<Completion.ml>>=
 <<Facebook copyright>>
 open Common
 
@@ -3289,7 +3288,7 @@ diagram where see events, functions,  draw vs paint vs overlays.
 
 \section{Parsing}
 
-<<parsing2.mli>>=
+<<Parsing.mli>>=
 
 (* internally memoize the parsing part in _hmemo_file *)
 val tokens_with_categ_of_file:
@@ -3306,7 +3305,7 @@ val use_arity_of_use_count:
 
 \section{Generic semantic visual feedback}
 
-<<parsing2.ml>>=
+<<Parsing.ml>>=
 <<Facebook copyright>>
 open Common
 
@@ -3924,7 +3923,7 @@ let async_get_opt a =
 <<type settings>>=
 @
 
-<<style2.mli>>=
+<<Style.mli>>=
 
 val windows_params : int -> int * int * int * int
 
@@ -5489,17 +5488,17 @@ let lines_where_used_node node startl microlevel =
 
 @ 
 
-\section{[[view2.mli]]}
+\section{[[View.mli]]}
 
 
-<<view2.mli>>=
+<<View.mli>>=
 <<[[mk_gui]] sig>>
 @ 
 
 
-\section{[[view2.ml]]}
+\section{[[View.ml]]}
 
-<<view2.ml>>=
+<<View.ml>>=
 <<Facebook copyright>>
 open Common2_
 open Common
@@ -5553,9 +5552,9 @@ module Db = Database_code
 @ 
 
 
-\section{[[controller2.mli]]}
+\section{[[Controller.mli]]}
 
-<<controller2.mli>>=
+<<Controller.mli>>=
 
 val _refresh_da: (unit -> unit) ref
 val _refresh_legend: (unit -> unit) ref
@@ -5586,9 +5585,9 @@ val title_of_path: string -> string
 
 @ 
 
-\section{[[controller2.ml]]}
+\section{[[Controller.ml]]}
 
-<<controller2.ml>>=
+<<Controller.ml>>=
 <<Facebook copyright>>
 
 (* refresh drawing area *)
@@ -6581,19 +6580,25 @@ module Controller = Controller2
 
 
 
-\section{[[parsing2.mli]]}
+\section{[[Parsing.mli]]}
 
-\section{[[parsing2.ml]]}
+\section{[[Parsing.ml]]}
 
-\section{[[completion2.mli]]}
+\section{[[Completion.mli]]}
 
-\section{[[completion2.ml]]}
+<<Completion.mli>>=
+<<signature [[my_entry_completion_eff]]>>
 
-\section{[[style2.mli]]}
+<<signature [[build_completion_defs_index]]>>
+@
 
-\section{[[style2.ml]]}
+\section{[[Completion.ml]]}
 
-<<style2.ml>>=
+\section{[[Style.mli]]}
+
+\section{[[Style.ml]]}
+
+<<Style.ml>>=
 <<Facebook copyright>>
 open Common
 

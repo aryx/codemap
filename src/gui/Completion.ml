@@ -1,4 +1,4 @@
-(*s: completion2.ml *)
+(*s: Completion.ml *)
 (*s: Facebook copyright *)
 (* Yoann Padioleau
  * 
@@ -305,4 +305,4 @@ let my_entry_completion_eff2 ~callback_selected ~callback_changed fn_idx =
 let my_entry_completion_eff ~callback_selected ~callback_changed x = 
   my_entry_completion_eff2 ~callback_selected ~callback_changed x
 
-(*e: completion2.ml *)
+(*e: Completion.ml *)

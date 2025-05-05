@@ -1,4 +1,4 @@
-(*s: parsing2.mli *)
+(*s: Parsing.mli *)
 
 (* internally memoize the parsing part in _hmemo_file *)
 val tokens_with_categ_of_file:
@@ -10,4 +10,4 @@ val tokens_with_categ_of_file:
 val use_arity_of_use_count: 
   int -> Highlight_code.use_arity
 
-(*e: parsing2.mli *)
+(*e: Parsing.mli *)

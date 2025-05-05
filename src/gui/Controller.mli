@@ -1,4 +1,4 @@
-(*s: controller2.mli *)
+(*s: Controller.mli *)
 
 val _refresh_da: (unit -> unit) ref
 val _refresh_legend: (unit -> unit) ref
@@ -27,4 +27,4 @@ val current_tooltip_refresher:
 
 val title_of_path: string -> string
 
-(*e: controller2.mli *)
+(*e: Controller.mli *)

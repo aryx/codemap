@@ -5,11 +5,11 @@
    str bigarray
    ocamlgraph
    logs
+   ppx_deriving
+   uucp uutf
 
    ; semgrep deps
    commons
-   ppx_deriving
-   uucp uutf
    paths
    gitignore
 
