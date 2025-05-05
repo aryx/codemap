@@ -2,6 +2,6 @@
 val choose_layer: 
   root:string ->
   string option (* layer title we want *) -> 
-  Model2.world -> 
+  Model.world -> 
   unit
 (*e: ui_layers.mli *)

@@ -22,7 +22,7 @@ module G = Gui
 module K = GdkKeysyms
 module T = Treemap
 module CairoH = Cairo_helpers
-open Model2 (* for the fields *)
+open Model (* for the fields *)
 module Controller = Controller2
 module Flag = Flag_visual
 module Style = Style2
@@ -98,8 +98,8 @@ let configure w ev =
   let height = GdkEvent.Configure.height ev in
   dw.width <- width;
   dw.height <- height;
-  dw.base <- Model2.new_surface ~alpha:false ~width ~height;
-  dw.overlay <- Model2.new_surface ~alpha:true ~width ~height;
+  dw.base <- Model.new_surface ~alpha:false ~width ~height;
+  dw.overlay <- Model.new_surface ~alpha:true ~width ~height;
   View_mainmap.paint dw w.model;
   true
 [@@profiling]
@@ -301,8 +301,8 @@ let mk_gui ~screen_size ~legend test_mode w =
     hbox#pack ~padding:10 (G.mk (GButton.toolbar) (fun tb ->
 
       let idx = (fun () -> 
-        let model = Async.async_get w.model in
-        model.Model2.big_grep_idx 
+        let model : Model.model = Async.async_get w.model in
+        model.big_grep_idx 
       )
       in
 

@@ -17,7 +17,7 @@
 (*e: Facebook copyright *)
 open Common
 
-open Model2
+open Model
 module Controller = Controller2
 
 (*****************************************************************************)
@@ -58,7 +58,7 @@ let go_dirs_or_file ?(current_grep_query=None) w paths =
 
   Stack_.push w.dw w.dw_stack;
   w.dw <- 
-    Model2.init_drawing 
+    Model.init_drawing 
       ~width:dw.width
       ~height:dw.height
       w.treemap_func 

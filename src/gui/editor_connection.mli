@@ -3,5 +3,5 @@
 val emacsclient_path: string ref
 val efunsclient_path: string ref
 
-val open_file_in_current_editor: file:string -> line:Model2.line -> unit
+val open_file_in_current_editor: file:string -> line:Model.line -> unit
 (*e: editor_connection.mli *)

@@ -18,7 +18,7 @@
 open Common
 
 module G = Gui
-module M = Model2
+module M = Model
 
 (*****************************************************************************)
 (* Prelude *)
@@ -38,8 +38,8 @@ module M = Model2
 (*s: [[dialog_search_def]] *)
 let dialog_search_def model = 
   let idx = (fun () -> 
-    let model = Async.async_get model in
-    model.Model2.big_grep_idx 
+    let model : Model.model = Async.async_get model in
+    model.big_grep_idx 
   )
   in
   let entry = 

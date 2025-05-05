@@ -20,10 +20,10 @@ open Fpath_.Operators
 (* floats are the norm in graphics *)
 open Common2_.ArithFloatInfix
 
-open Model2
+open Model
 module T = Treemap
 module CairoH = Cairo_helpers
-module M = Model2
+module M = Model
 module Controller = Controller2
 module Style = Style2
 

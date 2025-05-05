@@ -1,14 +1,14 @@
 (*s: view_mainmap.mli *)
 
-val paint: Model2.drawing -> Model2.model Async.t -> unit
+val paint: Model.drawing -> Model.model Async.t -> unit
 
-val zoom_pan_scale_map: Cairo.context -> Model2.drawing -> unit
+val zoom_pan_scale_map: Cairo.context -> Model.drawing -> unit
 
-val device_to_user_area: Model2.drawing -> Figures.rectangle
+val device_to_user_area: Model.drawing -> Figures.rectangle
 
-val with_map: Model2.drawing -> (Cairo.context -> 'a) -> 'a
+val with_map: Model.drawing -> (Cairo.context -> 'a) -> 'a
 
 val button_action:
-   Model2.world -> GdkEvent.Button.t -> bool
+   Model.world -> GdkEvent.Button.t -> bool
 
 (*e: view_mainmap.mli *)

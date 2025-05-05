@@ -20,12 +20,12 @@ open Fpath_.Operators
 (* floats are the norm in graphics *)
 open Common2_.ArithFloatInfix
 
-open Model2
+open Model
 module CairoH = Cairo_helpers
 module F = Figures
 module T = Treemap
 module Flag = Flag_visual
-module M = Model2
+module M = Model
 module Ctl = Controller2
 
 let debug = ref false

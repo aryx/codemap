@@ -7,7 +7,6 @@ open Common
 open Fpath_.Operators
 module Flag = Flag_visual
 module FT = File_type
-module Model = Model2
 
 (*****************************************************************************)
 (* Prelude *)

@@ -797,7 +797,7 @@ let init_drawing   ?(width = 600) ?(height = 600) func layers paths root =
 
 <<[[mk_gui]] sig>>=
 val mk_gui :
-  screen_size:int -> legend:bool -> 'b option (* test *) -> Model2.world ->
+  screen_size:int -> legend:bool -> 'b option (* test *) -> Model.world ->
   unit
 @ 
 
@@ -998,8 +998,8 @@ let mk_gui ~screen_size ~legend test_mode w =
     hbox#pack ~padding:10 (G.mk (GButton.toolbar) (fun tb ->
 
       let idx = (fun () -> 
-        let model = Async.async_get w.model in
-        model.Model2.big_grep_idx 
+        let model : Model.model = Async.async_get w.model in
+        model.big_grep_idx 
       )
       in
 
@@ -1598,9 +1598,9 @@ let expose_legend da w _ev =
 val draw_treemap_rectangle_content_maybe:
   Cairo.context ->
   Figures.rectangle ->
-  Model2.context ->
+  Model.context ->
   Treemap.treemap_rectangle -> 
-  Model2.microlevel option
+  Model.microlevel option
 @ 
 
 \section{Entities size}
@@ -2028,7 +2028,7 @@ about aspects.
 val choose_layer: 
   root:string ->
   string option (* layer title we want *) -> 
-  Model2.world -> 
+  Model.world -> 
   unit
 @ 
 
@@ -2036,8 +2036,8 @@ val choose_layer:
 <<Facebook copyright>>
 open Common
 
-open Model2
-module M = Model2
+open Model
+module M = Model
 module Controller = Controller2
 
 module L = Layer_code
@@ -2062,7 +2062,7 @@ let choose_layer ~root layer_title_opt w =
       ))
   in
   w.dw <- 
-    Model2.init_drawing 
+    Model.init_drawing 
       ~width:dw.width
       ~height:dw.height
       w.treemap_func 
@@ -2270,7 +2270,7 @@ let go_dirs_or_file ?(current_grep_query=None) w paths =
 
   Stack_.push w.dw w.dw_stack;
   w.dw <- 
-    Model2.init_drawing 
+    Model.init_drawing 
       ~width:dw.width
       ~height:dw.height
       w.treemap_func 
@@ -2353,7 +2353,7 @@ see multi dir search
 val emacsclient_path: string ref
 val efunsclient_path: string ref
 
-val open_file_in_current_editor: file:string -> line:Model2.line -> unit
+val open_file_in_current_editor: file:string -> line:Model.line -> unit
 @ 
 
 <<emacs configuration>>=
@@ -2382,7 +2382,7 @@ let run_efunsclient ~file ~line =
 
 <<[[open_file_in_current_editor]]()>>=
 let open_file_in_current_editor ~file ~line =
-  let (Model2.Line line) = line in
+  let (Model.Line line) = line in
   (* emacs/efuns line numbers start at 1 *)
   let line = line + 1 in
   run_efunsclient ~file ~line;
@@ -2482,8 +2482,8 @@ mutable height: int;
 <<[[dialog_search_def]]>>=
 let dialog_search_def model = 
   let idx = (fun () -> 
-    let model = Async.async_get model in
-    model.Model2.big_grep_idx 
+    let model : Model.model = Async.async_get model in
+    model.big_grep_idx 
   )
   in
   let entry = 
@@ -3224,8 +3224,8 @@ let configure w ev =
   let height = GdkEvent.Configure.height ev in
   dw.width <- width;
   dw.height <- height;
-  dw.base <- Model2.new_surface ~alpha:false ~width ~height;
-  dw.overlay <- Model2.new_surface ~alpha:true ~width ~height;
+  dw.base <- Model.new_surface ~alpha:false ~width ~height;
+  dw.overlay <- Model.new_surface ~alpha:true ~width ~height;
   View_mainmap.paint dw w.model;
   true
 [@@profiling]
@@ -4407,7 +4407,6 @@ open Common
 open Fpath_.Operators
 module Flag = Flag_visual
 module FT = File_type
-module Model = Model2
 
 (*****************************************************************************)
 (* Prelude *)
@@ -5509,7 +5508,7 @@ module G = Gui
 module K = GdkKeysyms
 module T = Treemap
 module CairoH = Cairo_helpers
-open Model2 (* for the fields *)
+open Model (* for the fields *)
 module Controller = Controller2
 module Flag = Flag_visual
 module Style = Style2
@@ -5561,10 +5560,10 @@ module Db = Database_code
 val _refresh_da: (unit -> unit) ref
 val _refresh_legend: (unit -> unit) ref
 
-val _go_back: (Model2.world -> unit) ref
+val _go_back: (Model.world -> unit) ref
 val _go_dirs_or_file: 
-  (?current_grep_query: (string, Model2.line) Hashtbl.t option ->
-    Model2.world -> string (* filename *) list -> unit
+  (?current_grep_query: (string, Model.line) Hashtbl.t option ->
+    Model.world -> string (* filename *) list -> unit
   ) ref
 
 val _statusbar_addtext: (string -> unit) ref
@@ -5740,7 +5739,7 @@ let draw_trect_using_layers ~cr layers_with_index rect =
 
 val draw_magnify_line:
   ?honor_color:bool ->
-  Cairo.context -> Model2.line -> Model2.microlevel -> unit
+  Cairo.context -> Model.line -> Model.microlevel -> unit
 @ 
 
 \section{[[draw_microlevel.ml]]}
@@ -5752,9 +5751,9 @@ open Either
 open Common2_.ArithFloatInfix
 
 open Figures (* for the fields *)
-open Model2 (* for the fields *)
+open Model (* for the fields *)
 module F = Figures
-module M = Model2
+module M = Model
 module T = Treemap
 module Color = Simple_color
 module CairoH = Cairo_helpers
@@ -5786,7 +5785,7 @@ module Parsing = Parsing2
  * Below line numbers starts at 0, not at 1 as in emacs.
  *)
 
-type _line = Model2.line
+type _line = Model.line
 
 type line_in_column = {
   column: float; (* int *)
@@ -5912,7 +5911,7 @@ let glyphs_of_file ~font_size ~font_size_real model_async file
 
     let entities = 
       match Async.async_get_opt model_async with
-      | Some model -> model.Model2.hentities 
+      | Some model -> model.hentities 
       | None -> Hashtbl.create 0
     in
 
@@ -6146,16 +6145,16 @@ let draw_legend_layer ~cr layers_idx =
 
 <<view_mainmap.mli>>=
 
-val paint: Model2.drawing -> Model2.model Async.t -> unit
+val paint: Model.drawing -> Model.model Async.t -> unit
 
-val zoom_pan_scale_map: Cairo.context -> Model2.drawing -> unit
+val zoom_pan_scale_map: Cairo.context -> Model.drawing -> unit
 
-val device_to_user_area: Model2.drawing -> Figures.rectangle
+val device_to_user_area: Model.drawing -> Figures.rectangle
 
-val with_map: Model2.drawing -> (Cairo.context -> 'a) -> 'a
+val with_map: Model.drawing -> (Cairo.context -> 'a) -> 'a
 
 val button_action:
-   Model2.world -> GdkEvent.Button.t -> bool
+   Model.world -> GdkEvent.Button.t -> bool
 
 @ 
 
@@ -6168,12 +6167,12 @@ open Fpath_.Operators
 (* floats are the norm in graphics *)
 open Common2_.ArithFloatInfix
 
-open Model2
+open Model
 module CairoH = Cairo_helpers
 module F = Figures
 module T = Treemap
 module Flag = Flag_visual
-module M = Model2
+module M = Model
 module Ctl = Controller2
 
 let debug = ref false
@@ -6268,15 +6267,15 @@ let debug = ref false
 <<view_overlays.mli>>=
 
 val draw_searched_rectangles:
-  dw:Model2.drawing -> unit
+  dw:Model.drawing -> unit
 
 val motion_notify:
-  Model2.world -> GdkEvent.Motion.t -> bool
+  Model.world -> GdkEvent.Motion.t -> bool
 
 val paint_initial:
-  Model2.drawing -> unit
+  Model.drawing -> unit
 val hook_finish_paint:
-  Model2.world -> unit
+  Model.world -> unit
 
 @ 
 
@@ -6290,10 +6289,10 @@ open Fpath_.Operators
 (* floats are the norm in graphics *)
 open Common2_.ArithFloatInfix
 
-open Model2
+open Model
 module T = Treemap
 module CairoH = Cairo_helpers
-module M = Model2
+module M = Model
 module Controller = Controller2
 module Style = Style2
 
@@ -6500,13 +6499,13 @@ let hook_finish_paint w =
 <<ui_search.mli>>=
 
 val dialog_search_def: 
-  Model2.model Async.t -> string option
+  Model.model Async.t -> string option
 
 val run_grep_query:
-  root:string -> string -> (string * Model2.line) list
+  root:string -> string -> (string * Model.line) list
 
 val run_tbgs_query:
-  root:string -> string -> (string * Model2.line) list
+  root:string -> string -> (string * Model.line) list
 
 @ 
 
@@ -6518,7 +6517,7 @@ val run_tbgs_query:
 open Common
 
 module G = Gui
-module M = Model2
+module M = Model
 
 (*****************************************************************************)
 (* Prelude *)
@@ -6548,11 +6547,11 @@ module M = Model2
 <<ui_navigation.mli>>=
 
 val go_back: 
-  Model2.world -> unit
+  Model.world -> unit
 
 val go_dirs_or_file:
-  ?current_grep_query:(string (* filename *), Model2.line) Hashtbl.t option ->
-  Model2.world -> string (* filename *) list -> unit
+  ?current_grep_query:(string (* filename *), Model.line) Hashtbl.t option ->
+  Model.world -> string (* filename *) list -> unit
 
 @ 
 
@@ -6562,7 +6561,7 @@ val go_dirs_or_file:
 <<Facebook copyright>>
 open Common
 
-open Model2
+open Model
 module Controller = Controller2
 
 (*****************************************************************************)

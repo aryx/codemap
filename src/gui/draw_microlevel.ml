@@ -20,9 +20,9 @@ open Either
 open Common2_.ArithFloatInfix
 
 open Figures (* for the fields *)
-open Model2 (* for the fields *)
+open Model (* for the fields *)
 module F = Figures
-module M = Model2
+module M = Model
 module T = Treemap
 module Color = Simple_color
 module CairoH = Cairo_helpers
@@ -54,7 +54,7 @@ module Parsing = Parsing2
  * Below line numbers starts at 0, not at 1 as in emacs.
  *)
 
-type _line = Model2.line
+type _line = Model.line
 
 type line_in_column = {
   column: float; (* int *)
@@ -198,7 +198,7 @@ let glyphs_of_file ~font_size ~font_size_real model_async file
 
     let entities = 
       match Async.async_get_opt model_async with
-      | Some model -> model.Model2.hentities 
+      | Some model -> model.hentities 
       | None -> Hashtbl.create 0
     in
 

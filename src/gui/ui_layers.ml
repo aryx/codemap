@@ -17,8 +17,8 @@
 (*e: Facebook copyright *)
 open Common
 
-open Model2
-module M = Model2
+open Model
+module M = Model
 module Controller = Controller2
 
 module L = Layer_code
@@ -43,7 +43,7 @@ let choose_layer ~root layer_title_opt w =
       ))
   in
   w.dw <- 
-    Model2.init_drawing 
+    Model.init_drawing 
       ~width:dw.width
       ~height:dw.height
       w.treemap_func 

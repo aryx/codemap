@@ -5,9 +5,9 @@
 val draw_treemap_rectangle_content_maybe:
   Cairo.context ->
   Figures.rectangle ->
-  Model2.context ->
+  Model.context ->
   Treemap.treemap_rectangle -> 
-  Model2.microlevel option
+  Model.microlevel option
 (*e: [[draw_treemap_rectangle_content_maybe]] sig *)
 
 (*s: [[text_with_user_pos]] sig *)
@@ -15,5 +15,5 @@ val draw_treemap_rectangle_content_maybe:
 
 val draw_magnify_line:
   ?honor_color:bool ->
-  Cairo.context -> Model2.line -> Model2.microlevel -> unit
+  Cairo.context -> Model.line -> Model.microlevel -> unit
 (*e: draw_microlevel.mli *)
