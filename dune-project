@@ -95,12 +95,3 @@ For more information see https://github.com/aryx/codemap
   (synopsis "XXX")
   (description "XXX")
 )
-
-(package (name parser_lisp)
-  (synopsis "XXX")
-  (description "XXX")
-)
-(package (name tree-sitter-lang-clojure)
-  (synopsis "XXX")
-  (description "XXX")
-)
