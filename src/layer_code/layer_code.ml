@@ -661,7 +661,7 @@ let simple_layer_of_parse_infos ~root ~title ?(description = "") xs kinds =
            let file = Tok.file_of_tok tok in
            let line = Tok.line_of_tok tok in
            let file' = Common2_.relative_to_absolute !!file in
-           (!!(Filename_.readable ~root:(Fpath.v root) (Fpath.v file')), (line, kind)))
+           ((Filename_.readable ~root:(root) (file')), (line, kind)))
   in
 
   let (group_by_file : (string (* filename *) * (int * kind) list) list) =

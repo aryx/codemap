@@ -252,7 +252,7 @@ let button_action w ev =
             (* less: print a warning when does not exist? *)
             |> List.filter Sys.file_exists
           in
-          let readable = !!(Filename_.readable ~root:(Fpath.v model.root) (Fpath.v file)) in
+          let readable = (Filename_.readable ~root:(model.root) (file)) in
           let readable =
             match entity_opt with
             | None -> readable

@@ -428,13 +428,13 @@ let shortname_of_node (s, _kind) =
 (*****************************************************************************)
 
 let create_intermediate_directories_if_not_present g dir =
-  let dirs = Common2.inits_of_relative_dir (Fpath.v dir) in
+  let dirs = Common2.inits_of_relative_dir dir in
 
   let rec aux current xs =
     match xs with
     | [] -> ()
     | x :: xs ->
-        let entity = (Fpath.to_string x, E.Dir) in
+        let entity = (x, E.Dir) in
         if has_node entity g then aux entity xs
         else (
           g |> add_node entity;
@@ -465,14 +465,13 @@ let remove_empty_nodes g xs =
             *)
            remove_edge (parent n g, n) Has g)
 
-let basename_to_readable_disambiguator xs ~root =
-  let root = Fpath.v root in
+let basename_to_readable_disambiguator (xs : string list) ~root =
   (* nosemgrep: no-filename-readable *)
-  let xs = xs |> List_.map (fun x -> Filename_.readable ~root (Fpath.v x)) in
+  let xs = xs |> List_.map (fun x -> Filename_.readable ~root (x)) in
   let h = Hashtbl.create 101 in
   xs
   |> List.iter (fun file ->
-         Hashtbl_.push h (Fpath.basename file) (Fpath.to_string file));
+         Hashtbl_.push h (Fpath.basename (Fpath.v file)) (file));
   fun file -> Hashtbl_.get_stack h file
 
 (*****************************************************************************)

@@ -447,7 +447,7 @@ let test_loc print_top30 xs =
           let multiplier = (float_of_int size /. float_of_int unix_size) in
           let multiplier = min multiplier 1.0 in
           let loc = Common2_.nblines_with_wc file in
-          Stack_.push ((!!(Filename_.readable ~root:(Fpath.v root) (Fpath.v file))), 
+          Stack_.push (((Filename_.readable ~root:(root) (file))), 
                        (float_of_int loc *. multiplier)) res;
         end
   in

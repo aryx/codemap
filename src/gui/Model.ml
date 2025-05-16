@@ -233,7 +233,7 @@ let init_drawing   ?(width = 600) ?(height = 600) func layers paths root =
       if not rect.T.tr_is_node
       then 
         let file  = rect.T.tr_label in
-        let readable = !!(Filename_.readable ~root:(Fpath.v root) (Fpath.v file)) in
+        let readable = (Filename_.readable ~root:(root) (file)) in
         Some (readable, rect)
       else None
     ) |> Hashtbl_.hash_of_list
@@ -366,7 +366,7 @@ let rank_entity_kind = function
  *)
 let find_def_entity_at_line_opt line tr dw model =
   let file = tr.T.tr_label in
-  let readable = !!(Filename_.readable ~root:(Fpath.v model.root) (Fpath.v file)) in
+  let readable = (Filename_.readable ~root:(model.root) (file)) in
   try 
     let nodes = Hashtbl.find model.hentities_of_file readable in
     let microlevel = Hashtbl.find dw.microlevel tr in
@@ -406,7 +406,7 @@ let find_use_entity_at_line_and_glyph_opt line glyph tr dw model =
 
 let node_of_rect tr model =
   let file = tr.Treemap.tr_label in
-  let readable = !!(Filename_.readable ~root:(Fpath.v model.root) (Fpath.v file)) in
+  let readable = (Filename_.readable ~root:(model.root) (file)) in
   let kind = if tr.Treemap.tr_is_node then E.Dir else E.File in
   readable, kind
 

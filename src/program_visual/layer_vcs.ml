@@ -13,7 +13,6 @@
  * license.txt for more details.
  *)
 open Common 
-open Fpath_.Operators
 module FT = File_type
 
 (*****************************************************************************)
@@ -123,7 +122,7 @@ let gen_nbauthors_layer (*?(verbose=false)*) ~skip_revs dir ~output =
      files = files |> (*Console.progress ~show:verbose (fun k -> *)
       List.map (fun file ->
         (*k();*)
-        let readable_file = !!(Filename_.readable ~root:(Fpath.v dir) (Fpath.v file)) in
+        let readable_file = (Filename_.readable ~root:(dir) (file)) in
         
         let annots = Git_.annotate 
           ~basedir:dir ~use_cache:true 
@@ -176,7 +175,7 @@ let gen_age_layer (*?(verbose=false)*) ~line_granularity ~skip_revs dir ~output 
      files = files |> (*Console.progress ~show:verbose (fun k -> *)
       List.map (fun file ->
         (*k();*)
-        let readable_file = !!(Filename_.readable ~root:(Fpath.v dir) (Fpath.v file)) in
+        let readable_file = (Filename_.readable ~root:(dir) (file)) in
         
         let annots = Git_.annotate 
           ~basedir:dir ~use_cache:true 

@@ -16,7 +16,6 @@
  *)
 (*e: Facebook copyright *)
 open Common
-open Fpath_.Operators
 (* floats are the norm in graphics *)
 open Common2_.ArithFloatInfix
 open Model
@@ -42,7 +41,7 @@ let readable_txt_for_label txt current_root =
   let readable_txt = 
     if current_root = txt (* when we are fully zoomed on one file *)
     then "root"
-    else !!(Filename_.readable ~root:(Fpath.v current_root) (Fpath.v txt))
+    else (Filename_.readable ~root:(current_root) (txt))
   in
   if String.length readable_txt > 25
   then 

@@ -13,7 +13,6 @@
  * license.txt for more details.
  *)
 open Common
-open Fpath_.Operators
 open Entity_code
 module J = JSON
 module HC = Highlight_code
@@ -547,14 +546,14 @@ let multi_dirs_entities_of_dirs es =
 let files_and_dirs_database_from_files ~root files =
   (* quite similar to what we first do in a database_light_xxx.ml *)
   let dirs = files |> List.map Filename.dirname |> Common2_.uniq_eff in
-  let dirs = dirs |> List.map (fun s -> !!(Filename_.readable ~root:(Fpath.v root) (Fpath.v s))) in
+  let dirs = dirs |> List.map (fun s -> (Filename_.readable ~root:(root) (s))) in
   let dirs = alldirs_and_parent_dirs_of_relative_dirs dirs in
 
   {
     root;
     dirs = dirs |> List.map (fun d -> (d, 0));
     (* TODO *)
-    files = files |> List.map (fun f -> (!!(Filename_.readable ~root:(Fpath.v root) (Fpath.v f)), 0));
+    files = files |> List.map (fun f -> ((Filename_.readable ~root:(root) (f)), 0));
     (* TODO *)
     entities = [||];
   }
