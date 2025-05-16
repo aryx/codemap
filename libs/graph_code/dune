@@ -1,0 +1,17 @@
+; used to be part of pfff
+(library
+ (public_name graph_code)
+ (wrapped false)
+ (libraries
+   ocamlgraph
+
+   commons
+   lib_parsing ; store position information in the graph and tokens for stats
+   parallelism
+ )
+ (preprocess
+   (pps
+     profiling.ppx
+     ppx_deriving.show
+  ))
+)
