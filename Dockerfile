@@ -1,4 +1,4 @@
-# Build codemap (and semgrep-libs) with OCaml 4.14.2 via OPAM on Ubuntu Linux.
+# Build codemap (and semgrep) with OCaml 4.14.2 via OPAM on Ubuntu Linux.
 
 FROM ubuntu:22.04
 # alt: 24.04
@@ -18,7 +18,7 @@ RUN opam switch create 4.14.2 -v
 RUN apt-get install -y libcairo2-dev libgtk2.0-dev
 
 
-# Install semgrep-libs (and its many dependencies)
+# Install semgrep libs (and its many dependencies)
 WORKDIR /semgrep
 # alt: add semgrep as a submodule in codemap source or LATER add semgrep as opam packages
 RUN git clone --recurse-submodules https://github.com/aryx/semgrep-libs /semgrep
