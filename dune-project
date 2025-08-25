@@ -1,7 +1,7 @@
 (lang dune 3.7)
 
 ;; This file is used both to configure 'dune' as usual, and
-;; to autogenerate the semgrep.opam for 'opam'.
+;; to autogenerate the codemap.opam for 'opam'.
 
 ;; classic dune-project settings
 (name codemap)
@@ -28,9 +28,9 @@ For more information see https://github.com/aryx/codemap
 "
   )
 
-  (maintainers "Yoann Padioleau <pad@semgrep.com>")
-  (authors "Yoann Padioleau <pad@semgrep.com>")
-  (license "LGPL2.1")
+  (maintainers "Yoann Padioleau <yoann.padioleau@gmail.com>")
+  (authors "Yoann Padioleau <yoann.padioleau@gmail.com>")
+  (license "LGPL-2.1-only WITH OCaml-LGPL-linking-exception")
 
   ; TODO: and there are tons of dependencies to semgrep not listed below
   (depends
