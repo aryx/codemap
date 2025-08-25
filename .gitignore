@@ -15,3 +15,4 @@ Visual-*.pdf
 
 # temporary
 /*.opam
+!/codemap.opam
