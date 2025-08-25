@@ -2,6 +2,45 @@
 
 * Last
 
+** Last 5
+
+*** add arch_code colors for README.md, pad.org, .gitignore?
+
+
+*** why codemap can't parse most .go files? lots of red!
+
+*** why can't see content of configure script in codemap?
+because no extension?
+
+
+*** RELAX cleanup the code, switch to Fpath.t in model.ml
+but need syncweb working first?
+
+*** consider CLI.ml as Main.ml
+
+*** RELAX colorize specialy capabilities in codemap!
+present in AST_ocaml.ml ? present in AST_generic.ml if use
+generic highlighters? need ocaml-specific highlighter?
+
+*** untangle some of the deps to semgrep.core from codemap
+because of Lang.ml, because of Naming_AST.ml depending
+on semgrep.typing depending on semgrep.core, etc.
+
+*** Makefile mode, so can visualize Makefiles
+need tree-sitter-makefile? add it in codemap/languages/
+
+*** RELAX Log src for gui event, log src for db event
+but set LOG_SRCS from Arg flag callback?
+
+and make sure default codemap does not show much
+unless you set LOG_SRCS
+
+
+*** still? remove use of common_parent, force single root parameter?
+but I use the ability to use multiples dirs when exploring
+r2c codebases so good to keep?
+
+
 ** Last 4
 
 *** Can't use search anymore, blocked
