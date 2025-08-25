@@ -1,6 +1,7 @@
 # Build codemap (and semgrep-libs) with OCaml 4.14.2 via OPAM on Ubuntu Linux.
 
 FROM ubuntu:22.04
+# alt: 24.04
 
 # Setup a basic C dev environment
 RUN apt-get update # needed otherwise can't find any package
@@ -12,6 +13,9 @@ RUN apt-get install -y opam
 RUN opam init --disable-sandboxing -y
 RUN opam switch create 4.14.2 -v
 
+# Add external libs
+# alt: use opam-depext
+RUN apt-get install -y libcairo2-dev libgtk2.0-dev
 
 WORKDIR /src
 
