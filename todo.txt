@@ -6,7 +6,6 @@
 
 *** add arch_code colors for README.md, pad.org, .gitignore?
 
-
 *** why codemap can't parse most .go files? lots of red!
 
 *** why can't see content of configure script in codemap?
