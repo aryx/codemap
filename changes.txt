@@ -7,3 +7,9 @@
 ** testinfra
 
 - Dockerfile and docker.yml GHA CI
+
+* ...
+
+* alpha  (Q? 2020) (first proto)
+
+- first prototype as part of pfff at Facebook
