@@ -29,7 +29,8 @@ RUN apt-get install -y pkg-config libpcre3-dev libpcre2-dev libgmp-dev libev-dev
 RUN ./configure
 RUN eval $(opam env) && make
 RUN eval $(opam env) && make install-semgrep-libs
-RUN rm -rf /semgrep
+#TODO: can't because then can't find -ltree-sitter
+# RUN rm -rf /semgrep
 
 # Back to codemap
 WORKDIR /src
