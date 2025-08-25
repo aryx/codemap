@@ -13,7 +13,6 @@ all:
 	dune build
 clean:
 	dune clean
-	rm -f *.opam
 
 test:
 	dune runtest
