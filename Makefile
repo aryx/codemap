@@ -23,6 +23,9 @@ install:
 codemap.opam: dune-project
 	dune build $@
 
+build-docker:
+	docker build -t "codemap" .
+
 .PHONY: all clean install test dump
 
 ###############################################################################
