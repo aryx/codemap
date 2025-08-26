@@ -48,4 +48,4 @@ RUN eval $(opam env) && make install
 
 # Test
 RUN eval $(opam env) && codemap --help
-# TODO
+# TODO make test
