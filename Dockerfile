@@ -13,10 +13,6 @@ RUN apt-get install -y opam
 RUN opam init --disable-sandboxing -y
 RUN opam switch create 4.14.2 -v
 
-# Add external libs
-# alt: use opam-depext
-RUN apt-get install -y libcairo2-dev libgtk2.0-dev
-
 
 # Install semgrep libs (and its many dependencies)
 WORKDIR /semgrep
@@ -31,7 +27,7 @@ RUN eval $(opam env) && make && make dune-build-all
 # subset of make install-semgrep-libs (dune build; dune install)
 # LATER: move in codemap.opam (and dune-project) at some point
 # alt: RUN eval $(opam env) && make install-semgrep-libs
-RUN cd /semgrep; eval $(opam env) && dune install \
+RUN eval $(opam env) && dune install \
    TCB commons commons2 profiling tracing process_limits parallelism pcre2 \
    testo testo-util testo-diff \
    gitignore paths glob git_wrapper \
@@ -47,6 +43,10 @@ RUN cd /semgrep; eval $(opam env) && dune install \
 # and its Lang
 #TODO: can't rm -rf because then can't find -ltree-sitter :(
 # RUN rm -rf /semgrep
+
+# Add external libs
+# alt: use opam-depext
+RUN apt-get install -y libcairo2-dev libgtk2.0-dev
 
 # Back to codemap
 WORKDIR /src

@@ -35,7 +35,7 @@ For more information see https://github.com/aryx/codemap
   ; TODO: and there are tons of dependencies to semgrep not listed below
   ; see Dockerfile and its 'dune install ...' command
   (depends
-    (dune (>= 2.7.0))
+    (dune (>= 3.7))
     lablgtk
     cairo2-gtk
     ounit
