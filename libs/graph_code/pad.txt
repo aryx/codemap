@@ -1,0 +1,5 @@
+This used to be in semgrep, then semgrep-pro, and now is back in codemap.
+Note that graph_code/ defines the main data structures for the codegraph
+tool, but it's now used also in codemap and to avoid mutual dependencies
+between codemap and codegraph, graph_code/ is in codemap/libs instead
+of codegraph/libs.

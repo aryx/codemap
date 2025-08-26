@@ -6,7 +6,7 @@
 
 ** testinfra
 
-- Dockerfile and docker.yml GHA CI
+- Dockerfile and docker.yml GHA (GitHub Actions) CI
 
 * ...
 

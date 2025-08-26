@@ -41,6 +41,7 @@ For more information see https://github.com/aryx/codemap
   )
 )
 
+; note that many of those packages are used by codegraph
 
 (package (name commons2_)
   (synopsis "XXX")
