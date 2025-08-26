@@ -1,4 +1,4 @@
-# Build codemap (and semgrep) with OCaml 4.14.2 via OPAM on Ubuntu Linux.
+# Build codemap (and semgrep libs) with OCaml 4.14.2 via OPAM on Ubuntu Linux.
 
 FROM ubuntu:22.04
 # alt: 24.04
