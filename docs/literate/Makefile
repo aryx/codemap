@@ -1,3 +1,7 @@
+#TODO: switch to mkfile and reuse principia/docs/latest/mkcommon
+# instead of ~/github/semgrep-internals/Makefile.common
+# or move semgrep-internals/Makefile.common in principia/docs/latest
+
 # -verbose
 SYNCFLAGS=-md5sum_in_auxfile -less_marks -lang ocaml
 
@@ -36,20 +40,19 @@ SRC_VIEWS=$(SRC_VIEWS_WITH_MLI) $(SRC_VIEWS_WITH_MLI:ml=mli) $(SRC_VIEWS_JUST_ML
 #SRC_MLI=$(filter-out $(SRC_NO_MLI), $(SRC_ML:ml=mli))
 #SRC_VIEWS=$(SRC_MLI) $(SRC_ML) ../main_codemap.ml
 
-
+#TODO: use in principia instead?
 include ~/github/semgrep-internals/Makefile.common
 
-#INDEXER=~/github/syncweb/indexer/_build/default/main_indexer.exe
-#index:
-#	$(INDEXER) -lang cmt $(SRC_INDEX)  \
-#    | sed -e 's#Main.cmt#Main#' \
-#    | sed -e 's#semgrep-core/_build/default/##' \
-#    | sed -e 's#semgrep/semgrep-core/_build/default/bin/.Main.eobjs/byte/#semgrep/bin/#' \
-#    | grep -v 'Common.=.*' \
-#    | grep -v 'Common2' \
-#    | grep -v 'OUnit.>' \
-#    | grep -v 'fuzzy' \
-#    | grep -v 'simple_refactoring' \
-#    | grep -v 'main_spatch' \
-#    > defs_and_uses.list
+index:
+	$(INDEXER) -lang cmt $(SRC_INDEX)  \
+    | sed -e 's#Main.cmt#Main#' \
+    | sed -e 's#semgrep-core/_build/default/##' \
+    | sed -e 's#semgrep/semgrep-core/_build/default/bin/.Main.eobjs/byte/#semgrep/bin/#' \
+    | grep -v 'Common.=.*' \
+    | grep -v 'Common2' \
+    | grep -v 'OUnit.>' \
+    | grep -v 'fuzzy' \
+    | grep -v 'simple_refactoring' \
+    | grep -v 'main_spatch' \
+    > defs_and_uses.list
 
