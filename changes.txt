@@ -2,7 +2,7 @@
 
 * TODO
 
-* 0.X (Q3 2025) (Dockerfile and GHA)
+* 0.X (Q3 2025) (Dockerfile and GHA, OCaml5 ready)
 
 ** testinfra
 
