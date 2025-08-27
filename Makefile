@@ -27,6 +27,8 @@ codemap.opam: dune-project
 
 build-docker:
 	docker build -t "codemap" .
+build-docker-ocaml5:
+	docker build -t "codemap" --build-arg OCAML_VERSION=5.2.1 .
 
 ###############################################################################
 # Developer targets
