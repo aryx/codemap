@@ -1,5 +1,5 @@
 # dune
-_build
+/_build
 
 # syncweb
 *.md5sum_*
