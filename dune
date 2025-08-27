@@ -4,3 +4,6 @@
     (flags (:standard -w -52-6)))
   (release
     (flags (:standard -O3))))
+
+; dune 2.7 does not like dangling symlinks in docs/literate/principia-latex and bin
+(dirs :standard \ docs \ bin)
