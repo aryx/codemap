@@ -16,7 +16,7 @@ jobs:
       matrix:
         ocaml:
           - 4.14.2
-          - 5.3.0
+          - 5.2.1
     steps:
       - uses: actions/checkout@v4
       # optional if don't need multi-arch build
