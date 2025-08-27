@@ -6,7 +6,8 @@
 
 ** testinfra
 
-- Dockerfile and docker.yml GHA (GitHub Actions) CI
+- Dockerfile and docker.yml GHA (GitHub Actions) CI working for
+  OCaml 4.14.2 and 5.2.1
 
 * ...
 
