@@ -1,4 +1,4 @@
-(*s: flag_visual.ml *)
+(*s: src/gui/flag_visual.ml *)
 
 (* It was 0.4, but on Linux the anti-aliasing seems to not be as good
  * as on Mac (possibly because I have only an old cairo lib on my 
@@ -29,4 +29,4 @@ let boost_label_size = ref false
 let disable_fonts = ref false
 
 let extra_filter = ref (None: string option) (* regexp *)
-(*e: flag_visual.ml *)
+(*e: src/gui/flag_visual.ml *)

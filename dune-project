@@ -1,4 +1,6 @@
-(lang dune 3.7)
+(lang dune 2.7)
+; 2.7 instead of 3.7 so dune does not generate confusing .pp.ml for codegraph
+; and syncweb_indexer
 
 ;; This file is used both to configure 'dune' as usual, and
 ;; to autogenerate the codemap.opam for 'opam'.

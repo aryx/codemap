@@ -1,4 +1,4 @@
-(*s: Main.ml *)
+(*s: src/main/Main.ml *)
 (*
  * Please imagine a long and boring gnu-style copyright notice 
  * appearing just here.
@@ -691,4 +691,4 @@ let _ =
   UCommon.main_boilerplate (fun () ->
     main ()
   )
-(*e: Main.ml *)
+(*e: src/main/Main.ml *)

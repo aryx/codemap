@@ -43,8 +43,21 @@ SRC_VIEWS=$(SRC_VIEWS_WITH_MLI) $(SRC_VIEWS_WITH_MLI:ml=mli) $(SRC_VIEWS_JUST_ML
 #TODO: use in principia instead?
 include ~/github/semgrep-internals/Makefile.common
 
+# note: the grep _build/default is for files like Lexer_nw.ml which are
+# just under _build/ and not in src/ but we still don't want them
+#TODO: remove the second grep and lpize those files instead
 index:
-	$(INDEXER) -lang cmt $(SRC_INDEX)  \
+	$(INDEXER) -lang cmt $(TOP) \
+    | grep -v 'TODO_NO_SOURCE_FOUND' \
+    | grep -v '_build/default' \
+    | grep -v 'Log_' \
+    | grep -v 'version_control/' \
+    > defs_and_uses.list
+
+
+#    | grep -E -v 'flag_.*visual|ast_nw.ml|Main.ml|Log_.*.ml|archi_code_lexer.ml|main_vcs.ml|Gui.ml|Lexer_nw.ml|ast_html.ml' \
+
+xxxx: echo \
     | sed -e 's#Main.cmt#Main#' \
     | sed -e 's#semgrep-core/_build/default/##' \
     | sed -e 's#semgrep/semgrep-core/_build/default/bin/.Main.eobjs/byte/#semgrep/bin/#' \
@@ -54,5 +67,4 @@ index:
     | grep -v 'fuzzy' \
     | grep -v 'simple_refactoring' \
     | grep -v 'main_spatch' \
-    > defs_and_uses.list
 

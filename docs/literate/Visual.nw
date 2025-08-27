@@ -4063,7 +4063,7 @@ let threshold_draw_dark_background_font_size_real = 5.
 @
 
 
-<<flag_visual.ml>>=
+<<src/gui/flag_visual.ml>>=
 
 (* It was 0.4, but on Linux the anti-aliasing seems to not be as good
  * as on Mac (possibly because I have only an old cairo lib on my 
@@ -4391,9 +4391,19 @@ let draw_rectangle_bis ~cr ~color ~line_width r =
 
 \chapter{Extra Code}
 
+% for make index; make pdf
+<<languages/nw/ast_nw.ml>>=
+@
+<<languages/html/ast_html.ml>>=
+@
+<<src/program_visual/flag_program_visual.ml>>=
+@
+<<libs/gui/Gui.ml>>=
+@
+
 \section{[[Main.ml]]}
 
-<<Main.ml>>=
+<<src/main/Main.ml>>=
 (*
  * Please imagine a long and boring gnu-style copyright notice 
  * appearing just here.
@@ -6727,6 +6737,14 @@ let _re_tab = Str.regexp "^[\t]+$"
 
 \chapter*{Indexes}
 \addcontentsline{toc}{section}{Index}
+
+%src: wc.nw in noweb source
+Here is a list of the identifiers used, and where they appear.
+Underlined entries indicate the place of definition.
+This index is generated automatically.
+
+%\twocolumn does not work
+\nowebindex
 
 %\chapter{References} 
 \addcontentsline{toc}{section}{References}
