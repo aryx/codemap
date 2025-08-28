@@ -12,7 +12,7 @@ license: "LGPL-2.1-only WITH OCaml-LGPL-linking-exception"
 homepage: "https://github.com/aryx/codemap"
 bug-reports: "https://github.com/aryx/codemap/issues"
 depends: [
-  "dune" {>= "3.7" & >= "3.7"}
+  "dune" {>= "2.7" & >= "3.7"}
   "lablgtk"
   "cairo2-gtk"
   "ounit"

@@ -6,7 +6,8 @@
     (flags (:standard -O3))))
 
 ; dune 2.7 does not like dangling symlinks in docs/literate/principia-latex
-; WEIRD: locally I don't even need this directive, but in docker I need it
-; You don't need \ bin, because (dirs) is about dirs, and if you don't have
-; any targets at the toplevel dune file, you're fine with a dangling bin
+; hence the dirs directive below.
+; Adding '\ bin' will not work because '(dirs ...)' is about dirs, so you
+; either need to call dune build _build/.../codemap in which case dune will
+; not stat the root, but if you do 'dune build' it will complain
 (dirs :standard \ docs)
