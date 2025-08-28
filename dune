@@ -6,4 +6,6 @@
     (flags (:standard -O3))))
 
 ; dune 2.7 does not like dangling symlinks in docs/literate/principia-latex and bin
-(dirs :standard \ docs \ bin)
+; WEIRD: locally I don't even need this directive, but in docker I need it
+; WEIRD: I don't need \ bin in docker either, even though dangling symlink too
+(dirs :standard \ docs) ;  \ bin
