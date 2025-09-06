@@ -3,7 +3,7 @@ val color_of_source_archi:
   Archi_code.source_archi -> Simple_color.emacs_color
 
 val color_of_webpl_type:
-  File_type.webpl_type -> Simple_color.emacs_color
+  FType.webpl_type -> Simple_color.emacs_color
 
 val anamorphic_diviser_of_file:
   root:string ->

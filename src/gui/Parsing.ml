@@ -18,7 +18,7 @@
 open Common
 
 open Highlight_code
-module FT = File_type
+module FT = FType
 module HC = Highlight_code
 module Db = Database_code
 module Flag = Flag_visual
@@ -197,7 +197,7 @@ let tokens_with_categ_of_file_helper
  * also in Draw_microlevel.draw_contents2.
  *)
 let tokens_with_categ_of_file (file : string) hentities = 
-  let ftype = FT.file_type_of_file (Fpath.v file) in
+  let ftype = FT.of_file (Fpath.v file) in
   let prefs = Highlight_code.default_highlighter_preferences in
   
   match ftype with

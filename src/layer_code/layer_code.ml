@@ -628,13 +628,13 @@ let layer_of_json json = json |> OCamlx.v_of_json |> layer_ofv
  *)
 let load_layer file =
   (* pr2 (spf "loading layer: %s" file); *)
-  if File_type.is_json_filename (Fpath.v file) 
+  if FType.is_json_file (Fpath.v file) 
   then UChan.with_open_in (Fpath.v file) J.json_of_chan |> layer_of_json
   else Common2_.get_value file
 
 let save_layer layer file =
   if
-    File_type.is_json_filename (Fpath.v file)
+    FType.is_json_file (Fpath.v file)
     (* layer +> vof_layer +> OCaml.string_of_v +> Common.write_file ~file *)
   then layer |> json_of_layer |> OCamlx.save_json file
   else Common2_.write_value layer file

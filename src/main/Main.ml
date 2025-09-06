@@ -6,7 +6,7 @@
 open Common
 open Fpath_.Operators
 module Flag = Flag_visual
-module FT = File_type
+module FT = FType
 
 (*****************************************************************************)
 (* Prelude *)
@@ -157,7 +157,7 @@ let action = ref ""
 let filters = [
   (* pad-specific: semgrep related files *)
   "semgrep", (fun file ->
-    match FT.file_type_of_file file with
+    match FT.of_file file with
     | FT.PL (FT.OCaml _ | FT.Python | FT.Web (FT.Js | FT.TypeScript))
     | FT.PL (FT.IDL _)
     | FT.PL (FT.Script _)
@@ -167,42 +167,42 @@ let filters = [
   );
   (* pad-specific: *)
   "xix", (fun file ->
-    match FT.file_type_of_file file with
+    match FT.of_file file with
     | FT.PL ((FT.OCaml _) | (FT.C _ | FT.Asm)) | FT.Config FT.Makefile -> true
     | _ -> false
   );
 
   "ocaml", (fun file ->
-    match File_type.file_type_of_file file with
+    match FT.of_file file with
     | FT.PL (FT.OCaml _) | FT.Config (FT.Makefile)  -> true
     | _ -> false
   );
   "mli", (fun file ->
-    match File_type.file_type_of_file file with
+    match FT.of_file file with
     | FT.PL (FT.OCaml "mli") | FT.Config (FT.Makefile)   -> 
       not (!!file =~ ".*/commons/")
     | _ -> false
   );
   "nw", (fun file -> 
-    match FT.file_type_of_file file with
+    match FT.of_file file with
     | FT.Text "nw" -> true | _ -> false
   );
   "doc", (fun file -> 
-    match FT.file_type_of_file file with
+    match FT.of_file file with
     | FT.Text _ -> true | _ -> false
   );
 
   (* other languages *)
   "php", (fun file ->
-    match File_type.file_type_of_file file with
+    match FT.of_file file with
     | FT.PL (FT.Web (FT.Php _)) -> true  | _ -> false
   );
   "js", (fun file ->
-    match File_type.file_type_of_file file with
+    match FT.of_file file with
     | FT.PL (FT.Web (FT.Js)) -> true  | _ -> false
   );
   "config", (fun file ->
-    match File_type.file_type_of_file file with
+    match FT.of_file file with
     | FT.Config (FT.Yaml | FT.Json) -> true  | _ -> false
   );
 
@@ -211,7 +211,7 @@ let filters = [
       (* TODO: also add possible pfff_macros.h when there *)
       Parse_cpp.init_defs !Flag_parsing_cpp.macros_h
     );
-    match FT.file_type_of_file file with
+    match FT.of_file file with
     | FT.PL (FT.C _ | FT.Cplusplus _) -> true 
     | FT.PL FT.Asm -> true
     | _ -> false
@@ -219,7 +219,7 @@ let filters = [
 
   (* general categories *)
   "pl", (fun file ->
-    match File_type.file_type_of_file file with
+    match FT.of_file file with
     | FT.PL _ -> true  | _ -> false
   );
 ]

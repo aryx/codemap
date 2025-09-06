@@ -17,7 +17,7 @@ open Common
 open Highlight_code
 open Entity_code
 module T = Token_scala
-module FT = File_type
+module FT = FType
 
 (*****************************************************************************)
 (* Prelude *)

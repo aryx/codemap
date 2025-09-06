@@ -14,8 +14,8 @@
  *)
 open Common 
 
-open File_type
-module PL = File_type
+open FType
+module PL = FType
 module Color = Simple_color
 
 (*****************************************************************************)
@@ -56,7 +56,7 @@ let _hmemo_file_type = Hashtbl.create 101
 let file_type_of_file file =
   Profiling.profile_code "Treemap_pl.file_type" (fun () ->
     Common.memoized _hmemo_file_type file (fun () ->
-      File_type.file_type_of_file file
+      FType.of_file file
   ))
 
 

@@ -18,7 +18,7 @@ open Common
 open Highlight_code
 open Entity_code
 module T = Parser_ml
-module FT = File_type
+module FT = FType
 
 (*****************************************************************************)
 (* Prelude *)
@@ -93,7 +93,7 @@ let visit_program
   in
 
   let is_lex_or_yacc_file =
-    match File_type.file_type_of_file file with
+    match FType.of_file file with
     | FT.PL (FT.OCaml ("mll" | "mly" | "dyp")) -> true
     | _ -> false
   in
