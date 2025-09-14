@@ -13,7 +13,7 @@
  * license.txt for more details.
  *)
 open Common 
-module FT = FType
+module FT = Ftype
 
 (*****************************************************************************)
 (* Prelude *)

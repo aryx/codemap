@@ -6,7 +6,7 @@
 open Common
 open Fpath_.Operators
 module Flag = Flag_visual
-module FT = FType
+module FT = Ftype
 
 (*****************************************************************************)
 (* Prelude *)

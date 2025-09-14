@@ -27,7 +27,7 @@ module T = Treemap
 module Color = Simple_color
 module CairoH = Cairo_helpers
 module Flag = Flag_visual
-module FT = FType
+module FT = Ftype
 
 (*****************************************************************************)
 (* Prelude *)
@@ -434,7 +434,7 @@ let draw_treemap_rectangle_content_maybe cr clipping context tr  =
      * it confuses cairo which then can confuse computation done in gtk
      * idle callbacks
      *)
-    if Common2_.lfile_exists_eff file && FType.is_textual_file (Fpath.v file)
+    if Common2_.lfile_exists_eff file && Ftype.is_textual_file (Fpath.v file)
     then begin
       let w = F.rect_width r in
       let h = F.rect_height r in

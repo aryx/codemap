@@ -18,7 +18,7 @@
 open Common
 
 open Highlight_code
-module FT = FType
+module FT = Ftype
 module HC = Highlight_code
 module Db = Database_code
 module Flag = Flag_visual
