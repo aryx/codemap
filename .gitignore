@@ -3,14 +3,14 @@
 
 # syncweb
 *.md5sum_*
-/docs/literate/Visual.aux
-/docs/literate/Visual.bbl
-/docs/literate/Visual.blg
-/docs/literate/Visual.brf
-/docs/literate/Visual.log
-/docs/literate/Visual.out
-/docs/literate/Visual.tex
-/docs/literate/Visual.toc
+/docs/Visual.aux
+/docs/Visual.bbl
+/docs/Visual.blg
+/docs/Visual.brf
+/docs/Visual.log
+/docs/Visual.out
+/docs/Visual.tex
+/docs/Visual.toc
 Visual-*.pdf
 
 # temporary
