@@ -11,7 +11,7 @@ DOC=Visual
 #TODO? add a Visua_extra.nw?
 SRC_ORIG=Visual.nw
 
-TOP=../..
+TOP=..
 LIB=$(TOP)/src/gui/
 
 SRC_VIEWS_WITH_MLI=$(LIB)/cairo_helpers.ml $(LIB)/async.ml \
@@ -41,7 +41,7 @@ SRC_VIEWS=$(SRC_VIEWS_WITH_MLI) $(SRC_VIEWS_WITH_MLI:ml=mli) $(SRC_VIEWS_JUST_ML
 #SRC_VIEWS=$(SRC_MLI) $(SRC_ML) ../main_codemap.ml
 
 #TODO: use in principia instead?
-include ~/github/semgrep-internals/Makefile.common
+include ~/github/efuns/docs/Makefile.common
 
 # note: the grep _build/default is for files like Lexer_nw.ml which are
 # just under _build/ and not in src/ but we still don't want them

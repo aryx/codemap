@@ -61,7 +61,7 @@
 
 
 \input{Config}
-\usepackage{principia-latex/noweb}
+\usepackage{latex/noweb}
  \noweboptions{footnotesizecode,nomargintag}
 %%note: allow chunk on different pages, less white space at bottom of pages
  \def\nwendcode{\endtrivlist \endgroup}
@@ -71,7 +71,7 @@
 %------------------------------------------------------------------------------
 % Macros
 %------------------------------------------------------------------------------
-\input{principia-latex/Macros}
+\input{latex/Macros}
 
 \newcommand{\pfff}{Pfff\xspace}
 
@@ -233,7 +233,7 @@ The source code of \pfff is governed by the following copyright:
 
 \section{About this document}
 
-#include "principia-latex/About.nw"
+#include "latex/About.nw"
 
 \chapter{Examples of Use}
 
@@ -6750,7 +6750,7 @@ This index is generated automatically.
 \addcontentsline{toc}{section}{References}
 
 
-\bibliography{principia-latex/Principia}
+\bibliography{latex/Principia}
 \bibliographystyle{alpha}
 
 %\begin{thebibliography}{99}
