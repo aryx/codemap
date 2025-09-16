@@ -386,6 +386,7 @@ let main_action xs =
   let dw = Model.init_drawing  treemap_func layers_with_index xs root in
 
   (* This can require lots of stack. Make sure to have ulimit -s 40000 *)
+(* TODO!!!! RESTORE !!! but then get 100% CPU recently on repos like xix
   Thread.create (fun () ->
     (* heavy computation are not *fairly* scheduled apparently by the OCaml
      * runtime, so let's do the heavy computation in another process
@@ -398,7 +399,7 @@ let main_action xs =
     Async.async_set res async_model;
   ) ()
   |> ignore;
- 
+*) 
   let w = { Model.
     dw;
     dw_stack = ref [dw];
