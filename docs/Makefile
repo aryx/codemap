@@ -3,7 +3,7 @@
 # or move semgrep-internals/Makefile.common in principia/docs/latest
 
 # -verbose
-SYNCFLAGS=-md5sum_in_auxfile -less_marks -lang ocaml
+SYNCFLAGS=-md5sum_in_auxfile -verbose -less_marks -lang ocaml
 
 VERSION=4
 DOC=Visual
