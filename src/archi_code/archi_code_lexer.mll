@@ -306,12 +306,17 @@ rule category = parse
   | "/arch/"
       { Architecture }
 
+  (* the main OSes *)
   | "unix"
   (* commented when analyze linux itself *)
   | "linux"
   | "macos"
   | "osx"
   | "win32"
+
+  (* oldies but goodies *)
+  | "plan9"
+  | "inferno"
 
   | "cygwin"
   | "msdos"
