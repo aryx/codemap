@@ -265,6 +265,8 @@ rule category = parse
   | "ia32"
 
   | "mips"
+  | "riscv"
+
   | "m68k"
   | "sparc"
   | "hppa"
@@ -303,6 +305,7 @@ rule category = parse
   | "/alphapc/"
       { Architecture }
 
+  | "arch_"
   | "/arch/"
       { Architecture }
 
@@ -393,7 +396,7 @@ rule category = parse
   | "image"
   | "jpeg"
   | "/ui."
-  | "window"
+  (*| "window" *)
   | "/draw_"
       { Ui }
 
