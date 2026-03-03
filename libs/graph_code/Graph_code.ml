@@ -410,7 +410,7 @@ let privacy_of_node n g =
 (* see also Graph_code_class_analysis.class_method_of_string *)
 let shortname_of_node (s, _kind) =
   let xs = String_.split ~sep:"[.]" s in
-  let s = Common2.list_last xs in
+  let s = Common2_.list_last xs in
   (* undo what was in gensym, otherwise codemap for instance will not
    * recognize the entity as one hovers on its name in a file. *)
   let s = if s =~ "\\(.*\\)__[0-9]+" then Common.matched1 s else s in
@@ -428,7 +428,7 @@ let shortname_of_node (s, _kind) =
 (*****************************************************************************)
 
 let create_intermediate_directories_if_not_present g dir =
-  let dirs = Common2.inits_of_relative_dir dir in
+  let dirs = Common2_.inits_of_relative_dir dir in
 
   let rec aux current xs =
     match xs with
@@ -480,7 +480,7 @@ let basename_to_readable_disambiguator (xs : string list) ~root =
 
 let group_edges_by_files_edges xs g =
   xs
-  |> Common2.group_by_mapped_key (fun (n1, n2) ->
+  |> Common2_.group_by_mapped_key (fun (n1, n2) ->
          (file_of_node n1 g, file_of_node n2 g))
   |> List_.map (fun (x, deps) -> (List.length deps, (x, deps)))
   |> Assoc.sort_by_key_highfirst |> List_.map snd

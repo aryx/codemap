@@ -489,7 +489,7 @@ let adjust_gopti_if_needed_lazily tree gopti =
            * threshold_pack - 1 + the new entry = threshold_pack
            * and so we will not loop again and again.
            *)
-          let ok, to_pack = Common2.splitAt (!threshold_pack - 1) score in
+          let ok, to_pack = Common2_.splitAt (!threshold_pack - 1) score in
           (* pr2 (spf "REPACKING: TO_PACK = %s, TO_KEEP = %s"
                  (Common.dump to_pack) (Common.dump ok)); *)
           let new_gopti, dotdotdot_entry =
