@@ -6,10 +6,10 @@
 SYNCFLAGS=-md5sum_in_auxfile -verbose -less_marks -lang ocaml
 
 VERSION=4
-DOC=Visual
+DOC=codemap
 
-#TODO? add a Visua_extra.nw?
-SRC_ORIG=Visual.nw
+#TODO? add a codemap_extra.nw?
+SRC_ORIG=codemap.nw
 
 TOP=..
 LIB=$(TOP)/src/gui/
