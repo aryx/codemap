@@ -6,29 +6,189 @@ set -eu # to debug this script add '-x'
 ###############################################################################
 # The goal of this script is to automate the configuration and installation
 # of packages that are needed to then compile and install codemap itself.
-# See also my https://github.com/aryx/xix/blob/master/configure for more info.
+# coupling: adapted from ~/github/osemgrep/configure
 
 ###############################################################################
-# Platform specific setup
+# Helper functions
 ###############################################################################
 
+ok()   { echo "  [OK]   $1"; }
+warn() { echo "  [WARN] $1"; }
+err()  { echo "  [ERR]  $1" >&2; }
+
+errors=0
+
+need_command() {
+    if command -v "$1" >/dev/null 2>&1; then
+        ok "$1 ($(command -v "$1"))"
+    else
+        err "$1 not found in PATH"
+        errors=$((errors + 1))
+    fi
+}
+
+want_command() {
+    if command -v "$1" >/dev/null 2>&1; then
+        ok "$1 ($(command -v "$1"))"
+    else
+        warn "$1 not found — $2"
+    fi
+}
+
+check_c_lib() {
+    local name pkg header search_dirs dir
+    name="$1"
+    pkg="$2"
+    header="$3"
+
+    if command -v pkg-config >/dev/null 2>&1 \
+       && pkg-config --exists "$pkg" 2>/dev/null; then
+        ok "$name (pkg-config: $pkg)"
+        return 0
+    fi
+
+    search_dirs="/usr/include /usr/local/include"
+    if command -v brew >/dev/null 2>&1; then
+        search_dirs="$search_dirs $(brew --prefix 2>/dev/null)/include"
+    fi
+
+    for dir in $search_dirs; do
+        if [ -f "$dir/$header" ]; then
+            ok "$name (header: $dir/$header)"
+            return 0
+        fi
+    done
+
+    err "$name not found (pkg-config module '$pkg', header '$header')"
+    errors=$((errors + 1))
+}
+
+# On macOS, extend PKG_CONFIG_PATH for Homebrew
+if command -v brew >/dev/null 2>&1; then
+    _brew_prefix="$(brew --prefix 2>/dev/null || true)"
+    if [ -n "$_brew_prefix" ]; then
+        PKG_CONFIG_PATH="${_brew_prefix}/lib/pkgconfig:${PKG_CONFIG_PATH:-}"
+        export PKG_CONFIG_PATH
+    fi
+fi
+
 ###############################################################################
-# Platform independent
+# Check required tools
 ###############################################################################
 
-#TODO:
-# - check opam is in PATH
-# - check opam was initialized
-# - use opam.locked
+echo "Checking required tools..."
 
-#in theory we should also
-# - check the ocaml switch is a good version
-# - check external deps are installed (e.g., pcre, semgrep!)
+need_command ocaml
+need_command opam
+need_command make
+need_command git
 
-opam install --no-depexts --deps-only ./codemap.opam -y
+_cc_found=false
+for _cc_candidate in ${CC:-} cc gcc clang; do
+    if command -v "$_cc_candidate" >/dev/null 2>&1; then
+        ok "C compiler ($_cc_candidate -> $(command -v "$_cc_candidate"))"
+        _cc_found=true
+        break
+    fi
+done
+if ! $_cc_found; then
+    err "No C compiler found (tried cc, gcc, clang). Install one or set \$CC."
+    errors=$((errors + 1))
+fi
 
+need_command curl
+want_command pkg-config "tree-sitter will be built from source"
+
+# Detect system tree-sitter early
+_ts_required="0.20"
+_ts_found=false
+if command -v pkg-config >/dev/null 2>&1 \
+   && pkg-config --exists tree-sitter 2>/dev/null \
+   && pkg-config --atleast-version="$_ts_required" tree-sitter 2>/dev/null; then
+    _ts_found=true
+fi
+
+if ! $_ts_found; then
+    want_command autoconf "required to build tree-sitter from source"
+    want_command automake "required to build tree-sitter from source"
+fi
+
+echo ""
+
+###############################################################################
+# Check git submodules
+###############################################################################
+
+echo "Checking git submodules..."
+
+if [ -d "semgrep-libs/TCB" ]; then
+    ok "semgrep-libs (initialized)"
+else
+    err "semgrep-libs is empty; run: git submodule update --init --recursive"
+    errors=$((errors + 1))
+fi
+
+if [ -f "semgrep-pfff-langs/libs/ocaml-tree-sitter-core/configure" ]; then
+    ok "semgrep-pfff-langs (initialized, including ocaml-tree-sitter-core)"
+else
+    err "semgrep-pfff-langs is empty or ocaml-tree-sitter-core not initialized; run: git submodule update --init --recursive"
+    errors=$((errors + 1))
+fi
+
+echo ""
+
+if [ "$errors" -ne 0 ]; then
+    echo "$errors error(s) found. Please fix the issues above and re-run ./configure."
+    exit 1
+fi
+
+###############################################################################
+# Setup
+###############################################################################
+
+# Initialize submodules. Skipped when not in a git repo (e.g., Docker COPY).
+if git rev-parse --git-dir >/dev/null 2>&1; then
+    echo "Initializing git submodules..."
+    git submodule update --init --recursive
+fi
+
+# Configure tree-sitter C library (uses system lib if available, else builds from source)
+echo "Setting up tree-sitter..."
+./semgrep-pfff-langs/scripts/setup-tree-sitter.sh
+
+# Install OCaml dependencies
+echo "Installing opam dependencies..."
+opam install --confirm-level=unsafe-yes --deps-only ./codemap.opam -y
+
+echo ""
+
+###############################################################################
+# Verify C libraries
+###############################################################################
+
+echo "Verifying C libraries..."
+check_c_lib "PCRE"    "libpcre"    "pcre.h"
+check_c_lib "PCRE2"   "libpcre2-8" "pcre2.h"
+check_c_lib "GMP"     "gmp"        "gmp.h"
+check_c_lib "libev"   "libev"      "ev.h"
+check_c_lib "libcurl" "libcurl"    "curl/curl.h"
+check_c_lib "Cairo"   "cairo"      "cairo/cairo.h"
+check_c_lib "GTK2"    "gtk+-2.0"   "gtk-2.0/gtk/gtk.h"
+
+if $_ts_found; then
+    ok "tree-sitter (pkg-config: $(pkg-config --modversion tree-sitter))"
+else
+    warn "tree-sitter >= $_ts_required not found — will be compiled from source"
+fi
+
+if [ "$errors" -ne 0 ]; then
+    echo "$errors C librar(ies) missing after setup. Please install them."
+    exit 1
+fi
+
+echo ''
 echo 'Everything looks fine. You can now run: '
-echo
+echo ''
 echo '   $ make'
 echo '   $ make all'
 echo '   $ make install'
