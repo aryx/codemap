@@ -3,7 +3,8 @@
     "allow": [
       "Bash(xargs cat:*)",
       "Bash(ls:*)",
-      "Bash(ocamlfind query:*)"
+      "Bash(ocamlfind query:*)",
+      "Bash(grep:*)"
     ]
   }
 }
