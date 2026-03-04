@@ -53,7 +53,7 @@ let font_text =
   | _ -> raise Impossible
 
 (*s: [[size_font_multiplier_of_categ]]() *)
-let multiplier_use x = 
+let multiplier_use x =
   match x with
   | HC.HugeUse -> 3.3
   | HC.LotsOfUse -> 2.7
