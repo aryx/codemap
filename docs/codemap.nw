@@ -134,6 +134,16 @@ Yoann Padioleau\\
 
 \section{Motivations}
 
+%claude:
+Codemap is a ``Google Maps for source code'': a zoomable, interactive
+treemap visualizer that lets you see an entire codebase at once and
+seamlessly drill down to individual lines of code.
+%claude:
+The key insight is to combine multiple levels of detail in a single
+interface---treemap rectangles at the macro level, source thumbnails
+at the micro level, and overlays for search results and dependency
+information---so that the programmer always has both context and detail.
+
 \begin{verbatim}
 (*
  * This file is the basis for a new kind of code visualizer, 
@@ -194,7 +204,14 @@ like the Speedbar Emacs project, except it is using a treemap
 instead of a classic hiearchy browser.
 
 %vs emacs ?
-%vs eclipse ? 
+%vs eclipse ?
+
+%claude:
+Codemap is designed to complement traditional editors, not replace them.
+Middle-clicking a file opens it in Emacs (or Efuns) at the right line.
+The value proposition is spatial awareness: while an editor shows one file
+at a time, Codemap shows the entire project, making it easy to spot
+large files, dead code, or architectural patterns at a glance.
 
 % follow movment towards tiling, ex: xmonad haskell window manager
 
@@ -308,6 +325,17 @@ and have emacsclient in your path).
 
 \chapter{Implementation Overview}
 
+%claude:
+Codemap follows a Model-View-Controller architecture built on top of
+GTK and Cairo. The {model} consists of a treemap rendering (the macro level)
+plus optional semantic databases and dependency graphs. The {view} is split
+into two levels: [[draw_macrolevel]] paints treemap rectangles with colored
+backgrounds, while [[draw_microlevel]] renders actual source code as
+thumbnails inside those rectangles. The {controller} handles mouse events
+(clicking, double-clicking, right-clicking for context menus) and keyboard
+shortcuts, translating user interactions into navigation actions like
+zooming into directories or opening files in an editor.
+
 \begin{verbatim}
 % say that model/view/controller
 \end{verbatim}
@@ -330,12 +358,26 @@ and have emacsclient in your path).
 \end{verbatim}
 
 \begin{verbatim}
-concepts: 
+concepts:
 user vs device
 see Cairo/Gtk appendix
 
 macro vs micro level
 \end{verbatim}
+
+%claude:
+Two coordinate systems permeate the code: {user coordinates} (the abstract
+treemap space, where $x$ ranges from $0$ to [[xy_ratio]] and $y$ from $0$
+to $1$) and {device coordinates} (actual pixels on screen). Cairo handles
+the mapping between them via [[scale]] and [[translate]], but the distinction
+matters everywhere---font sizes, clipping rectangles, and hit testing all
+must be careful about which coordinate system they operate in.
+%claude:
+The other key distinction is between {macro level} (the treemap rectangles,
+colored by file category) and {micro level} (the source thumbnails rendered
+inside rectangles when you zoom in enough). These two levels are painted
+on separate Cairo surfaces and composited together during the [[expose]]
+event.
 
 \begin{verbatim}
 Plan for following sections.
@@ -348,6 +390,13 @@ Dependencies diagram and Tabular.
 \end{verbatim}
 
 \chapter{Main}
+
+%claude:
+The main module handles command-line argument parsing and application
+bootstrap. The most interesting part is the initialization sequence
+in [<function [[main_action]]>]: it computes the initial treemap, optionally
+loads semantic databases and dependency graphs, sets up the async model
+for background computation, and launches the GTK event loop.
 
 <<main flags>>=
 (* on macOS lion, X11 resizes the window to a smaller size so
@@ -373,8 +422,16 @@ let layer_dir  = ref (None: string (* filename *) option)
 let test_mode = ref (None: string option)
 @
 
+%claude:
+The [[main_action]] function is the entry point after argument parsing.
+It initializes GTK, computes a common root from the given paths, loads
+any available layers and semantic databases, generates the initial treemap,
+and launches the GUI. The heavy model-building (parsing, indexing) was
+originally done in a background thread via [[Parallel.invoke]] to keep
+the UI responsive, though that code is currently commented out.
+
 <<function [[main_action]]>>=
-let main_action xs = 
+let main_action xs =
   (* this used to be done by linking with gtkInit.cmo, but better like this *)
   let _locale = GtkMain.Main.init () in
 
@@ -483,6 +540,14 @@ let main_action xs =
 
 \section{The code database}
 
+%claude:
+The [[model]] type holds the semantic information about the codebase:
+an optional [[Database_code.database]] for entity metadata (function names,
+use counts, file locations) and an optional [[Graph_code.t]] for
+dependency information. The two hash tables [[hfile_deps_of_node]]
+and [[hentities_of_file]] are derived from the graph and provide fast
+lookups for the dependency visualization overlays.
+
 <<type model>>=
 (* filename below should be in readable path format *)
 type model = {
@@ -544,6 +609,15 @@ let build_model root dbfile_opt graphfile_opt =
 
 \section{The treemap generator}
 
+%claude:
+The treemap generator is a function that takes a list of paths and
+produces a [[treemap_rendering]]---a flat list of labeled rectangles
+ready to be drawn. It is called each time the user navigates to a new
+directory (zooming in), so it must be reasonably fast. The
+[[Treemap.Ordered Treemap.PivotByMiddle]] algorithm produces a
+layout where files are roughly sorted alphabetically from top-left
+to bottom-right, which gives the treemap a predictable spatial structure.
+
 <<[[treemap_generator]]>>=
 (* this is called each time we go in a new directory (or set of dirs) *)
 let treemap_generator ~filter_file = 
@@ -557,6 +631,16 @@ let treemap_generator ~filter_file =
 @ 
 
 \section{The final model}
+
+%claude:
+The [[drawing]] type is the central data structure for the view.
+It holds the treemap rendering (macro level), a hash table mapping
+each rectangle to its [[microlevel]] data (line-to-position mappings
+and parsed glyphs for rendered files), and two Cairo surfaces:
+[[base]] for the expensive treemap+content painting, and [[overlay]]
+for the lightweight mouse-tracking graphics that change on every
+mouse move. This two-surface architecture avoids repainting the
+entire treemap every time the mouse moves.
 
 <<type drawing>>=
 (* All the 'float' below are to be intepreted as user coordinates except when
@@ -596,6 +680,13 @@ type drawing = {
 
 \section{The microlevel specific model}
 
+%claude:
+The [[context]] type is a lightweight slice of the drawing state
+passed to microlevel rendering functions. It bundles the async model
+reference, the current number of rectangles on screen (used to adjust
+transparency---fewer rectangles means higher alpha for richer detail),
+the grep query results, and the microlevel layer colors.
+
 <<type context>>=
 (* a slice of drawing used in the drawing functions *)
 type context = {
@@ -609,9 +700,19 @@ type context = {
 
 \section{On filenames}
 
+%claude:
+Filenames in Codemap come in three flavors: {absolute} paths (what the
+OS uses), {relative} paths (convenient but fragile), and {readable} paths
+(relative to the project root, stored in databases so they can be shared
+across machines). The tricky part is that the user may run Codemap on a
+subdirectory of what the database covers---so
+[[readable_to_absolute_filename_under_root]] must walk up the directory
+hierarchy to find the right prefix that makes the readable path resolve
+to an actual file.
+
 \begin{verbatim}
 quite tricky. Also had pbs with our testing code. Relative path
-are convenient but bad in code. 
+are convenient but bad in code.
 
 - relative
 - absolute
@@ -631,6 +732,23 @@ val actual_root_of_db :
   root:string (* filename *) -> Database_code.database -> string
 @
 
+
+%claude:
+The database stores only {readable paths} (e.g., [[flib/foo.php]])
+rather than absolute paths, because the database is shared across users
+who may have different checkout locations ([[~/www4/]] vs [[~/www/]]).
+But when the user runs Codemap on a subdirectory like [[~/www/flib]],
+naively concatenating root and readable path would give the wrong
+result ([[~/www/flib/flib/foo.php]]). The function
+[<readable_to_absolute_filename_under_root>] solves this by walking up
+the directory hierarchy from root until it finds a prefix where the
+file actually exists on disk.
+%claude:
+[<actual_root_of_db>] uses this to discover the true root of the database:
+it resolves the first entity's file to an absolute path, then strips
+the readable suffix to recover the actual root directory. This is needed
+because the database may have been built from a wider tree than the
+subdirectory the user is currently viewing.
 
 <<[[readable_to_absolute_filename_under_root]]>>=
 (* People may run the visualizer on a subdir of what is mentionned in the
@@ -702,6 +820,16 @@ hentities : (string (* short name *), Database_code.entity) Hashtbl.t;
 
 
 
+%claude:
+[<hentities>] builds a hash table mapping entity names (function names,
+class names, etc.) to their [[Database_code.entity]] records. The key
+subtlety is that it rewrites each entity's [[e_file]] from a readable
+path to an absolute path using [<actual_root_of_db>], so that later
+code can directly compare entity paths with treemap rectangle paths.
+This table is computed once at startup (not inside [<init_drawing>])
+because parsing the database is expensive and [<init_drawing>] is called
+repeatedly when the user zooms into subdirectories.
+
 <<hentities()>>=
 (* We want to display very often used functions in bigger size font.
  * Enter database_code.ml which provides a language-independent database of
@@ -746,6 +874,15 @@ val init_drawing :
   drawing
 @
 
+%claude:
+[[init_drawing]] creates a fresh [[drawing]] from scratch. It is called
+both at startup and every time the user zooms into a new directory.
+It computes the treemap, builds the [[readable_file_to_rect]] index
+(for fast lookup when the search box finds a file by readable name),
+and allocates the two Cairo surfaces. The initial 600$\times$600 size
+is a placeholder---the first GTK [[configure]] event will immediately
+trigger a resize to the actual window dimensions.
+
 <<[[init_drawing]]()>>=
 (* This is a first guess. The first configure ev will force a resize. *)
 let init_drawing   ?(width = 600) ?(height = 600) func layers paths root =
@@ -786,6 +923,15 @@ let init_drawing   ?(width = 600) ?(height = 600) func layers paths root =
 
 \section{Overall organisation}
 
+%claude:
+The GUI is built with lablgtk (OCaml bindings for GTK). The [<function [[mk_gui]]>]
+function assembles all the widgets: a menu bar with navigation and search
+commands, a toolbar with a search entry and back/up/top buttons, the main
+drawing area where the treemap is rendered via Cairo, an optional legend
+pane, and a status bar. All the interesting rendering happens in the
+callbacks wired to GTK events: [[expose]], [[configure]], [[button_press]],
+and [[motion_notify]].
+
 \begin{verbatim}
  * Overall UI organisation:
  *  - menu
@@ -822,6 +968,19 @@ val mk_gui :
 \section{Status bar}
 
 \section{Misc}
+
+%claude:
+The [[mk_gui]] function is long but straightforward: it creates the GTK
+window, sets up the widget hierarchy, and wires event callbacks.
+A subtle point is the comment at line 1136: callbacks must capture
+the [[w]] (world) record, not [[w.dw]] directly, because [[w.dw]] is
+replaced on every navigation (zoom in/out). Capturing [[w.dw]] would
+freeze the callback on a stale drawing.
+%claude:
+The controller functions ([[_go_back]], [[_go_dirs_or_file]], [[_refresh_da]])
+are stored as mutable references rather than passed directly. This is a
+form of late binding that lets the view module set up the callbacks
+without creating circular dependencies with the navigation module.
 
 <<[[mk_gui]]()>>=
 let mk_gui ~screen_size ~legend test_mode w =
@@ -1225,9 +1384,25 @@ let mk_gui ~screen_size ~legend test_mode w =
 
 % xyratio
 
+%claude:
+The treemap maps the file hierarchy to nested rectangles whose area is
+proportional to file size. Codemap uses the ``ordered'' layout algorithm
+with pivot-by-middle, which preserves approximate alphabetical order
+(top-left to bottom-right). The [[xy_ratio]] global controls the aspect
+ratio of the root rectangle, matching the window's width-to-height ratio
+so that the treemap fills the screen without distortion.
+
 \section{Drawing}
 
 % \label{user-vs-device}
+
+%claude:
+Drawing a treemap rectangle is simply filling a colored quadrilateral
+via Cairo. The color comes from the file's category (source, test,
+third-party, etc.) as determined by [[Archi_code]]. An optional
+[[color]] parameter allows overriding the default---used when layers
+are active to recolor rectangles based on semantic properties like
+code coverage or dead code.
 
 <<[[device_to_user_area]]>>=
 (* still needed ? reuse helper functions above ? *)
@@ -1285,6 +1460,22 @@ let draw_treemap_rectangle ~cr ?color ?alpha a =
 
 
 \section{Labels}
+
+%claude:
+Label drawing is surprisingly complex because labels must fit inside
+rectangles of widely varying sizes. The algorithm tries multiple
+strategies in sequence: first horizontal at full size, then diagonal,
+then horizontal at 70\%, diagonal at 70\%, and so on down to 25\% of
+the original font size. For each attempt, it checks whether the text
+extent fits within the rectangle's dimensions. The diagonal placement
+uses basic trigonometry (arctangent of height/width) to rotate the text
+along the rectangle's diagonal.
+%claude:
+Performance matters here because labels are drawn for every rectangle
+in the treemap. The [[_hmemo_text_extent]] hash table memoizes
+[[CairoH.text_extents]] calls (which are expensive Cairo operations)
+keyed by font size, and a threshold on [[font_size_real]] skips
+labels that would be too tiny to read anyway.
 
 <<[[draw_treemap_rectangle_label_maybe]] sig>>=
 val draw_treemap_rectangle_label_maybe :
@@ -1588,6 +1779,19 @@ let expose_legend da w _ev =
 
 \section{Principles}
 
+%claude:
+The microlevel view is what makes Codemap unique: when you zoom in
+enough, each file's rectangle stops being just a colored box and
+starts showing the actual source code as a thumbnail. The same
+rendering code handles both the zoomed-out thumbnail (where individual
+characters are sub-pixel) and the zoomed-in readable view---there is
+no separate ``thumbnail mode'' versus ``source mode'' as in some IDEs.
+%claude:
+The text is syntax-highlighted using language-specific parsers, and
+important entities (frequently-used functions, class definitions) are
+rendered in a larger font size, creating an {anamorphic} effect where
+important code visually stands out even at small zoom levels.
+
 \section{Drawing}
 
 <<type [[draw_content_layout]]>>=
@@ -1605,6 +1809,20 @@ val draw_treemap_rectangle_content_maybe:
 @ 
 
 \section{Entities size}
+
+%claude:
+Entity importance drives font size. Each syntax category (function
+definition, class, global variable, etc.) has a base multiplier from
+[[size_font_multiplier_of_categ]], which is further scaled by the
+entity's {use count} from the database. A function called by 100 other
+files gets [[HugeUse]] (multiplier 3.3$\times$) while a dead function
+gets [[NoUse]] (0.9$\times$). This creates a natural visual hierarchy:
+heavily-used APIs leap out of the thumbnail while internal helpers
+fade into the background.
+%ocaml:
+The multiplier is also adjusted inversely with zoom level: when zoomed
+out ([[font_size_real < 3]]) multipliers are doubled so important names
+remain visible; when zoomed in they are dampened to avoid oversized text.
 
 <<[[final_font_size_when_multiplier]]>>=
 let final_font_size_when_multiplier 
@@ -1651,6 +1869,15 @@ let final_font_size_of_categ ~font_size ~font_size_real categ =
 
 
 \section{Column layout}
+
+%claude:
+Long files are split into multiple columns to make better use of
+wide rectangles, much like a newspaper layout. The
+[[optimal_nb_columns]] function searches for the number of columns
+that maximizes the font size: starting at one column, it keeps adding
+columns as long as the resulting font size increases (because shorter
+columns mean the constraining dimension shifts from height to width),
+and stops when adding another column would make the font smaller.
 
 <<[[font_size_when_have_x_columns]]>>=
 let font_size_when_have_x_columns ~nblines ~chars_per_column ~w ~h ~with_n_columns = 
@@ -1708,6 +1935,18 @@ let draw_column_bars cr layout r =
 \section{Content rendering}
 
 % thumbnails and actual source is same code! not like in visual studio
+
+%claude:
+[[draw_content]] is where the source thumbnails are actually rendered.
+For each line of the file, it computes the position in the column layout,
+moves the Cairo cursor there, and draws each glyph with its syntax-highlighted
+color and (possibly enlarged) font size.
+%claude:
+When layers are active, the macrolevel color is erased and replaced with
+a dark background ([[DarkSlateGray]]) so the colored source text is readable.
+Layer highlights (and grep matches) are drawn as semi-transparent colored
+rectangles behind the relevant lines, blending the semantic overlay with
+the source thumbnail.
 
 <<[[draw_content]]>>=
 let draw_content cr layout context tr =
@@ -1890,6 +2129,19 @@ let draw_treemap_rectangle_content_maybe cr clipping context tr  =
 
 % also contain the code for calling the micro-level
 
+%claude:
+The [[paint]] function is the heavyweight rendering entry point.
+It proceeds in three phases: (1) draw all treemap rectangles (macro level),
+(2) draw labels for each rectangle, and (3) render file contents (micro
+level) for rectangles large enough to show source code.
+%claude:
+Phase 3 is the expensive part, so it is done lazily via
+[[GMain.Idle.add]]: the [[lazy_paint]] callback processes rectangles in
+batches of at most 0.3 seconds, yielding control back to the GTK event
+loop between batches so the UI remains responsive. This means the
+treemap structure and labels appear immediately, while source thumbnails
+fill in progressively---a common technique in map applications.
+
 <<paint>>=
 let paint_content_maybe_rect ~user_rect dw model rect =
  with_map dw (fun cr ->
@@ -2006,6 +2258,18 @@ let hfiles_and_top_entities root db_opt =
 
 \chapter{Layers}
 
+%claude:
+Layers are Codemap's mechanism for overlaying semantic information
+on top of the treemap. They work at two levels: at the {macro level},
+a layer can recolor entire file rectangles (e.g., green for tested files,
+red for files with bugs); at the {micro level}, a layer can highlight
+individual lines within a file (e.g., purple for uncovered lines).
+%claude:
+Layers are stored as external files that can be generated by
+analysis tools independently of Codemap. This decoupling means any
+tool that can produce a list of (file, line, color) triples can
+feed visual information into Codemap without modifying its source code.
+
 \section{Micro-level}
 
 \begin{verbatim}
@@ -2076,15 +2340,30 @@ let choose_layer ~root layer_title_opt w =
 
 \chapter{Navigation}
 
+%claude:
+Navigation in Codemap is spatial: you move through the codebase by
+clicking on the map. The three mouse buttons serve different purposes:
+left-click selects a file (printing its name), middle-click opens it
+in an external editor at the line under the cursor, and right-click
+zooms into the file or directory. Double-click zooms into the enclosing
+directory (one level up from the most specific match). Shift+right-click
+opens a context menu with dependency navigation options.
+%claude:
+The navigation history is maintained as a stack of [[drawing]] values
+([[dw_stack]]). Each zoom-in pushes the current drawing; going back
+pops the previous one. This is simple and effective---each drawing
+is a self-contained snapshot of the treemap state at that navigation
+level.
+
 <<[[key_pressed]]>>=
-@ 
+@
 
 
 <<[[find_filepos_in_rectangle_at_user_point]]>>=
-@ 
+@
 
 <<[[text_with_user_pos]] sig>>=
-@ 
+@
 
 
 <<[[button_action]]>>=
@@ -2253,6 +2532,13 @@ let button_action w ev =
 
 \section{Zooming in a directory}
 
+%claude:
+Zooming in is implemented by creating a brand-new [[drawing]]: the
+treemap is recomputed from scratch for the target directory (or set of
+files), the old drawing is pushed onto [[dw_stack]], and the new one
+replaces [[w.dw]]. This means each zoom level has its own coordinate
+system where the target fills the entire viewport, giving maximum
+resolution to the files of interest.
 
 <<[[go_dirs_or_file]]>>=
 let go_dirs_or_file ?(current_grep_query=None) w paths =
@@ -2295,6 +2581,15 @@ val find_rectangle_at_user_point :
    Treemap.treemap_rectangle (* top one *)
   ) option
 @
+
+%claude:
+Hit testing---finding which rectangle contains a given point---is done
+by brute-force linear scan over all rectangles, filtering those that
+contain the point, then sorting by depth (deepest first) to return the
+most specific match. The comment notes this could be optimized with a
+quad tree, but in practice the number of rectangles is small enough
+(a few thousand at most) that linear scan with Cairo's fast point-in-rect
+check is adequate.
 
 <<[[find_rectangle_at_user_point]]()>>=
 (* alt: we could use Cairo_bigarray and the pixel trick below if
@@ -2344,6 +2639,13 @@ see multi dir search
 \section{Zooming in a file}
 
 \section{Opening a file in an external editor}
+
+%claude:
+Codemap can open files in both Emacs (via [[emacsclient]]) and Efuns
+(the author's OCaml-based editor, via [[efunsclient]]). Both are
+tried in sequence, so if one is not running the other may succeed.
+The editor connection requires a running server (e.g., [[M-x server-start]]
+in Emacs).
 
 <<editor_connection.mli>>=
 
@@ -2449,6 +2751,13 @@ let go_back w =
 
 \section{Fine-grained pan and zoom}
 
+%claude:
+The [[with_map]] helper sets up the Cairo coordinate transform
+before any drawing operation. [[zoom_pan_scale_map]] scales the
+coordinate system so that user coordinates $(0 \ldots \text{xy\_ratio},
+0 \ldots 1)$ map to device coordinates $(0 \ldots \text{width},
+0 \ldots \text{height})$. The translate is currently a no-op (0,0)
+but is the hook point for future pan support.
 
 <<[[with_map]]>>=
 let with_map dw f = 
@@ -2475,6 +2784,20 @@ mutable height: int;
 @
 
 \chapter{Search}
+
+%claude:
+Search in Codemap operates at three levels: (1) the toolbar entry
+provides live completion against a [[Big_grep]] index of all entity names
+in the codebase, (2) the ``Git grep'' menu item runs [[git grep]] and
+highlights matching files and lines on the treemap, and (3) as-you-type
+filtering highlights rectangles whose filenames match the query in yellow.
+%claude:
+The completion system deserves attention: rather than using GTK's
+built-in prefix matching, Codemap provides its own [[set_match_func]]
+that always returns true, because the model is rebuilt from scratch
+on each keystroke (with a 250ms debounce) using [[Big_grep]]'s
+substring search. This allows suffix matching---searching for ``parser''
+finds [[json_parser.ml]]---which standard GTK completion cannot do.
 
 <<[[dialog_search_def]]>>=
 let dialog_search_def model = 
@@ -2575,7 +2898,12 @@ mutable current_grep_query: (string (* filename *), line) Hashtbl.t;
 % php manual integration!
 \end{verbatim}
 
-
+%claude:
+The entity index for completion is built from two sources: the
+[[Database_code]] (which contains parsed entities with use counts) and
+a fallback [[files_and_dirs_database]] built from the filesystem itself.
+This ensures that even without a pre-built semantic database, users can
+at least get completion on filenames and directory names.
 
 <<[[all_entities]] sig>>=
 (* Will generate extra entities for files, dirs, and also generate
@@ -2983,6 +3311,21 @@ let my_entry_completion_eff ~callback_selected ~callback_changed x =
 
 % draw vs paint vs xxx
 
+%claude:
+The term ``overlays'' here refers to Cairo {graphics layers}, not
+to be confused with the semantic ``layers'' in the previous chapter.
+The [[drawing]] type has two Cairo surfaces: [[base]] holds the
+expensive treemap and content rendering (rebuilt only on navigation),
+while [[overlay]] holds the lightweight graphics that change on every
+mouse move---highlighted rectangles, labels under the cursor,
+dependency arrows, tooltips, and search result highlights.
+%claude:
+This separation is the key performance optimization: on each mouse
+move, only the overlay surface is cleared and redrawn (which is fast),
+then both surfaces are composited together in [[assemble_layers]]
+during the [[expose]] event. Without this, every mouse movement
+would trigger a full treemap repaint.
+
 \section{Cairo overlays}
 
 \begin{verbatim}
@@ -3089,6 +3432,21 @@ let draw_searched_rectangles ~dw =
 @ 
 
 \section{Assembling overlays}
+
+%claude:
+The [[motion_refresher]] function is the heart of the interactive
+experience. On each mouse move, it: (1) clears and repaints the overlay,
+(2) hit-tests to find the rectangle under the cursor, (3) draws
+the hierarchy of englobing rectangles (white for the file, blue for
+the parent directory, greys for intermediate levels), (4) shows a
+label tooltip, (5) draws dependency arrows if a graph is available,
+(6) updates the status bar with file/line/entity information, and
+(7) schedules a delayed tooltip for entity details.
+%claude:
+To avoid overwhelming the GTK event loop, the actual refresher is
+scheduled via [[GMain.Idle.add]] at a low priority, so rapid mouse
+movements coalesce into a single refresh. Each new motion event
+cancels the previous pending refresher.
 
 <<[[motion_refresher]]>>=
 let motion_refresher ev w =
@@ -3206,12 +3564,28 @@ let motion_notify w ev =
 
 \section{The big picture}
 
+%claude:
+The rendering pipeline has three distinct operations: {paint} (expensive,
+rebuilds the [[base]] surface with treemap + content), {expose} (cheap,
+composites [[base]] and [[overlay]] onto the GTK window), and {overlay
+drawing} (medium, clears and redraws the [[overlay]] surface on mouse
+events). A resize triggers a full repaint; a mouse move only redraws
+the overlay; and a GTK expose event (e.g., from window uncovering)
+just recomposites the existing surfaces.
+
 \begin{verbatim}
 
 \end{verbatim}
 
 
 \section{The [[configure]] event}
+
+%claude:
+The [[configure]] event fires when the window is resized. It updates
+the drawing's width and height, allocates fresh Cairo surfaces at the
+new dimensions, and triggers a full repaint. This is why the initial
+600$\times$600 size in [[init_drawing]] does not matter---the first
+configure event immediately corrects it.
 
 <<configure>>=
 let configure w ev = 
@@ -3229,6 +3603,13 @@ let configure w ev =
 
 
 \section{The [[expose]] event}
+
+%claude:
+The [[expose]] event is deliberately lightweight: it does not repaint
+anything, it just copies the pre-rendered [[base]] and [[overlay]]
+surfaces onto the actual GTK window using Cairo's [[OVER]] compositing
+operator. This is the ``cheap'' path that makes interactive frame rates
+possible even with complex treemaps.
 
 <<[[assemble_layers]]>>=
 (* Composing the "layers". See cairo/tests/knockout.ml example.
@@ -3283,6 +3664,20 @@ diagram where see events, functions,  draw vs paint vs overlays.
 
 \chapter{Language Modes}
 
+%claude:
+Codemap supports syntax highlighting for over a dozen programming
+languages. Each language mode provides three things: a parser
+(producing an AST and token list), a highlighter (annotating tokens
+with categories like ``function definition'' or ``keyword''), and
+a token-to-info extractor. These are bundled into a
+[[Parse_and_highlight]] record and passed to a generic
+[[tokens_with_categ_of_file_helper]] function.
+%claude:
+Results are cached in [[_hmemo_file]] keyed by filename and
+modification time, so re-rendering a file after a mouse move does
+not re-parse it. When the file changes on disk (detected via
+[[mtime]]), the cache entry is invalidated and the file is reparsed.
+
 \section{Parsing}
 
 <<Parsing.mli>>=
@@ -3301,6 +3696,16 @@ val use_arity_of_use_count:
 
 
 \section{Generic semantic visual feedback}
+
+%claude:
+The [[ast]] sum type below is an OCaml workaround for memoizing
+parse results of different languages in a single hash table.
+OCaml's type system does not allow a [[Hashtbl.t]] to hold
+heterogeneous values, so each language's AST is wrapped in its own
+constructor. The cache ([[_hmemo_file]]) maps filenames to
+[[(mtime, ast)]] pairs; when a file's modification time changes,
+the cached entry is evicted and the file is reparsed. This avoids
+re-parsing thousands of files on every mouse move or zoom operation.
 
 <<Parsing.ml>>=
 <<Facebook copyright>>
@@ -3791,6 +4196,20 @@ let tokens_with_categ_of_file (file : string) hentities =
 
 \section{Threads, Idle, Timeouts}
 
+%claude:
+The [[Async]] module provides a simple future/promise mechanism for
+background computation. The [[async_make]]/[[async_set]]/[[async_get]]
+API wraps a mutex-protected [[option ref]] with a condition variable
+for blocking reads. This is used to build the semantic model
+(parsing, indexing) in a background thread while the treemap UI
+is already interactive.
+%ocaml:
+OCaml's lack of parallel threads (due to the GIL/runtime lock) means
+the background thread does not actually run in parallel with GTK
+callbacks. The original code worked around this by using
+[[Parallel.invoke]] to fork the heavy computation into a separate
+process, though that code is currently disabled.
+
 <<type async>>=
 type 'a t = {
   m: Mutex.t; 
@@ -3859,6 +4278,16 @@ let async_get_opt a =
 @ 
 
 \chapter{Configuration}
+
+%claude:
+Codemap's behavior is controlled by a set of thresholds that govern
+the trade-off between visual richness and rendering speed. The most
+important ones are [[threshold_draw_content_font_size_real]] (below which
+source thumbnails are not rendered---too small to read anyway),
+[[threshold_nb_rects_draw_content]] (maximum number of rectangles
+that trigger content rendering---avoids spending minutes parsing
+thousands of files), and [[threshold_draw_label_font_size_real]]
+(below which labels are skipped).
 
 <<options>>=
   "-screen_size", Arg.Set_int screen_size,
@@ -3968,8 +4397,19 @@ let windows_params screen_size =
 @
 
 
+%claude:
+This is the core of Codemap's {anamorphic} display: the font size
+for each token is scaled by a multiplier that depends on both
+the entity's syntactic category (module definitions get 5$\times$,
+function definitions 3.5$\times$, constructors only 1.2$\times$)
+and its usage frequency in the codebase ([[HugeUse]] through
+[[NoUse]], derived from the [[Database_code]]). The result is that
+heavily-used functions are literally bigger on screen and readable
+from farther away, creating a natural importance hierarchy without
+any explicit ranking UI.
+
 <<[[size_font_multiplier_of_categ]]()>>=
-let multiplier_use x = 
+let multiplier_use x =
   match x with
   | HC.HugeUse -> 3.3
   | HC.LotsOfUse -> 2.7
@@ -4151,6 +4591,17 @@ all." - frish
 \end{verbatim}
 
 \chapter{Conclusion}
+
+%claude:
+Codemap demonstrates that a relatively small OCaml program (a few
+thousand lines) can provide a genuinely useful spatial code navigation
+experience. The key architectural choices---treemaps for spatial layout,
+two-surface Cairo rendering for interactive performance, anamorphic
+font sizing for importance-based display, and a plugin-like layer
+system for extensible semantic overlays---combine to create a tool
+that fills a gap no traditional editor or IDE addresses: seeing
+your entire codebase at once while retaining the ability to read
+individual lines of code.
 
 Hope you like it.
 
