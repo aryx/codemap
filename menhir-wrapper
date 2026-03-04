@@ -1,0 +1,116 @@
+#!/bin/bash
+# Wrapper around menhir that suppresses known conflicts and catches regressions.
+#
+# This script must live at the workspace root because semgrep-pfff-langs parser
+# dune files reference it via %{workspace_root}/menhir-wrapper.
+# coupling: osemgrep/menhir-wrapper (should be kept in sync)
+#
+# Replaces dune's built-in (menhir ...) stanza in each parser's dune file.
+# Each parser's (rule ...) calls this to generate parser_xxx.ml/.mli while
+# checking conflicts against an expected_menhir_conflicts baseline file.
+#
+# If the baseline exists and matches: conflicts are suppressed (known/expected).
+# If the baseline exists but differs: build fails (regression detected).
+# If no baseline exists but conflicts appear: build fails (must create one).
+#
+# TRADEOFF: --table vs --code
+# We use --table mode which doesn't require type inference, avoiding the
+# multi-step ocamlc dance that dune's (menhir ...) stanza handles internally.
+# Per the menhir manual, --table produces "significantly more compact and
+# somewhat slower parsers" compared to --code (the default). The code backend
+# compiles the LR automaton into nested OCaml functions, while --table
+# generates compact tables interpreted by menhirLib at runtime.
+# This is acceptable for semgrep because parsing is rarely the bottleneck
+# (pattern matching and taint analysis dominate), and most languages use
+# tree-sitter anyway with menhir only for pattern parsing.
+# This requires menhirLib as a library dependency for each parser.
+#
+# TO REVERT to dune's built-in (menhir ...) stanza (and accept the warnings):
+# In each parser's dune file, replace the (rule ...) stanza with:
+#   (menhir (modules <parser_module>)
+#           (flags --unused-tokens --explain --fixed-exception))
+# and remove menhirLib from the (libraries ...) list (unless it was already
+# there, as for parser_javascript.menhir and parser_regexp which used --table).
+# For scala, add: --external-tokens Token_scala
+#
+# WHY IS THIS FILE AT THE PROJECT ROOT?
+# Dune (rule ...) stanzas reference this via %{project_root}/menhir-wrapper.
+# Dune's (run ...) action resolves the executable as a build dependency, so
+# the file must be in a directory included in dune's (dirs ...) list. The
+# project root is the simplest such location. Moving it to scripts/ would
+# require adding scripts/ to (dirs ...).
+#
+# ALTERNATIVES CONSIDERED:
+# - Menhir has no --expect flag (unlike bison) to declare expected conflicts
+# - Dune's built-in (menhir ...) stanza provides no way to intercept stderr
+
+set -euo pipefail
+
+# Parse arguments: extract .mly file and any extra flags
+MLY_FILE=""
+MLY_DIR=""
+EXTRA_FLAGS=()
+for arg in "$@"; do
+  if [[ "$arg" == *.mly ]]; then
+    MLY_FILE="$arg"
+    MLY_DIR="$(dirname "$arg")"
+  else
+    EXTRA_FLAGS+=("$arg")
+  fi
+done
+
+if [ -z "$MLY_FILE" ]; then
+  echo "ERROR: menhir-wrapper: no .mly file in arguments" >&2
+  exit 1
+fi
+
+# Run menhir with --table (no inference needed), capturing stderr
+TMPSTDERR=$(mktemp)
+trap "rm -f $TMPSTDERR" EXIT
+
+if menhir --table --fixed-exception --unused-tokens \
+    "${EXTRA_FLAGS[@]}" \
+    "$MLY_FILE" 2>"$TMPSTDERR"; then
+  MENHIR_RC=0
+else
+  MENHIR_RC=$?
+fi
+
+CONFLICT_LINES=$(grep -E "^Warning:.*conflict" "$TMPSTDERR" | sort || true)
+OTHER_LINES=$(grep -vE "^Warning:.*conflict" "$TMPSTDERR" || true)
+
+# Always pass through non-conflict stderr (real errors)
+if [ -n "$OTHER_LINES" ]; then
+  echo "$OTHER_LINES" >&2
+fi
+
+# If menhir failed for a non-conflict reason, propagate the error
+if [ "$MENHIR_RC" -ne 0 ] && [ -z "$CONFLICT_LINES" ]; then
+  exit $MENHIR_RC
+fi
+
+# Check for expected_menhir_conflicts file
+EXPECTED_FILE=""
+if [ -n "$MLY_DIR" ] && [ -f "$MLY_DIR/expected_menhir_conflicts" ]; then
+  EXPECTED_FILE="$MLY_DIR/expected_menhir_conflicts"
+fi
+
+if [ -n "$EXPECTED_FILE" ]; then
+  EXPECTED=$(grep -E "^Warning:" "$EXPECTED_FILE" | sort || true)
+  if [ "$CONFLICT_LINES" != "$EXPECTED" ]; then
+    echo "ERROR: Menhir conflicts changed in $MLY_DIR!" >&2
+    echo "Expected:" >&2
+    echo "$EXPECTED" | sed 's/^/  /' >&2
+    echo "Actual:" >&2
+    echo "$CONFLICT_LINES" | sed 's/^/  /' >&2
+    echo "Update baseline: edit $MLY_DIR/expected_menhir_conflicts" >&2
+    exit 1
+  fi
+  # Conflicts match baseline — all good
+elif [ -n "$CONFLICT_LINES" ]; then
+  # No baseline but conflicts exist — fail and ask developer to create one
+  echo "ERROR: Menhir conflicts in $MLY_DIR but no expected_menhir_conflicts file!" >&2
+  echo "$CONFLICT_LINES" | sed 's/^/  /' >&2
+  echo "Create $MLY_DIR/expected_menhir_conflicts with the above warnings." >&2
+  exit 1
+fi

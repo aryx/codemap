@@ -156,9 +156,11 @@ fi
 echo "Setting up tree-sitter..."
 ./semgrep-pfff-langs/scripts/setup-tree-sitter.sh
 
-# Install OCaml dependencies
+# Install OCaml dependencies.
+# codemap.opam lists both codemap's own deps and external deps of the
+# vendored submodules (semgrep-libs, semgrep-pfff-langs).
 echo "Installing opam dependencies..."
-opam install --confirm-level=unsafe-yes --deps-only ./codemap.opam -y
+opam install --confirm-level=unsafe-yes --deps-only -y ./codemap.opam
 
 echo ""
 

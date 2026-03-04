@@ -23,9 +23,9 @@ RUN apt-get install -y libcairo2-dev libgtk2.0-dev
 
 WORKDIR /src
 
-# Install dependencies (copy minimal files for layer caching)
-COPY codemap.opam configure Makefile ./
-# Copy enough submodule content for configure/setup to work
+# Install dependencies (copy minimal files for Docker layer caching)
+COPY codemap.opam configure ./
+# Copy enough submodule content for configure to work
 COPY semgrep-libs/TCB/ ./semgrep-libs/TCB/
 COPY semgrep-pfff-langs/scripts/setup-tree-sitter.sh ./semgrep-pfff-langs/scripts/
 COPY semgrep-pfff-langs/libs/ocaml-tree-sitter-core/ ./semgrep-pfff-langs/libs/ocaml-tree-sitter-core/

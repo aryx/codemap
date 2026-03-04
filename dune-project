@@ -34,13 +34,61 @@ For more information see https://github.com/aryx/codemap
   (authors "Yoann Padioleau <yoann.padioleau@gmail.com>")
   (license "LGPL-2.1-only WITH OCaml-LGPL-linking-exception")
 
-  ; TODO: and there are tons of dependencies to semgrep not listed below
-  ; see Dockerfile and its 'dune install ...' command
   (depends
     (dune (>= 3.7))
+    ; codemap's own deps
     lablgtk
     cairo2-gtk
     ounit
+    uutf
+    uucp
+    ocamlgraph
+    ; External deps of vendored submodules (semgrep-libs, semgrep-pfff-langs).
+    ; These are needed because the submodules are built from source as part of
+    ; the dune workspace, so their opam deps are not resolved automatically.
+    ; alt: check in the generated .opam files in the submodule repos and use
+    ;  opam install --deps-only on them in configure instead of listing here.
+    ; coupling: semgrep-libs/dune-project, semgrep-pfff-langs/dune-project
+    ; -- from semgrep-libs (mainly commons) --
+    ANSITerminal
+    alcotest
+    alcotest-lwt
+    atdgen
+    bos
+    (cmdliner (>= "1.1.1"))
+    digestif
+    fmt
+    fpath
+    logs
+    lwt
+    lwt_ppx
+    memtrace
+    ocolor
+    pcre
+    pcre2
+    ppx_deriving
+    ppx_deriving_yojson
+    ppx_hash
+    ppx_inline_test
+    ppx_sexp_conv
+    ppxlib
+    re
+    semver
+    sexplib
+    testo
+    timedesc
+    ; TODO: trace/opentelemetry are pulled in transitively via
+    ;  profiling -> process_limits -> tracing -> tracing.unix.
+    ;  We should find a way to remove these dependencies from codemap.
+    trace
+    opentelemetry
+    opentelemetry-client-ocurl
+    ambient-context-lwt
+    uri
+    uuidm
+    yojson
+    ; -- from semgrep-pfff-langs --
+    menhir
   )
 )
 
