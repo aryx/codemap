@@ -55,10 +55,11 @@ For more information see https://github.com/aryx/codemap
     alcotest-lwt
     atdgen
     bos
-    (cmdliner (>= "1.1.1"))
+    (cmdliner (and (>= "1.3.0") (< "2.0.0")))
     digestif
     fmt
     fpath
+    git
     logs
     lwt
     lwt_ppx
@@ -81,14 +82,21 @@ For more information see https://github.com/aryx/codemap
     ;  profiling -> process_limits -> tracing -> tracing.unix.
     ;  We should find a way to remove these dependencies from codemap.
     trace
-    opentelemetry
-    opentelemetry-client-ocurl
+    (opentelemetry (< "0.11"))
+    (opentelemetry-client-ocurl (< "0.11"))
     ambient-context-lwt
     uri
     uuidm
     yojson
     ; -- from semgrep-pfff-langs --
-    menhir
+    ; coupling: menhir version must match what semgrep-pfff-langs parsers
+    ;  were tested with — newer menhir can generate different conflict reports
+    ;  and slightly different parser code (e.g., tuple shapes in actions).
+    (menhir (= "20230608"))
+    parmap
+    tsort
+    visitors
+    yaml
   )
 )
 

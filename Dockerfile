@@ -34,7 +34,9 @@ RUN ./configure
 # Now copy the full source and build
 COPY . .
 RUN eval $(opam env) && make
-RUN eval $(opam env) && make all
+# Note: 'make all' (dune build) is not used here because it would try to build
+# all libraries in vendored submodules, including ones that depend on osemgrep
+# or JS packages (cohttp-lwt, js_of_ocaml-lwt, semgrep.core) not needed by codemap.
 RUN eval $(opam env) && make install
 
 # Test
