@@ -31,7 +31,7 @@
    parser_yaml.ast_generic
 
    ; now in codemap
-   parser_html
+   codemap_parser_html
    parser_nw
 
    highlight_code ; now in codemap! local deps
@@ -39,7 +39,7 @@
    database_code
 
    ; generic!
-   pfff-lang_GENERIC-naming ; for generic name resolver
+   pfff_lang_GENERIC_naming ; for generic name resolver
  )
  (preprocess (pps ppx_deriving.show))
 )
