@@ -1,6 +1,6 @@
 (library
- (public_name parser_html)
- (name parser_html)
+ (public_name codemap_parser_html)
+ (name codemap_parser_html)
  (wrapped false)
  (libraries
    ; semgrep deps
