@@ -100,12 +100,7 @@ For more information see https://github.com/aryx/codemap
   )
 )
 
-; Libraries that stay in codemap (not needed by efuns)
-
-(package (name layer_code)
-  (synopsis "XXX")
-  (description "XXX")
-)
+; Libraries that stay in codemap
 
 (package (name parser_text)
   (synopsis "XXX")
