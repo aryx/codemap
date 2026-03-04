@@ -24,9 +24,10 @@
    parser_ocaml.menhir
    parser_lisp.recursive_descent
 
-   ; now in codemap
+   ; from semgrep-pfff-langs
    parser_nw
-   codemap_parser_html
+   codemap_parser_html.menhir
+   ; codemap-only
    parser_text
 
    ; local deps

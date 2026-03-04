@@ -23,15 +23,15 @@
     parser_ocaml.menhir parser_ocaml.tree_sitter
     parser_lisp.recursive_descent
 
-    ; now in codemap
+    ; from semgrep-pfff-langs
     parser_nw
-    codemap_parser_html
-    parser_text
-
-    ; now actually in codemap
+    codemap_parser_html.menhir
     highlighters
-    visualization gui
     database_code
+
+    ; codemap-only
+    parser_text
+    visualization gui
     layer_code
 
     ; local deps
