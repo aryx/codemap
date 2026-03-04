@@ -3,15 +3,15 @@
 
 # syncweb
 *.md5sum_*
-/docs/Visual.aux
-/docs/Visual.bbl
-/docs/Visual.blg
-/docs/Visual.brf
-/docs/Visual.log
-/docs/Visual.out
-/docs/Visual.tex
-/docs/Visual.toc
-Visual-*.pdf
+/docs/codemap.aux
+/docs/codemap.bbl
+/docs/codemap.blg
+/docs/codemap.brf
+/docs/codemap.log
+/docs/codemap.out
+/docs/codemap.tex
+/docs/codemap.toc
+codemap-*.pdf
 
 # temporary
 /*.opam
