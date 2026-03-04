@@ -315,7 +315,7 @@ let layers_in_dir dir =
 (*****************************************************************************)
 
 (*s: function [[main_action]] *)
-let main_action xs = 
+let main_action xs =
   (* this used to be done by linking with gtkInit.cmo, but better like this *)
   let _locale = GtkMain.Main.init () in
 
