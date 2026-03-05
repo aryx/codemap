@@ -98,6 +98,7 @@ let use_fancy_highlighting file =
     (*    | FT.PL (FT.Prolog _) *)
     | FT.PL (FT.Erlang)
     | FT.PL (FT.Rust)
+    | FT.PL (FT.Zig)
     | FT.PL (FT.Skip)
     | FT.PL (FT.Go)
     | FT.PL (FT.Ruby)

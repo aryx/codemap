@@ -329,6 +329,14 @@ let tokens_with_categ_of_file (file : string) hentities =
       tokens_with_categ_of_file_helper ph_with_cache
         file prefs hentities
 
+  | FT.PL (FT.Zig) ->
+      let ph_with_cache =
+        { PH.zig with parse = (parse_cache
+              (fun file -> Generic (PH.zig.parse file))
+              (function Generic (ast, toks) -> ast, toks | _ -> raise Impossible))} in
+      tokens_with_categ_of_file_helper ph_with_cache
+        file prefs hentities
+
   | FT.PL (FT.Lisp _) | FT.Config (FT.Sexp) ->
       let ph_with_cache = 
         { PH.lisp with parse = (parse_cache 

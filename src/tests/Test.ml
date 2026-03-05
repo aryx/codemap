@@ -10,6 +10,7 @@ let main (_caps : Cap.all_caps) : unit =
         Unit_highlight_js.tests;
         Unit_highlight_scala.tests;
         Unit_highlight_rust.tests;
+        Unit_highlight_zig.tests;
       ])
 
 let () = Cap.main (fun all_caps -> main all_caps)
