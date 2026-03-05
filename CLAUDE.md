@@ -11,7 +11,10 @@ Codemap is a semantic source code visualizer written in OCaml. It renders treema
 ```bash
 make              # Build the codemap binary (dune build)
 make all          # Build everything
-make test         # Run tests (dune runtest)
+make test         # Build test exe then run ./test (Testo-based)
+make build-test   # Build test exe only (no run)
+./test            # Run tests directly (symlink to _build/default/src/tests/Test.exe)
+./test -s foo     # Run only tests matching "foo"
 make clean        # Clean build artifacts
 make install      # Install via dune
 make visual       # Launch the GUI on the current directory
@@ -44,6 +47,14 @@ make build-docker # Build Docker image (OCaml 4.14.2 default, also supports 5.2.
 - Compiler warnings config: `-w -52-6` (some warnings suppressed).
 - OPAM file (`codemap.opam`) is auto-generated from `dune-project` — run `make codemap.opam` after changes.
 - CI: GitHub Actions with Docker, testing on OCaml 4.14.2 and 5.2.1.
+
+## Testing
+
+- **Framework:** [Testo](https://github.com/semgrep/testo) with Alcotest assertions and the capability system (`Cap.main` from `TCB` library).
+- **Test entry point:** `src/tests/Test.ml` — uses `Cap.main` and `Testo.interpret_argv`.
+- **Test modules:** `src/tests/Unit_highlight_*.ml` for per-language highlighting tests.
+- **Test fixtures:** `tests/<language>/` directories (e.g., `tests/haskell/simple.hs`).
+- **Symlink:** `./test` at project root points to the built test binary. Tests expect to run from the project root so fixture paths like `tests/haskell/simple.hs` resolve correctly.
 
 ## Conventions
 

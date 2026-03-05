@@ -19,13 +19,16 @@ all:
 	dune build
 clean:
 	dune clean
-test:
-	dune runtest
+test: build-test
+	./test
+
+build-test:
+	dune build _build/default/src/tests/Test.exe
 install:
 	dune build codemap.install
 	dune install codemap
 
-.PHONY: all clean install test
+.PHONY: all clean install test build-test
 
 
 codemap.opam: dune-project

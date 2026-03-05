@@ -42,12 +42,13 @@ module PH = Parse_and_highlight
  * highlight_AST.ml, should we also memoized the (named) generic AST?
  *)
 type ast = 
-  (* generic, which is used currently for: 
+  (* generic, which is used currently for:
    * - Rust
    * - TODO Ruby
+   * - Haskell
    * - Jsonnet
    * - Yaml
-   * - TODO Bash 
+   * - TODO Bash
    * - TODO Docker
    * - Lisp/Scheme/Clojure/Sexp (but currently use Raw_tree so no
    *   great highlighting for now)
@@ -55,7 +56,6 @@ type ast =
   | Generic of (AST_generic.program * (Tok.t * Parse_languages.origin_info) list)
 (* old: was just lexer in old pfff
   | Csharp of Parse_csharp.program_and_tokens
-  | Hs  of Parse_hs.program_and_tokens
   | Erlang of Parse_erlang.program_and_tokens
 *)
 
@@ -321,6 +321,14 @@ let tokens_with_categ_of_file (file : string) hentities =
       tokens_with_categ_of_file_helper ph_with_cache
         file prefs hentities
 
+  | FT.PL (FT.Haskell _) ->
+      let ph_with_cache =
+        { PH.haskell with parse = (parse_cache
+              (fun file -> Generic (PH.haskell.parse file))
+              (function Generic (ast, toks) -> ast, toks | _ -> raise Impossible))} in
+      tokens_with_categ_of_file_helper ph_with_cache
+        file prefs hentities
+
   | FT.PL (FT.Lisp _) | FT.Config (FT.Sexp) ->
       let ph_with_cache = 
         { PH.lisp with parse = (parse_cache 
@@ -346,17 +354,6 @@ let tokens_with_categ_of_file (file : string) hentities =
         highlight = (fun ~tag_hook prefs (ast, toks) -> 
           Highlight_csharp.visit_program ~tag_hook prefs (ast, toks));
         info_of_tok = Token_helpers_csharp.info_of_tok;
-        }
-        file prefs hentities
-
-  | FT.PL (FT.Haskell _) ->
-      tokens_with_categ_of_file_helper 
-        { parse = (parse_cache 
-         (fun file -> Hs (Parse_hs.parse file |> fst))
-         (function Hs (ast, toks) -> [ast, toks] | _ -> raise Impossible));
-        highlight = (fun ~tag_hook prefs (ast, toks) -> 
-          Highlight_hs.visit_program ~tag_hook prefs (ast, toks));
-        info_of_tok = Parser_hs.info_of_tok;
         }
         file prefs hentities
 

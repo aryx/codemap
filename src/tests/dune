@@ -1,0 +1,16 @@
+(test
+ (name Test)
+ (action (run %{exe:Test.exe}))
+ (libraries
+   alcotest
+   testo
+   commons
+   TCB
+
+   ; codemap libs
+   viewer
+   highlight_code
+   database_code
+ )
+ (preprocess (pps ppx_deriving.show))
+)
