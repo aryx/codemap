@@ -1,5 +1,5 @@
 # Build codemap with OCaml 4.14.2 via OPAM on Ubuntu.
-# semgrep-libs and semgrep-pfff-langs are vendored as git submodules.
+# semgrep-pfff-libs and semgrep-pfff-langs are vendored as git submodules.
 
 FROM ubuntu:22.04
 # alt: 24.04
@@ -16,7 +16,7 @@ ARG OCAML_VERSION=4.14.2
 RUN opam switch create ${OCAML_VERSION} -v
 
 # Add external deps of codemap and its submodules
-# coupling: semgrep-libs needs pcre, gmp, ev, curl
+# coupling: semgrep-pfff-libs needs pcre, gmp, ev, curl
 RUN apt-get install -y pkg-config libpcre3-dev libpcre2-dev libgmp-dev libev-dev libcurl4-gnutls-dev
 # codemap GUI needs cairo and gtk2
 RUN apt-get install -y libcairo2-dev libgtk2.0-dev
@@ -26,7 +26,7 @@ WORKDIR /src
 # Install dependencies (copy minimal files for Docker layer caching)
 COPY codemap.opam configure ./
 # Copy enough submodule content for configure to work
-COPY semgrep-libs/TCB/ ./semgrep-libs/TCB/
+COPY semgrep-pfff-libs/TCB/ ./semgrep-pfff-libs/TCB/
 COPY semgrep-pfff-langs/scripts/setup-tree-sitter.sh ./semgrep-pfff-langs/scripts/
 COPY semgrep-pfff-langs/libs/ocaml-tree-sitter-core/ ./semgrep-pfff-langs/libs/ocaml-tree-sitter-core/
 RUN ./configure

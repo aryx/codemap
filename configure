@@ -121,10 +121,10 @@ echo ""
 
 echo "Checking git submodules..."
 
-if [ -d "semgrep-libs/TCB" ]; then
-    ok "semgrep-libs (initialized)"
+if [ -d "semgrep-pfff-libs/TCB" ]; then
+    ok "semgrep-pfff-libs (initialized)"
 else
-    err "semgrep-libs is empty; run: git submodule update --init --recursive"
+    err "semgrep-pfff-libs is empty; run: git submodule update --init --recursive"
     errors=$((errors + 1))
 fi
 
@@ -158,7 +158,7 @@ echo "Setting up tree-sitter..."
 
 # Install OCaml dependencies.
 # codemap.opam lists both codemap's own deps and external deps of the
-# vendored submodules (semgrep-libs, semgrep-pfff-langs).
+# vendored submodules (semgrep-pfff-libs, semgrep-pfff-langs).
 echo "Installing opam dependencies..."
 opam install --confirm-level=unsafe-yes --deps-only -y ./codemap.opam
 

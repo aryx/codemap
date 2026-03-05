@@ -1,6 +1,6 @@
-[submodule "semgrep-libs"]
-	path = semgrep-libs
-	url = git@github.com:aryx/semgrep-libs.git
 [submodule "semgrep-pfff-langs"]
 	path = semgrep-pfff-langs
 	url = git@github.com:aryx/semgrep-pfff-langs.git
+[submodule "semgrep-pfff-libs"]
+	path = semgrep-pfff-libs
+	url = git@github.com:aryx/semgrep-pfff-libs.git
