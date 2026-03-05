@@ -1,17 +1,14 @@
 \documentclass[12pt]{report}
 %alt: 12pt, twocolumn, landscape
 
+\input{latex/Packages}
+\input{latex/Noweb}
+\input{latex/Config}
+\input{latex/Macros}
+
 %******************************************************************************
 % Prelude
 %******************************************************************************
-\newif\iffinal
-\newif\ifverbose
-\newif\iffacebook
-
-\finaltrue\verbosefalse\facebooktrue
-%\finalfalse\verbosetrue\facebooktrue
-
-%cf also some \newif below
 
 %------------------------------------------------------------------------------
 %history: 
@@ -39,45 +36,11 @@
 % - TODO add biblio
 
 %------------------------------------------------------------------------------
-% Packages
+% Config
 %------------------------------------------------------------------------------
-
-\usepackage{xspace}
-\usepackage{verbatim}
-%note: required by noweblatexpad for the \t \l \n in this file
-\usepackage{fancyvrb}
-\usepackage{url}
-\iffinal
-\usepackage{hyperref}
-\hypersetup{colorlinks=true}
-\fi
-\usepackage[pageref]{backref}
-\def\backref{{\footnotesize cited page(s)}~}%en: \def\backref{{\footnotesize cited page(s)}~}
-\usepackage{multirow}
-\usepackage{booktabs} 
-\newcommand{\otoprule}{\midrule[\heavyrulewidth]}
-\usepackage{graphicx}
-%\usepackage{fullpage}
-
-
-\input{Config}
-\usepackage{latex/noweb}
- \noweboptions{footnotesizecode,nomargintag}
-%%note: allow chunk on different pages, less white space at bottom of pages
- \def\nwendcode{\endtrivlist \endgroup}
- \let\nwdocspar=\par
-
-
-%------------------------------------------------------------------------------
-% Macros
-%------------------------------------------------------------------------------
-\input{latex/Macros}
 
 \newcommand{\pfff}{Pfff\xspace}
 
-%------------------------------------------------------------------------------
-% Config
-%------------------------------------------------------------------------------
 \implemtrue
 \implemoverviewtrue
 \wantrepetitivecodefalse
@@ -109,8 +72,7 @@ Yoann Padioleau\\
 \begin{quote}
     Copyright \copyright{}  2010-2012 Facebook \\
     Copyright \copyright{}  2013-2021, 2025 Yoann Padioleau \\
-    Permission is granted to copy, distribute and/or modify this document
-    under the terms of the GNU Free Documentation License, Version 1.3.
+    All rights reserved.
 \end{quote}
 \hrule
 %\pagebreak
@@ -126,13 +88,14 @@ Yoann Padioleau\\
 \tableofcontents
 \fi
 
-%******************************************************************************
+%##############################################################################
 % Body
+%##############################################################################
+
+
 %******************************************************************************
-
 \chapter{Introduction}
-
-\section{Motivations}
+%******************************************************************************
 
 %claude:
 Codemap is a ``Google Maps for source code'': a zoomable, interactive
@@ -143,6 +106,14 @@ The key insight is to combine multiple levels of detail in a single
 interface---treemap rectangles at the macro level, source thumbnails
 at the micro level, and overlays for search results and dependency
 information---so that the programmer always has both context and detail.
+
+\section{Motivations}
+
+%programmer spend most of this time reading code, not writing. Need
+% to make tools optimizing for that.
+%
+% new age, even more important now with AI where need to control
+% understand, at least at a highlevel what AI generates.
 
 \begin{verbatim}
 (*
@@ -198,6 +169,8 @@ as it was a giant tiling plane.
 So poffs is a kind of a precursor to codemap :)
 \end{verbatim}
 
+\section{Editors, IDEs, and code visualizers}
+
 Note that Codemap is not a replacement for Emacs or Vi, but more a
 companion that works with Emacs or Vi, a little bit
 like the Speedbar Emacs project, except it is using a treemap
@@ -252,12 +225,18 @@ The source code of \pfff is governed by the following copyright:
 
 #include "latex/About.nw"
 
-\chapter{Examples of Use}
+%******************************************************************************
+\chapter{Overview}
+%******************************************************************************
+%alt: examples of use
 
 \begin{verbatim}
 put cool scenario of use. cool question and how can get visual answer to
 those questions!
 \end{verbatim}
+
+\section{Principles}
+
 
 \section{Viewing the Linux kernel}
 
@@ -304,7 +283,6 @@ and have emacsclient in your path).
 "
 @ 
 
-
 \section{Viewing Pfff itself}
 
 \section{Generic semantic visual feedback}
@@ -322,9 +300,11 @@ and have emacsclient in your path).
 %  or TODO dead func, 
 \end{verbatim}
 
+\section{Code organization}
 
-\chapter{Implementation Overview}
+\section{Software architecture}
 
+%yoann: say that model/view/controller
 %claude:
 Codemap follows a Model-View-Controller architecture built on top of
 GTK and Cairo. The {model} consists of a treemap rendering (the macro level)
@@ -335,10 +315,6 @@ thumbnails inside those rectangles. The {controller} handles mouse events
 (clicking, double-clicking, right-clicking for context menus) and keyboard
 shortcuts, translating user interactions into navigation actions like
 zooming into directories or opening files in an editor.
-
-\begin{verbatim}
-% say that model/view/controller
-\end{verbatim}
 
 \begin{verbatim}
  * Archi: There are different kinds of "drawings":
@@ -354,17 +330,9 @@ zooming into directories or opening files in an editor.
 
  * 
  * Assumes the treemap contains the absolute paths to existing files/dirs.
-
 \end{verbatim}
 
-\begin{verbatim}
-concepts:
-user vs device
-see Cairo/Gtk appendix
-
-macro vs micro level
-\end{verbatim}
-
+%yoann: user vs device, macro vs micro level
 %claude:
 Two coordinate systems permeate the code: {user coordinates} (the abstract
 treemap space, where $x$ ranges from $0$ to [[xy_ratio]] and $y$ from $0$
@@ -389,154 +357,24 @@ Dependencies diagram and Tabular.
  - gtk/cairo
 \end{verbatim}
 
-\chapter{Main}
+%yoann: control-flow diagram
 
-%claude:
-The main module handles command-line argument parsing and application
-bootstrap. The most interesting part is the initialization sequence
-in [<function [[main_action]]>]: it computes the initial treemap, optionally
-loads semantic databases and dependency graphs, sets up the async model
-for background computation, and launches the GTK event loop.
+%yoann: data-flow diagram
 
-<<main flags>>=
-(* on macOS lion, X11 resizes the window to a smaller size so
- * there is no point in starting with a big screen_size :(
- *)
-let screen_size = ref 1
-let legend = ref false
+%******************************************************************************
+\chapter{Core Data Strucrtures}
+%******************************************************************************
+%alt: the model
 
-(* you can also put this in your ~/gtkrc-2.0
- *  gtk-icon-theme-name = "Tango"
- *  gtk-theme-name = "Murrine-Gray"
- *  gtk-font-name = "DejaVu Sans 16"
- * or not put anything and use the default Gtk theme.
- *)
-
-(* if not specified, codemap will try to use files in the current directory *)
-let graph_file = ref (None: string (* filename *) option)
-let db_file    = ref (None: string (* filename *) option)
-let layer_file = ref (None: string (* filename *) option)
-let layer_dir  = ref (None: string (* filename *) option)
-
-(* See also Gui.synchronous_actions *)
-let test_mode = ref (None: string option)
-@
-
-%claude:
-The [[main_action]] function is the entry point after argument parsing.
-It initializes GTK, computes a common root from the given paths, loads
-any available layers and semantic databases, generates the initial treemap,
-and launches the GUI. The heavy model-building (parsing, indexing) was
-originally done in a background thread via [[Parallel.invoke]] to keep
-the UI responsive, though that code is currently commented out.
-
-<<function [[main_action]]>>=
-let main_action xs =
-  (* this used to be done by linking with gtkInit.cmo, but better like this *)
-  let _locale = GtkMain.Main.init () in
-
-  (* TODO: remove, accept just a single root and rely on .codemapignore
-   * for advanced customization? or nice to accept multiple so
-   * can compare size of different projects together easily?
-   * TODO: use Fpath_.common_parent at least
-   *)
-  let root = Common2_.common_prefix_of_files_or_dirs xs in
-  Logs.info (fun m -> m "Using root = %s" root);
-
-  let filter_file = mk_filter_file (Fpath.v root) in
-
-  let async_model = Async.async_make () in
-
-  let layers = 
-    match !layer_file, !layer_dir, xs with
-    | Some file, _, _ -> 
-        [Layer_code.load_layer file]
-    | None, Some dir, _ | None, None, [dir] ->
-        layers_in_dir dir |> List.map Layer_code.load_layer
-    | _ -> []
-  in
-  let layers_with_index = 
-    Layer_code.build_index_of_layers ~root 
-      (match !layer_file, layers with 
-      | Some _, [layer] -> [layer, true]
-      | _ -> layers |> List.map (fun x -> x, false)
-      )
-  in
-
-  let db_file = 
-    match !db_file, xs with
-    | Some file, _ -> Some file
-    | None, [dir] ->
-      let candidates = [
-          Filename.concat dir Database_code.default_db_name;
-          Filename.concat dir Database_code.default_db_name ^ ".json";
-      ] in
-      (try 
-        Some (candidates |> List.find (fun file -> Sys.file_exists file))
-      with Not_found -> None
-      )
-      | _ -> None
-  in
-  db_file |> Option.iter (fun db -> 
-    Logs.info (fun m -> m "Using pfff light db: %s" db)
-  );
-  let graph_file : Fpath.t option = 
-    match !graph_file, xs with
-    | Some file, _ -> Some (Fpath.v file)
-    | None, [dir] ->
-      let candidates = [
-          Filename.concat dir !!Graph_code.default_filename;
-      ] in
-      (try 
-         let file = candidates |> List.find (fun file -> Sys.file_exists file) in
-         Some (Fpath.v file)
-      with Not_found -> None
-      )
-    | _ -> None
-  in
-  graph_file |> Option.iter (fun db -> 
-    Logs.info (fun m -> m "Using graphcode: %s" !!db)
-  );
-
-  let treemap_func = treemap_generator ~filter_file in
-  let dw = Model.init_drawing  treemap_func layers_with_index xs root in
-
-  (* This can require lots of stack. Make sure to have ulimit -s 40000 *)
-(* TODO!!!! RESTORE !!! but then get 100% CPU recently on repos like xix
-  Thread.create (fun () ->
-    (* heavy computation are not *fairly* scheduled apparently by the OCaml
-     * runtime, so let's do the heavy computation in another process
-     * and here just have the thread waiting for it to be done.
-     * This thread used to cause some Bus error on MacOS but now that
-     * we use invoke and do the job in another process things seem better :)
-     *)
-    let job () = build_model root db_file graph_file in
-    let res = Parallel.invoke job () () in
-    Async.async_set res async_model;
-  ) ()
-  |> ignore;
-*) 
-  let w = { Model.
-    dw;
-    dw_stack = ref [dw];
-    model = async_model;
-    treemap_func;
-    current_node = None;
-    current_node_selected = None;
-    current_entity = None;
-    settings = { Model.
-      (* todo: too fuzzy for now *)
-      draw_summary = false;
-      draw_searched_rectangles = true;
-    };
-    root_orig = root;
-  }
-  in
-
-  View.mk_gui  ~screen_size:!screen_size ~legend:!legend !test_mode w
-@
-
-\chapter{The Model}
+\begin{verse}
+\begin{flushright}
+  {\it Show me your code and conceal your data structures, and I shall
+    continue to be mystified. Show me your data structures, and I
+    won't usually need your code; it'll be obvious.\\
+    ~\\
+    Fred Brooks}
+\end{flushright}
+\end{verse}
 
 \section{The code database}
 
@@ -919,7 +757,158 @@ let init_drawing   ?(width = 600) ?(height = 600) func layers paths root =
   }
 @
 
+%******************************************************************************
+\chapter{Main}
+%******************************************************************************
+
+%claude:
+The main module handles command-line argument parsing and application
+bootstrap. The most interesting part is the initialization sequence
+in [<function [[main_action]]>]: it computes the initial treemap, optionally
+loads semantic databases and dependency graphs, sets up the async model
+for background computation, and launches the GTK event loop.
+
+<<main flags>>=
+(* on macOS lion, X11 resizes the window to a smaller size so
+ * there is no point in starting with a big screen_size :(
+ *)
+let screen_size = ref 1
+let legend = ref false
+
+(* you can also put this in your ~/gtkrc-2.0
+ *  gtk-icon-theme-name = "Tango"
+ *  gtk-theme-name = "Murrine-Gray"
+ *  gtk-font-name = "DejaVu Sans 16"
+ * or not put anything and use the default Gtk theme.
+ *)
+
+(* if not specified, codemap will try to use files in the current directory *)
+let graph_file = ref (None: string (* filename *) option)
+let db_file    = ref (None: string (* filename *) option)
+let layer_file = ref (None: string (* filename *) option)
+let layer_dir  = ref (None: string (* filename *) option)
+
+(* See also Gui.synchronous_actions *)
+let test_mode = ref (None: string option)
+@
+
+%claude:
+The [[main_action]] function is the entry point after argument parsing.
+It initializes GTK, computes a common root from the given paths, loads
+any available layers and semantic databases, generates the initial treemap,
+and launches the GUI. The heavy model-building (parsing, indexing) was
+originally done in a background thread via [[Parallel.invoke]] to keep
+the UI responsive, though that code is currently commented out.
+
+<<function [[main_action]]>>=
+let main_action xs =
+  (* this used to be done by linking with gtkInit.cmo, but better like this *)
+  let _locale = GtkMain.Main.init () in
+
+  (* TODO: remove, accept just a single root and rely on .codemapignore
+   * for advanced customization? or nice to accept multiple so
+   * can compare size of different projects together easily?
+   * TODO: use Fpath_.common_parent at least
+   *)
+  let root = Common2_.common_prefix_of_files_or_dirs xs in
+  Logs.info (fun m -> m "Using root = %s" root);
+
+  let filter_file = mk_filter_file (Fpath.v root) in
+
+  let async_model = Async.async_make () in
+
+  let layers = 
+    match !layer_file, !layer_dir, xs with
+    | Some file, _, _ -> 
+        [Layer_code.load_layer file]
+    | None, Some dir, _ | None, None, [dir] ->
+        layers_in_dir dir |> List.map Layer_code.load_layer
+    | _ -> []
+  in
+  let layers_with_index = 
+    Layer_code.build_index_of_layers ~root 
+      (match !layer_file, layers with 
+      | Some _, [layer] -> [layer, true]
+      | _ -> layers |> List.map (fun x -> x, false)
+      )
+  in
+
+  let db_file = 
+    match !db_file, xs with
+    | Some file, _ -> Some file
+    | None, [dir] ->
+      let candidates = [
+          Filename.concat dir Database_code.default_db_name;
+          Filename.concat dir Database_code.default_db_name ^ ".json";
+      ] in
+      (try 
+        Some (candidates |> List.find (fun file -> Sys.file_exists file))
+      with Not_found -> None
+      )
+      | _ -> None
+  in
+  db_file |> Option.iter (fun db -> 
+    Logs.info (fun m -> m "Using pfff light db: %s" db)
+  );
+  let graph_file : Fpath.t option = 
+    match !graph_file, xs with
+    | Some file, _ -> Some (Fpath.v file)
+    | None, [dir] ->
+      let candidates = [
+          Filename.concat dir !!Graph_code.default_filename;
+      ] in
+      (try 
+         let file = candidates |> List.find (fun file -> Sys.file_exists file) in
+         Some (Fpath.v file)
+      with Not_found -> None
+      )
+    | _ -> None
+  in
+  graph_file |> Option.iter (fun db -> 
+    Logs.info (fun m -> m "Using graphcode: %s" !!db)
+  );
+
+  let treemap_func = treemap_generator ~filter_file in
+  let dw = Model.init_drawing  treemap_func layers_with_index xs root in
+
+  (* This can require lots of stack. Make sure to have ulimit -s 40000 *)
+(* TODO!!!! RESTORE !!! but then get 100% CPU recently on repos like xix
+  Thread.create (fun () ->
+    (* heavy computation are not *fairly* scheduled apparently by the OCaml
+     * runtime, so let's do the heavy computation in another process
+     * and here just have the thread waiting for it to be done.
+     * This thread used to cause some Bus error on MacOS but now that
+     * we use invoke and do the job in another process things seem better :)
+     *)
+    let job () = build_model root db_file graph_file in
+    let res = Parallel.invoke job () () in
+    Async.async_set res async_model;
+  ) ()
+  |> ignore;
+*) 
+  let w = { Model.
+    dw;
+    dw_stack = ref [dw];
+    model = async_model;
+    treemap_func;
+    current_node = None;
+    current_node_selected = None;
+    current_entity = None;
+    settings = { Model.
+      (* todo: too fuzzy for now *)
+      draw_summary = false;
+      draw_searched_rectangles = true;
+    };
+    root_orig = root;
+  }
+  in
+
+  View.mk_gui  ~screen_size:!screen_size ~legend:!legend !test_mode w
+@
+
+%******************************************************************************
 \chapter{The UI}
+%******************************************************************************
 
 \section{Overall organisation}
 
@@ -1374,16 +1363,19 @@ let mk_gui ~screen_size ~legend test_mode w =
   ()
 @
 
+%******************************************************************************
 \chapter{The Controller}
+%******************************************************************************
 
+%******************************************************************************
 \chapter{Macrolevel View: The Treemap}
+%******************************************************************************
 
 %macro-level visualization. See also archi_code.ml.
 
 \section{Principles}
 
-% xyratio
-
+%yoann: xyratio
 %claude:
 The treemap maps the file hierarchy to nested rectangles whose area is
 proportional to file size. Codemap uses the ``ordered'' layout algorithm
@@ -1391,6 +1383,7 @@ with pivot-by-middle, which preserves approximate alphabetical order
 (top-left to bottom-right). The [[xy_ratio]] global controls the aspect
 ratio of the root rectangle, matching the window's width-to-height ratio
 so that the treemap fills the screen without distortion.
+%yoann1: cite paper that invented this treemap specific algorithm
 
 \section{Drawing}
 
@@ -1773,12 +1766,15 @@ let expose_legend da w _ev =
 
 
 
+%******************************************************************************
 \chapter{Microlevel View: Source Thumbnails}
+%******************************************************************************
 
 % micro-level visualization. See also highlight_code.ml
 
 \section{Principles}
 
+%yoann: thumbnails and actual source is same code! not like in visual studio
 %claude:
 The microlevel view is what makes Codemap unique: when you zoom in
 enough, each file's rectangle stops being just a colored box and
@@ -1933,8 +1929,6 @@ let draw_column_bars cr layout r =
 
 
 \section{Content rendering}
-
-% thumbnails and actual source is same code! not like in visual studio
 
 %claude:
 [[draw_content]] is where the source thumbnails are actually rendered.
@@ -2123,11 +2117,11 @@ let draw_treemap_rectangle_content_maybe cr clipping context tr  =
 
 
 
+%******************************************************************************
 \chapter{Macro+Micro View}
+%******************************************************************************
 
 \section{Painting}
-
-% also contain the code for calling the micro-level
 
 %claude:
 The [[paint]] function is the heavyweight rendering entry point.
@@ -2256,7 +2250,9 @@ let hfiles_and_top_entities root db_opt =
 <<model fields hook>>=
 @ 
 
+%******************************************************************************
 \chapter{Layers}
+%******************************************************************************
 
 %claude:
 Layers are Codemap's mechanism for overlaying semantic information
@@ -2338,7 +2334,9 @@ let choose_layer ~root layer_title_opt w =
 @ 
 
 
+%******************************************************************************
 \chapter{Navigation}
+%******************************************************************************
 
 %claude:
 Navigation in Codemap is spatial: you move through the codebase by
@@ -2783,7 +2781,9 @@ mutable width: int;
 mutable height: int;
 @
 
+%******************************************************************************
 \chapter{Search}
+%******************************************************************************
 
 %claude:
 Search in Codemap operates at three levels: (1) the toolbar entry
@@ -3307,10 +3307,13 @@ let my_entry_completion_eff ~callback_selected ~callback_changed x =
 \end{verbatim}
 
 
+%******************************************************************************
 \chapter{Overlays}
+%******************************************************************************
 
+%yoann: overlays aka layers, similar but different from the layers in
+% prevision section. Here low level graphics layers.
 % draw vs paint vs xxx
-
 %claude:
 The term ``overlays'' here refers to Cairo {graphics layers}, not
 to be confused with the semantic ``layers'' in the previous chapter.
@@ -3327,12 +3330,6 @@ during the [[expose]] event. Without this, every mouse movement
 would trigger a full treemap repaint.
 
 \section{Cairo overlays}
-
-\begin{verbatim}
-aka layers
-similar but different from the  layers in prevision section.
-Here low level graphics layers.
-\end{verbatim}
 
 <<fields drawing main view>>=
 (* device coordinates *)
@@ -3560,7 +3557,9 @@ let motion_notify w ev =
 @ 
 
 
+%******************************************************************************
 \chapter{Final Rendering}
+%******************************************************************************
 
 \section{The big picture}
 
@@ -3572,11 +3571,6 @@ drawing} (medium, clears and redraws the [[overlay]] surface on mouse
 events). A resize triggers a full repaint; a mouse move only redraws
 the overlay; and a GTK expose event (e.g., from window uncovering)
 just recomposites the existing surfaces.
-
-\begin{verbatim}
-
-\end{verbatim}
-
 
 \section{The [[configure]] event}
 
@@ -3662,7 +3656,9 @@ diagram where see events, functions,  draw vs paint vs overlays.
 \end{verbatim}
 
 
+%******************************************************************************
 \chapter{Language Modes}
+%******************************************************************************
 
 %claude:
 Codemap supports syntax highlighting for over a dozen programming
@@ -4192,7 +4188,9 @@ let tokens_with_categ_of_file (file : string) hentities =
 
 \section{Lisp/Scheme}
 
+%******************************************************************************
 \chapter{Optimisations}
+%******************************************************************************
 
 \section{Threads, Idle, Timeouts}
 
@@ -4277,7 +4275,9 @@ let async_get_opt a =
 
 @ 
 
+%******************************************************************************
 \chapter{Configuration}
+%******************************************************************************
 
 %claude:
 Codemap's behavior is controlled by a set of thresholds that govern
@@ -4538,7 +4538,9 @@ let extra_filter = ref (None: string option) (* regexp *)
 @ 
 
 
+%******************************************************************************
 \chapter{Other Features}
+%******************************************************************************
 
 <<[[visual_commitid]]() action>>=
 let test_visual_commitid id =
@@ -4569,7 +4571,9 @@ let test_visual_commitid id =
 
 
 
+%******************************************************************************
 \chapter{Related Work}
+%******************************************************************************
 
 \begin{verbatim}
 
@@ -4590,7 +4594,9 @@ all." - frish
 
 \end{verbatim}
 
+%******************************************************************************
 \chapter{Conclusion}
+%******************************************************************************
 
 %claude:
 Codemap demonstrates that a relatively small OCaml program (a few
@@ -4606,13 +4612,19 @@ individual lines of code.
 Hope you like it.
 
 
+%##############################################################################
 \appendix
+%##############################################################################
 
+%******************************************************************************
 \chapter{Gtk}
+%******************************************************************************
 
+%******************************************************************************
 \chapter{Cairo}
+%******************************************************************************
 
-% ref to good tutorial
+%yoann: ref to good tutorial?
 
 <<[[new_pixmap]] sig>>=
 val new_surface: 
@@ -4838,10 +4850,9 @@ let draw_rectangle_bis ~cr ~color ~line_width r =
 \paragraph{User vs device coordinates}
 
 
-
-
-
+%******************************************************************************
 \chapter{Extra Code}
+%******************************************************************************
 
 % for make index; make pdf
 <<languages/nw/ast_nw.ml>>=
@@ -7183,6 +7194,8 @@ let _re_tab = Str.regexp "^[\t]+$"
 <<cairo helpers functions>>
 
 @ 
+
+%##############################################################################
 
 \chapter{Changelog}
 \label{sec:changelog}
