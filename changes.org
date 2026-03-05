@@ -1,9 +1,25 @@
 
-* 0.2 (Q1 2026) (configure)
+* 0.2 (Q1 2026) (configure, Haskell)
 # start to use Claude
+
+** languages
+- support for highlighting Haskell (using the generic AST highlighter)
 
 ** build infra
 - configure (mostly copied from osemgrep)
+  (Thx Claude)
+
+** test infra
+- start to use Testo and basic highlighting regression testing
+  (Thx Claude)
+
+** docs
+- resume codemap.nw
+  (thx Claude)
+
+** internals
+- switch to semgrep-libs and semgrep-pfff-langs submodules instead
+  of relying on ~/.opam or external/ and fragile OPAM_DIR symlinks
 
 * 0.1 (Q3 2025) (Dockerfile and GHA, OCaml5 ready)
 
