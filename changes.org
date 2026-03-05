@@ -20,7 +20,7 @@
 
 ** internals
 - switch to semgrep-libs and semgrep-pfff-langs submodules instead
-  of relying on ~/.opam or external/ and fragile OPAM_DIR symlinks
+  of relying on ~/.opam
 
 * 0.1 (Q3 2025) (Dockerfile and GHA, OCaml5 ready)
 
