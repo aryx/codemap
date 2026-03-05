@@ -11,7 +11,7 @@
     ; semgrep deps
     commons
     commons2_
-    lib_parsing
+    parsing_core
     graph_code  
 
     parser_python.menhir

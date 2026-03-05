@@ -5,7 +5,7 @@
  (libraries
    ; semgre pdeps
    commons
-   lib_parsing
+   parsing_core
 
    ; local deps
    highlight_code

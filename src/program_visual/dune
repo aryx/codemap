@@ -6,7 +6,7 @@
  (libraries
    ; semgrep deps
    commons 
-   lib_parsing
+   parsing_core
 
    ; local deps
    visualization

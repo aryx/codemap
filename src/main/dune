@@ -15,7 +15,7 @@
 
    ; codemap lib deps
    visualization gui
-   lib_parsing
+   parsing_core
    parser_python.menhir
    parser_javascript.menhir
    parser_php.menhir
