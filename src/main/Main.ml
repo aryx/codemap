@@ -207,7 +207,7 @@ let filters = [
   );
 
   "cpp", (let x = ref false in (fun file ->
-    Common2_.once x (fun () -> 
+    Common2.once x (fun () -> 
       (* TODO: also add possible pfff_macros.h when there *)
       Parse_cpp.init_defs !Flag_parsing_cpp.macros_h
     );
@@ -304,7 +304,7 @@ let build_model root dbfile_opt graphfile_opt =
 
 (* could also to parse all json files and filter the one which do not parse *)
 let layers_in_dir dir =
-  Common2_.readdir_to_file_list dir |> List_.filter_map (fun file ->
+  Common2.readdir_to_file_list dir |> List_.filter_map (fun file ->
     if file =~ "layer.*json"
     then Some (Filename.concat dir file)
     else None
@@ -324,7 +324,7 @@ let main_action xs =
    * can compare size of different projects together easily?
    * TODO: use Fpath_.common_parent at least
    *)
-  let root = Common2_.common_prefix_of_files_or_dirs xs in
+  let root = Common2.common_prefix_of_files_or_dirs xs in
   Logs.info (fun m -> m "Using root = %s" root);
 
   let filter_file = mk_filter_file (Fpath.v root) in
@@ -429,7 +429,7 @@ let main_action xs =
  *)
 let test_loc print_top30 xs =
   let xs = xs |> List.map Unix.realpath in
-  let root = Common2_.common_prefix_of_files_or_dirs xs in
+  let root = Common2.common_prefix_of_files_or_dirs xs in
 
   let filter_file = mk_filter_file (Fpath.v root) in
   let treemap = Treemap_pl.code_treemap ~filter_file xs in
@@ -437,23 +437,23 @@ let test_loc print_top30 xs =
   let res = ref [] in
   let rec aux tree =
     match tree with
-    | Common2_.Node (_dir, xs) ->
+    | Common2.Node (_dir, xs) ->
         List.iter aux xs
-    | Common2_.Leaf (leaf, _) ->
+    | Common2.Leaf (leaf, _) ->
         let file = leaf.Treemap.label in
         let size = leaf.Treemap.size in
-        let unix_size = (Common2_.unix_stat_eff file).Unix.st_size in
+        let unix_size = (Common2.unix_stat_eff file).Unix.st_size in
         if unix_size > 0
         then begin
           let multiplier = (float_of_int size /. float_of_int unix_size) in
           let multiplier = min multiplier 1.0 in
-          let loc = Common2_.nblines_with_wc file in
+          let loc = Common2.nblines_with_wc file in
           Stack_.push (((Filename_.readable ~root:(root) (file))), 
                        (float_of_int loc *. multiplier)) res;
         end
   in
   aux treemap;
-  let total = !res |> List.map snd |> List.map int_of_float  |> Common2_.sum in
+  let total = !res |> List.map snd |> List.map int_of_float  |> Common2.sum in
   UCommon.pr2 (spf "LOC = %d (%d files)" total (List.length !res));
   if print_top30 then begin
     let topx = 30 in
@@ -636,7 +636,7 @@ let options () = ([
   (*e: options *)
   ] @
   Arg_.options_of_actions action (all_actions()) @
-  Common2_.cmdline_flags_devel () @
+  Common2.cmdline_flags_devel () @
   [
   "-version",   Arg.Unit (fun () -> 
     UCommon.pr2 (spf "CodeMap version: %s" "TODO: version codemap");

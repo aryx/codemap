@@ -52,10 +52,10 @@ let readable_to_absolute_filename_under_root ~root filename =
   in
 
   let root_and_parents =
-    Common2_.inits_of_absolute_dir root_dir |> List.rev
+    Common2.inits_of_absolute_dir root_dir |> List.rev
   in
   try 
-    root_and_parents |> Common2_.return_when (fun dir ->
+    root_and_parents |> Common2.return_when (fun dir ->
       let path = Filename.concat dir filename in
       if Sys.file_exists path
       then Some path

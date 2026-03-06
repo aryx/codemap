@@ -3,7 +3,6 @@
  (wrapped false)
  (libraries
     commons profiling
-    commons2_
  )
  (preprocess
    (pps

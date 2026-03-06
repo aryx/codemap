@@ -17,7 +17,7 @@
 (*e: Facebook copyright *)
 open Common
 (* floats are the norm in graphics *)
-open Common2_.ArithFloatInfix
+open Common2.ArithFloatInfix
 open Model
 module T = Treemap
 module CairoH = Cairo_helpers
@@ -188,7 +188,7 @@ let draw_tooltip ~cr_overlay ~x ~y n g =
   let files = 
     pred 
     |> List_.filter_map (fun n ->
-        Common2_.optionise (fun () -> (Graph_code.file_of_node n g)))
+        Common2.optionise (fun () -> (Graph_code.file_of_node n g)))
     |> List_.sort |> Common2.uniq
   in
   let str = spf "
@@ -199,7 +199,7 @@ let draw_tooltip ~cr_overlay ~x ~y n g =
     (List.length pred) (List.length files)
     (List.length succ)
   in
-  let xs = Common2_.lines str in
+  let xs = Common2.lines str in
 
   (* copy paste of draw_label_overlay *)
   Cairo.select_font_face cr_overlay "serif" ~weight:Cairo.Normal;

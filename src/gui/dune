@@ -10,7 +10,6 @@
     
     ; semgrep deps
     commons
-    commons2_
     parsing_core
     graph_code  
 

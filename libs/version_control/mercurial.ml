@@ -77,9 +77,9 @@ let annotate2 ?(basedir="") filename =
         let (author, commitid, month_str, day, year) = Common.matched5 s in
         Some (VersionId commitid, 
               Author author,
-              Common2_.mk_date_dmy 
+              Common2.mk_date_dmy 
                 (s_to_i day) 
-                (Common2_.int_of_month (Common2_.month_of_string month_str))
+                (Common2.int_of_month (Common2.month_of_string month_str))
                 (s_to_i year))
       else begin 
         Log.warn (fun m -> m "hg annotate wrong line: %s" s);
@@ -142,9 +142,9 @@ let date_file_creation2 ?(basedir="") file =
     if s =~ date_regexp
     then 
       let (month_str, day, year) = Common.matched3 s in
-      Some (Common2_.mk_date_dmy 
+      Some (Common2.mk_date_dmy 
                (s_to_i day) 
-               (Common2_.int_of_month (Common2_.month_of_string month_str))
+               (Common2.int_of_month (Common2.month_of_string month_str))
                (s_to_i year))
     else None
   )
@@ -163,7 +163,7 @@ let grep ~basedir str =
   in
   UCmd.cmd_to_list cmd
 (*
-  let (xs, status) = Common2_.cmd_to_list_and_status cmd in
+  let (xs, status) = Common2.cmd_to_list_and_status cmd in
   (* According to grep man page, non-zero exit code is expected when
    * there are no matches.
    * According to xargs man page, it returns 123 if one of his subcommand

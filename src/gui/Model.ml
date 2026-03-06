@@ -221,8 +221,8 @@ let new_surface ~alpha ~width ~height =
 (*s: [[init_drawing]]() *)
 (* This is a first guess. The first configure ev will force a resize. *)
 let init_drawing   ?(width = 600) ?(height = 600) func layers paths root =
-  let paths = List.map Common2_.relative_to_absolute paths in
-  let current_root = Common2_.common_prefix_of_files_or_dirs paths in
+  let paths = List.map Common2.relative_to_absolute paths in
+  let current_root = Common2.common_prefix_of_files_or_dirs paths in
   let treemap = 
     Profiling.profile_code "Visual.building the treemap" (fun () -> 
       func paths
@@ -315,7 +315,7 @@ let find_rectangle_at_user_point user dw =
    match matching_rects with
    | [] -> None
    | [x] -> Some (x, [], x)
-   | _ -> Some (Common2_.head_middle_tail matching_rects)
+   | _ -> Some (Common2.head_middle_tail matching_rects)
 [@@profiling]
 (*e: [[find_rectangle_at_user_point]]() *)
 
@@ -431,10 +431,10 @@ let deps_rects_of_rect tr dw model =
   let node = node_of_rect tr model in
   let uses, users = deps_readable_files_of_node node model in
   uses |> List_.filter_map (fun file -> 
-    Common2_.optionise (fun () -> Hashtbl.find dw.readable_file_to_rect file)
+    Common2.optionise (fun () -> Hashtbl.find dw.readable_file_to_rect file)
   ),
   users |> List_.filter_map (fun file ->
-    Common2_.optionise (fun () ->Hashtbl.find dw.readable_file_to_rect file)
+    Common2.optionise (fun () ->Hashtbl.find dw.readable_file_to_rect file)
   )
 
 let line_and_microlevel_of_node_opt n dw model =

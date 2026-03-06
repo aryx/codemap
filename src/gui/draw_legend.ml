@@ -15,7 +15,7 @@
  * license.txt for more details.
  *)
 (*e: Facebook copyright *)
-open Common2_.ArithFloatInfix
+open Common2.ArithFloatInfix
 
 module CairoH = Cairo_helpers
 module L = Layer_code

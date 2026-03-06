@@ -62,8 +62,8 @@ let build_filedeps_of_dir_or_file g =
        * a/b -> a/c/bar.c, but not a/ -> a/c/bar.c cos of is_prefix
        * a/c <- a/b/foo.c, but not a/ <- a/b/foo.c cos of is_prefix
        *)
-      let dirs_n1 = Common2_.inits_of_relative_dir file1 in
-      let dirs_n2 = Common2_.inits_of_relative_dir file2 in
+      let dirs_n1 = Common2.inits_of_relative_dir file1 in
+      let dirs_n2 = Common2.inits_of_relative_dir file2 in
       dirs_n1 |> List.iter (fun dir ->
         if not (is_prefix dir file2)
         then Hashtbl.add huses (dir, E.Dir) file2;
@@ -76,7 +76,7 @@ let build_filedeps_of_dir_or_file g =
     with Not_found -> ()
   );
   let hres = Hashtbl.create 101 in
-  let keys = Common2_.union_set (Common2_.hkeys huses) (Common2_.hkeys husers) in
+  let keys = Common2.union_set (Common2.hkeys huses) (Common2.hkeys husers) in
   keys |> List.iter (fun k ->
     let uses = try Hashtbl.find_all huses k with Not_found -> [] in
     let users = try Hashtbl.find_all husers k with Not_found -> [] in
@@ -100,7 +100,7 @@ let build_entities_of_file g =
       Hashtbl.add h file n;
     with Not_found -> ()
   );
-  Common2_.hkeys h |> List.map (fun k ->
+  Common2.hkeys h |> List.map (fun k ->
     let xs = Hashtbl.find_all h k in
     k, xs
   )

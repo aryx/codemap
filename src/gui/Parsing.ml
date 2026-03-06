@@ -183,7 +183,7 @@ let tokens_with_categ_of_file_helper
       if not (Tok.is_origintok info)
       then None
       else 
-        let categ = Common2_.hfind_option info h |> Option.map (fun categ ->
+        let categ = Common2.hfind_option info h |> Option.map (fun categ ->
           rewrite_categ_using_entities s categ file hentities
         ) in
         Some (s, categ,{ Pos.l = Tok.line_of_tok info; c = Tok.col_of_tok info; })

@@ -6,7 +6,6 @@
    ounit2
 
    commons profiling
-   commons2_
  )
  (preprocess
    (pps

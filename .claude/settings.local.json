@@ -4,7 +4,8 @@
       "Bash(xargs cat:*)",
       "Bash(ls:*)",
       "Bash(ocamlfind query:*)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(make:*)"
     ]
   }
 }

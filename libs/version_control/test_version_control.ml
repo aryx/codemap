@@ -37,7 +37,7 @@ let actions () = [
     let commits = Git_.commits_between_commitids ~basedir ~old_id ~recent_id in
     UCommon.pr2_gen old_id;
     UCommon.pr2_gen recent_id;
-    Common2_.pr2_xxxxxxxxxxxxxxxxx ();
+    Common2.pr2_xxxxxxxxxxxxxxxxx ();
     commits |> List.iter UCommon.pr2_gen;
   )
 ]

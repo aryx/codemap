@@ -18,7 +18,7 @@
 open Common
 open Fpath_.Operators
 (* floats are the norm in graphics *)
-open Common2_.ArithFloatInfix
+open Common2.ArithFloatInfix
 open Model
 module CairoH = Cairo_helpers
 module F = Figures
@@ -257,7 +257,7 @@ let button_action w ev =
             match entity_opt with
             | None -> readable
             | Some n -> 
-                let g = Common2_.some model.g in
+                let g = Common2.some model.g in
                 try !!(Graph_code.file_of_node n g)
                 with Not_found -> readable
           in
@@ -291,7 +291,7 @@ let button_action w ev =
             (match entity_opt with
             | None -> []
             | Some n ->
-                let g = Common2_.some model.g in
+                let g = Common2.some model.g in
                 [`I ("info entity", (fun () ->
                   let users = Graph_code.pred n (Graph_code.Use) g in
                   let str =

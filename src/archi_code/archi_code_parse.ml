@@ -36,7 +36,7 @@ open Archi_code
 (* Helpers *)
 (*****************************************************************************)
 
-let ( ==~ ) = Common2_.( ==~ )
+let ( ==~ ) = Common2.( ==~ )
 let re_c_yaccfile = Str.regexp "\\(.*\\).tab"
 
 (* coupling: don't forget to extend re_auto_generated below too *)
