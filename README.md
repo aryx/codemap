@@ -5,7 +5,7 @@ views of codebases with code thumbnails and syntax highlighting
 via a GTK2/Cairo GUI. Uses [semgrep](https://github.com/semgrep/semgrep)
 parsers for multi-language semantic highlighting.
 
-![codemap screenshot](docs/codemap-screenshot.png)
+![codemap screenshot](docs/codemap-screenshot.jpg)
 
 ## Building
 
