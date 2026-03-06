@@ -23,11 +23,13 @@ let test_simple () =
   check_categ ~msg:"h1 text" tokens "Main heading" CommentSection0;
   check_categ ~msg:"h2 text" tokens "Second heading" CommentSection1;
 
-  (* bold delimiters *)
+  (* bold *)
   check_categ ~msg:"bold open" tokens "**" Punctuation;
+  check_categ ~msg:"bold text" tokens "bold text" EmbededHtml;
 
-  (* italic delimiters *)
+  (* italic *)
   check_categ ~msg:"italic open" tokens "*" Punctuation;
+  check_categ ~msg:"italic text" tokens "italic text" EmbededStyle;
 
   (* inline code *)
   check_categ ~msg:"backtick" tokens "`" Punctuation;
