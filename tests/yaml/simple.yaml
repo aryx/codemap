@@ -1,0 +1,7 @@
+name: hello
+version: 1.0
+tags:
+  - foo
+  - bar
+nested:
+  key: value

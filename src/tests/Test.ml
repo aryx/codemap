@@ -12,6 +12,7 @@ let main (_caps : Cap.all_caps) : unit =
         Unit_highlight_rust.tests;
         Unit_highlight_zig.tests;
         Unit_highlight_markdown.tests;
+        Unit_highlight_yaml.tests;
       ])
 
 let () = Cap.main (fun all_caps -> main all_caps)
