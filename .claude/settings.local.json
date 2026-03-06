@@ -5,7 +5,10 @@
       "Bash(ls:*)",
       "Bash(ocamlfind query:*)",
       "Bash(grep:*)",
-      "Bash(make:*)"
+      "Bash(make:*)",
+      "WebFetch(domain:dl.acm.org)",
+      "WebFetch(domain:hal.inria.fr)",
+      "WebSearch"
     ]
   }
 }
