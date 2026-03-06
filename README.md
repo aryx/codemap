@@ -60,3 +60,11 @@ and perform code search.
 
 See the [old codemap page at Facebook](https://github.com/facebookarchive/pfff/wiki/CodeMap)
 for more information.
+
+## Inspiration
+
+Codemap combines ideas from several software visualization projects:
+
+- **[SeeSoft](https://ieeexplore.ieee.org/document/177365)** — Eick, Steffen, and Sumner at Bell Labs (1992). One of the earliest tools for visualizing line-oriented software statistics, mapping each line of code to a thin colored row. See also Ball and Eick's follow-up, [Software Visualization in the Large](https://ieeexplore.ieee.org/document/488299) (1996), which extended these ideas with multiple visual representations (line, pixel, file summary, hierarchical).
+- **[Code Thumbnails](https://dl.acm.org/doi/10.1145/1168149.1168174)** — DeLine et al. at Microsoft Research (2006). Miniature code renderings as navigation aids, showing that the visual structure of code provides useful spatial cues even at tiny scales.
+- **[Treemap visualization of the Linux kernel](https://hal.inria.fr/hal-00850778)** — Fekete and Plaisant. The idea of using treemaps for source code layout, which codemap combines with code thumbnails and SeeSoft-style coloring.
