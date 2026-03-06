@@ -1,0 +1,10 @@
+(library
+ (name treemap)
+ (wrapped false)
+ (libraries
+   commons profiling
+   color
+   geometry
+ )
+ (preprocess (pps ppx_deriving.show profiling.ppx))
+)

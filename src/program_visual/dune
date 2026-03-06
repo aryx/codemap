@@ -9,7 +9,7 @@
    parsing_core
 
    ; local deps
-   visualization
+   color treemap
    version_control
    archi_code
    layer_code

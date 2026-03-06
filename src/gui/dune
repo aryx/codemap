@@ -30,7 +30,7 @@
 
     ; codemap-only
     parser_text
-    visualization gui
+    color geometry treemap gui
     layer_code
 
     ; local deps

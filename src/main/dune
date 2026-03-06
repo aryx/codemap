@@ -14,7 +14,7 @@
    gitignore
 
    ; codemap lib deps
-   visualization gui
+   color geometry treemap gui
    parsing_core
    parser_python.menhir
    parser_javascript.menhir
