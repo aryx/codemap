@@ -128,7 +128,7 @@ else
     errors=$((errors + 1))
 fi
 
-if [ -f "semgrep-pfff-langs/libs/ocaml-tree-sitter-core/configure" ]; then
+if [ -f "semgrep-pfff-langs/parsing_infra/ocaml-tree-sitter-core/configure" ]; then
     ok "semgrep-pfff-langs (initialized, including ocaml-tree-sitter-core)"
 else
     err "semgrep-pfff-langs is empty or ocaml-tree-sitter-core not initialized; run: git submodule update --init --recursive"

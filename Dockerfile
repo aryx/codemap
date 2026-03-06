@@ -28,7 +28,7 @@ COPY codemap.opam configure ./
 # Copy enough submodule content for configure to work
 COPY semgrep-pfff-libs/TCB/ ./semgrep-pfff-libs/TCB/
 COPY semgrep-pfff-langs/scripts/setup-tree-sitter.sh ./semgrep-pfff-langs/scripts/
-COPY semgrep-pfff-langs/libs/ocaml-tree-sitter-core/ ./semgrep-pfff-langs/libs/ocaml-tree-sitter-core/
+COPY semgrep-pfff-langs/parsing_infra/ocaml-tree-sitter-core/ ./semgrep-pfff-langs/parsing_infra/ocaml-tree-sitter-core/
 RUN ./configure
 
 # Now copy the full source and build
