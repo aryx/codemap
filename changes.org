@@ -1,10 +1,11 @@
 
-* 0.2 (Q1 2026) (configure, test infra, Haskell/Zig)
+* 0.2 (Q1 2026) (configure, test infra, MarkDown, Haskell/Zig)
 # start to use Claude
 
 ** languages
 - support for highlighting Haskell (using the generic AST highlighter)
 - support for Zig too
+- support for Markdown highlighting
 
 ** build infra
 - configure (mostly copied from osemgrep)
