@@ -1,5 +1,5 @@
 
-* 0.2 (Q1 2026) (configure, test infra, MarkDown, Haskell/Zig)
+* 0.2 (Q1 2026) (configure, test infra, MarkDown/Yaml, Haskell/Zig)
 # start to use Claude
 
 ** languages
@@ -49,7 +49,7 @@
 - deps-based navigation (deps-in, deps-out, deps-inout) and selection of
   files
 
-* alpha  (Q? 2012) (first proto, PHP/OCaml/C)
+* alpha (Q? 2012) (first proto, PHP/OCaml/C)
 
 ** features
 - first prototype as part of pfff at Facebook with most of the features
