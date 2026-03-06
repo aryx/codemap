@@ -80,6 +80,7 @@ type ast =
 
   (* documentation *)
   | Noweb of Parse_nw.program_and_tokens
+  | Markdown of (AST_markdown.program, Token_markdown.token) Parsing_result.t
   (* less? | Org of Org_mode.org ? *)
 
 let _hmemo_file = Hashtbl.create 101
@@ -426,8 +427,8 @@ let tokens_with_categ_of_file (file : string) hentities =
         file prefs hentities
 
   | FT.Text ("nw" | "tex" | "texi" | "web") ->
-      tokens_with_categ_of_file_helper 
-        { parse = (parse_cache 
+      tokens_with_categ_of_file_helper
+        { parse = (parse_cache
          (fun file -> Noweb (Parse_nw.parse file |> fst))
          (function Noweb x -> x | _ -> raise Impossible));
         highlight = Highlight_nw.visit_program;
@@ -435,6 +436,15 @@ let tokens_with_categ_of_file (file : string) hentities =
         }
         file prefs hentities
 
+  | FT.Text ("md") ->
+      let ph_with_cache =
+        { PH.markdown with parse = (parse_cache
+              (fun file -> Markdown (Parse_markdown.parse file))
+              (function
+              | Markdown {Parsing_result. ast; tokens; _} -> (ast, tokens)
+              | _ -> raise Impossible))} in
+      tokens_with_categ_of_file_helper ph_with_cache
+        file prefs hentities
 
   | FT.PL (FT.Web (FT.Js | FT.Coffee | FT.TypeScript)) ->
       tokens_with_categ_of_file_helper 

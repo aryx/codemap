@@ -81,7 +81,7 @@ let use_fancy_highlighting file =
 
   (* the one handled by parsing2.ml *)
   | ( FT.PL (FT.OCaml _)
-    | FT.Text ("nw" | "tex"  | "texi" | "web" | "org")
+    | FT.Text ("nw" | "tex"  | "texi" | "web" | "org" | "md")
     | FT.PL (FT.Web (FT.Php _ | FT.Js | FT.TypeScript | FT.Html))
     | FT.PL (FT.IDL _)
     (* TODO: FT.Makefile, but not tree-sitter-make yet
