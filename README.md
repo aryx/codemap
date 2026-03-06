@@ -1,9 +1,10 @@
 # Codemap
 
-Semantic source code visualizer. Renders treemap-based bird's-eye
-views of codebases with code thumbnails and syntax highlighting
-via a GTK2/Cairo GUI. Uses [semgrep](https://github.com/semgrep/semgrep)
-parsers for multi-language semantic highlighting.
+A Google Maps for source code. Codemap renders zoomable treemap-based
+bird's-eye views of codebases with code thumbnails and semantic syntax
+highlighting — zooming in progressively reveals more detail, just like
+a map. Uses [semgrep](https://github.com/semgrep/semgrep) parsers for
+multi-language highlighting via a GTK2/Cairo GUI.
 
 ![codemap screenshot](docs/codemap-screenshot.jpg)
 
@@ -68,3 +69,4 @@ Codemap combines ideas from several software visualization projects:
 - **[SeeSoft](https://www.semanticscholar.org/paper/Seesoft-A-Tool-For-Visualizing-Line-Oriented-Eick-Steffen/0e48f7fb11eca258d2bb3c343e9ac9cc5fab57ce)** — Eick, Steffen, and Sumner at Bell Labs (1992). One of the earliest tools for visualizing line-oriented software statistics, mapping each line of code to a thin colored row. See also Ball and Eick's follow-up, [Software Visualization in the Large](https://www.semanticscholar.org/paper/Software-Visualization-in-the-Large-Ball-Eick/668bb2b975f762d5eb596873671af3e18965daa2) (1996), which extended these ideas with multiple visual representations (line, pixel, file summary, hierarchical).
 - **[Code Thumbnails](https://www.microsoft.com/en-us/research/publication/code-thumbnails-using-spatial-memory-to-navigate-source-code/)** — DeLine et al. at Microsoft Research (2006). Miniature code renderings as navigation aids, showing that the visual structure of code provides useful spatial cues even at tiny scales.
 - **[Treemap visualization of the Linux kernel](https://www.cs.umd.edu/hcil/millionvis/Treemap_Visualization_of_the_Linux_Kernel_2_5_33.html)** — Fekete and Plaisant at UMD HCIL (2002). The idea of using treemaps for source code layout, which codemap combines with code thumbnails and SeeSoft-style coloring.
+- **Google Maps** — The zoomable interface that progressively reveals more detail as you zoom in. In codemap, important code is bigger (like major roads on a map), and zooming in gradually shows file content, then syntax-highlighted code.
