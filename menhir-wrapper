@@ -1,5 +1,10 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Wrapper around menhir that suppresses known conflicts and catches regressions.
+#
+# NOTE: We use "#!/usr/bin/env bash" instead of "#!/bin/bash" because macOS
+# ships Bash 3.2 at /bin/bash (due to GPL v3 licensing), which has bugs like
+# treating empty array expansion under `set -u` as "unbound variable".
+# Using env picks up a newer Bash (e.g., from Homebrew) if available.
 #
 # This script must live at the workspace root because semgrep-pfff-langs parser
 # dune files reference it via %{workspace_root}/menhir-wrapper.
