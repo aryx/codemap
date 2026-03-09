@@ -8,7 +8,8 @@
       "Bash(make:*)",
       "WebFetch(domain:dl.acm.org)",
       "WebFetch(domain:hal.inria.fr)",
-      "WebSearch"
+      "WebSearch",
+      "Bash(ocamlfind list:*)"
     ]
   }
 }
