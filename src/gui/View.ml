@@ -56,7 +56,7 @@ module Db = Database_code
 (* Composing the "layers". See cairo/tests/knockout.ml example.
  * Each move of the cursor will call assemble_layers which does all
  * those pixels copying (which is very fast).
- * 
+ *
  * The final target is the actual gtk window which is represented by cr_final.
  * We copy the pixels from the pixmap dw.pm on the window. Then
  * we copy the pixels from the pixmap dw.overlay on the window
@@ -75,21 +75,48 @@ let assemble_layers cr_final dw =
   ()
 (*e: [[assemble_layers]] *)
 
+(* claude: Cached GDK pixmap used as display buffer for blitting to the
+ * window. The old code called Cairo_gtk.create directly on the live GDK
+ * window (da#misc#window) to get a Cairo context, then composited the
+ * base and overlay surfaces onto it. On Linux/X11 this works fine, but on
+ * macOS the GTK2 Quartz backend maps Cairo_gtk.create on a live window to
+ * NSView lockFocus/unlockFocus calls, and these conflict with GTK's own
+ * drawing lifecycle, producing "unlockFocus called too many times" errors
+ * and a grey screen. The fix: composite onto an offscreen GDK pixmap
+ * (where Cairo_gtk.create is safe), then blit to the window via GDK's
+ * native put_pixmap which goes through the proper Quartz drawing path.
+ *)
+let display_pm : (GDraw.pixmap * int * int) option ref = ref None
+
+let get_display_pm ~width ~height =
+  match !display_pm with
+  | Some (pm, pw, ph) when Int.equal pw width && Int.equal ph height -> pm
+  | _ ->
+    let pm = GDraw.pixmap ~width ~height () in
+    display_pm := Some (pm, width, height);
+    pm
+
 (*s: expose *)
 (* opti: don't 'paint dw;' painting is the computation
  * heavy function. expose() just copy the "canvas" layers.
  *)
-let expose da w _ev = 
+let expose da w _ev =
   let dw = w.dw in
   let gwin = da#misc#window in
-  let cr = Cairo_gtk.create gwin in
+  (* claude: see comment on display_pm above for why we go through a pixmap
+   * instead of calling Cairo_gtk.create directly on gwin.
+   *)
+  let pm = get_display_pm ~width:dw.width ~height:dw.height in
+  let cr = Cairo_gtk.create pm#pixmap in
   assemble_layers cr dw;
+  let drawable = new GDraw.drawable gwin in
+  drawable#put_pixmap ~x:0 ~y:0 pm#pixmap;
   true
 [@@profiling]
 (*e: expose *)
 
 (*s: configure *)
-let configure w ev = 
+let configure w ev =
   let dw = w.dw in
   let width = GdkEvent.Configure.width ev in
   let height = GdkEvent.Configure.height ev in
@@ -97,6 +124,7 @@ let configure w ev =
   dw.height <- height;
   dw.base <- Model.new_surface ~alpha:false ~width ~height;
   dw.overlay <- Model.new_surface ~alpha:true ~width ~height;
+  display_pm := None;
   View_mainmap.paint dw w.model;
   true
 [@@profiling]
@@ -106,15 +134,20 @@ let configure w ev =
 (* The legend *)
 (* ---------------------------------------------------------------------- *)
 (*s: [[expose_legend]] *)
-let expose_legend da w _ev = 
+let expose_legend da w _ev =
   let dw = w.dw in
-  let cr = Cairo_gtk.create da#misc#window in
+  let { Gtk.width; height; _ } = da#misc#allocation in
+  let pm = GDraw.pixmap ~width ~height () in
+  let cr = Cairo_gtk.create pm#pixmap in
 
   (* todo: make the architecture a layer so no need for special case *)
   (if not (Layer_code.has_active_layers dw.layers)
   then Draw_legend.draw_legend ~cr
   else Draw_legend.draw_legend_layer ~cr dw.layers
   );
+  let gwin = da#misc#window in
+  let drawable = new GDraw.drawable gwin in
+  drawable#put_pixmap ~x:0 ~y:0 pm#pixmap;
   true
 (*e: [[expose_legend]] *)
 
@@ -413,7 +446,7 @@ let mk_gui ~screen_size ~legend test_mode w =
       ~packing:(vbox#pack ~expand:true ~fill:true) () in
 
     let da = GMisc.drawing_area () in
-    da#misc#set_double_buffered false;
+(*    da#misc#set_double_buffered false; *)
     hpane#add1 da#coerce;
 
    

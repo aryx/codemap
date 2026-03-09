@@ -202,18 +202,18 @@ type world = {
 
 (*s: [[new_pixmap]]() *)
 let new_surface ~alpha ~width ~height =
-  let drawable = GDraw.pixmap ~width:1 ~height:1 () in
-  drawable#set_foreground `WHITE;
-  drawable#rectangle ~x:0 ~y:0 ~width:1 ~height:1 ~filled:true ();
-
-
-  let cr = Cairo_gtk.create drawable#pixmap in
-  let surface = Cairo.get_target cr in
-  Cairo.Surface.create_similar surface
-    (if alpha 
-    then Cairo.COLOR_ALPHA
-    else Cairo.COLOR
-    ) width height
+  (* claude: We used to create a dummy 1x1 GDraw.pixmap, get a Cairo context
+   * from it via Cairo_gtk.create, then call Cairo.Surface.create_similar to
+   * get a platform-optimized surface. On Linux/X11 this created Xlib surfaces
+   * which worked fine. On macOS Quartz however, create_similar produced
+   * Quartz-backed surfaces that didn't composite reliably to the window
+   * during expose events (the screen would briefly show the treemap then
+   * turn grey). Using plain Cairo image surfaces (in-memory bitmaps) works
+   * identically on all platforms.
+   *)
+  Cairo.Image.create
+    (if alpha then Cairo.Image.ARGB32 else Cairo.Image.RGB24)
+    ~w:width ~h:height
 
 
 (*e: [[new_pixmap]]() *)
