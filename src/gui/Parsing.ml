@@ -43,13 +43,10 @@ module PH = Parse_and_highlight
  *)
 type ast = 
   (* generic, which is used currently for:
-   * - Rust
-   * - TODO Ruby
-   * - Haskell
-   * - Jsonnet
-   * - Yaml
-   * - TODO Bash
-   * - TODO Docker
+   * - Go
+   * - Rust/Haskell
+   * - Jsonnet/Yaml
+   * - Bash/Docker
    * - Lisp/Scheme/Clojure/Sexp (but currently use Raw_tree so no
    *   great highlighting for now)
   *)
@@ -70,7 +67,9 @@ type ast =
 
   (* system *)
   | Cpp of (Ast_cpp.program, Parser_cpp.token) Parsing_result.t
+  (* now via AST_generic and tree-sitter
   | Go of (Ast_go.program, Parser_go.token) Parsing_result.t
+  *)
 
   (* mainstream *)
   | Java of (Ast_java.program, Parser_java.token) Parsing_result.t
@@ -288,6 +287,13 @@ let tokens_with_categ_of_file (file : string) hentities =
               (function Generic (ast, toks) -> ast, toks | _ -> raise Impossible))} in
       tokens_with_categ_of_file_helper ph_with_cache
         file prefs hentities
+  | FT.PL (FT.Go) ->
+      let ph_with_cache = 
+        { PH.go with parse = (parse_cache 
+              (fun file -> Generic (PH.go.parse file))
+              (function Generic (ast, toks) -> ast, toks | _ -> raise Impossible))} in
+      tokens_with_categ_of_file_helper ph_with_cache
+        file prefs hentities
 (* TODO
   | FT.PL (FT.Ruby) ->
       let ph_with_cache = 
@@ -354,6 +360,10 @@ let tokens_with_categ_of_file (file : string) hentities =
       tokens_with_categ_of_file_helper ph_with_cache
         file prefs hentities
 
+
+
+
+
 (*
   | FT.PL (FT.Csharp) ->
       tokens_with_categ_of_file_helper 
@@ -414,6 +424,7 @@ let tokens_with_categ_of_file (file : string) hentities =
         }
         file prefs hentities
 
+(* now via AST_generic
   | FT.PL (FT.Go) ->
       tokens_with_categ_of_file_helper 
         { parse = (parse_cache 
@@ -425,6 +436,7 @@ let tokens_with_categ_of_file (file : string) hentities =
         info_of_tok = Token_helpers_go.info_of_tok;
         }
         file prefs hentities
+*)
 
   | FT.Text ("nw" | "tex" | "texi" | "web") ->
       tokens_with_categ_of_file_helper
