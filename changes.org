@@ -6,6 +6,7 @@
 - support for highlighting Haskell (using the generic AST highlighter)
 - support for Zig too
 - support for Markdown highlighting
+- better highlighting for Go switching to the tree-sitter parser instead of menhir
 
 ** build infra
 - configure (mostly copied from osemgrep)
@@ -23,11 +24,15 @@
 - switch to semgrep-libs and semgrep-pfff-langs submodules instead
   of relying on ~/.opam
 
+* -----------------------------------------------------------
+
 * 0.1 (Q3 2025) (Dockerfile and GHA, OCaml5 ready)
 
 ** testinfra
 - Dockerfile and docker.yml GHA (GitHub Actions) CI working for
   OCaml 4.14.2 and 5.2.1
+
+* -----------------------------------------------------------
 
 * gamma (Q? 2020) (extracted from pfff)
 
