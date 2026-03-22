@@ -2,6 +2,132 @@
 
 * Last
 
+** Last 6
+
+*** less: start a gui/ in semgrep-pfff-libs? 
+
+*** fix bugs with search and indexing not working
+
+*** FUN resume layer and tool to display the region that were recently modified!
+
+*** integrate better osemgrep, live search open Common2
+and Common2.$XXX (with resolved aliasing! using ocamllsp!!)
+
+*** FUN mix codemap and semgrep with yaml rule that returns
+not only a match but also a color! so can then generate layer
+from a semgrep query and for example see all the place where
+we use Cap.xxx with different colors for the xxx
+
+maybe osemgrep scan --generate_codemap_layer ?
+
+just need a match with a rulename that carry a color?
+
+id: layer--fork--color--red
+for a rule
+
+
+** Last 6 bis
+
+*** fail to render 5a/a.y because lexical error identifier $1
+so either forbid .y in codemap use_fancy_highlighting
+or extend lexer
+
+*** fail to go in goken/include/, force quit
+
+*** fail to render xix/lib_core/commons/Chan.ml
+why??
+
+*** color differently polymorphic type, like in xix/linker/Arch.ml
+get the 'instr polymorphic type in a different color than t itself
+
+*** coloring for toml? use tree-sitter-toml that I added recently in
+semgrep for SCA?
+
+*** RELAX add .lean and Lean to Ftype.ml and codemap display list
+.rkt racket (malt)
+
+arch_ testdata/
+
+*** fix codemap -symlinks in software-src/TAGS/1-tiny/
+got exn because try to build relative path or something
+
+*** can't parse goken/rc/unix.c :(
+take forever
+
+same pb with libmach/linux.c
+
+^CSIGINT signal intercepted, will do some cleaning before exiting
+Common.UnixExit(-130)
+Raised at UCommon.main_boilerplate.(fun).default_handler.(fun) in file "libs/commons/UCommon.ml", line 105, characters 14-76
+Called from Token_helpers_cpp.info_of_tok.(fun) in file "languages/cpp/menhir/token_helpers_cpp.ml", line 573, characters 13-20
+Called from Token_helpers_cpp.info_of_tok.(fun) in file "languages/cpp/menhir/token_helpers_cpp.ml", line 573, characters 13-20
+Called from Token_helpers_cpp.visitor_info_of_tok in file "languages/cpp/menhir/token_helpers_cpp.ml", line 398, characters 48-51
+Called from Token_helpers_cpp.info_of_tok in file "languages/cpp/menhir/token_helpers_cpp.ml", line 571, characters 2-76
+Called from Highlight_cpp.visit_toplevel.aux_toks in file "src/highlighters/highlight_cpp.ml", line 138, characters 11-31
+Called from Highlight_cpp.visit_toplevel.aux_toks in file "src/highlighters/highlight_cpp.ml", line 92, characters 8-19
+Called from Highlight_cpp.visit_toplevel.aux_toks in file "src/highlighters/highlight_cpp.ml", line 92, characters 8-19
+Called from Highlight_cpp.visit_toplevel.aux_toks in file "src/highlighters/highlight_cpp.ml", line 92, characters 8-19
+Called from Highlight_cpp.visit_toplevel.aux_toks in file "src/highlighters/highlight_cpp.ml", line 92, characters 8-19
+Called from Highlight_cpp.visit_toplevel.aux_toks in file "src/highlighters/highlight_cpp.ml", line 92, characters 8-19
+Called from Highlight_cpp.visit_toplevel.aux_toks in file "src/highlighters/highlight_cpp.ml", line 92, characters 8-19
+Called from Highlight_cpp.visit_toplevel.aux_toks in file "src/highlighters/highlight_cpp.ml", line 92, characters 8-19
+Called from Highlight_cpp.visit_toplevel.aux_toks in file "src/highlighters/highlight_cpp.ml", line 92, characters 8-19
+Called from Highlight_cpp.visit_toplevel.aux_toks in file "src/highlighters/highlight_cpp.ml", line 92, characters 8-19
+Called from Highlight_cpp.visit_toplevel.aux_toks in file "src/highlighters/highlight_cpp.ml", line 92, characters 8-19
+Called from Highlight_cpp.visit_toplevel.aux_toks in file "src/highlighters/highlight_cpp.ml", line 92, characters 8-19
+Called from Highlight_cpp.visit_toplevel.aux_toks in file "src/highlighters/highlight_cpp.ml", line 92, characters 8-19
+Called from Highlight_cpp.visit_toplevel.aux_toks in file "src/highlighters/highlight_cpp.ml", line 92, characters 8-19
+Called from Highlight_cpp.visit_toplevel in file "src/highlighters/highlight_cpp.ml", line 156, characters 2-15
+Called from Parsing.tokens_with_categ_of_file_helper in file "src/gui/Parsing.ml", line 176, characters 4-107
+Called from Draw_microlevel.glyphs_of_file in file "src/gui/draw_microlevel.ml", line 210, characters 28-75
+Called from Draw_microlevel.draw_content in file "src/gui/draw_microlevel.ml", line 373, characters 4-65
+Called from Draw_microlevel.draw_treemap_rectangle_content_maybe in file "src/gui/draw_microlevel.ml", line 482, characters 18-53
+Called from View_mainmap.paint_content_maybe_rect.(fun) in file "src/gui/view_mainmap.ml", line 93, characters 5-89
+Called from View_mainmap.lazy_paint in file "src/gui/view_mainmap.ml", line 113, characters 8-54
+Called from View_mainmap.paint.(fun) in file "src/gui/view_mainmap.ml", line 158, characters 20-52
+Called from Gui.gmain_idle_add.(fun) in file "libs/gui/Gui.ml", line 713, characters 8-19
+
+
+
+*** RELAX fix C/C++ parser output, use Logs not pr2
+and maybe put behind a Log src so not shown by default?
+or use Logs.warn?
+ERROR_RECOV: found sync '}' at line 221
+
+
+*** SEMI codemap: !!why codemap recompiled and on X11 get still 100%cpu on source xix?!!
+it works well on the source of {codemap,codegraph,efuns}, but on xix
+even with -filter mli, get 100% and not stopping and can't use C-q :(
+
+also 100% on myocaml/
+
+*** SEMI why 99% CPU on wayland on xix codebase?
+same on xorg?
+
+partially fixed by removing the Thread.create at the beginning
+computing database
+
+*** dupe? why take 100% CPU again :( seems to happen more on C codebase
+tree-sitter C parser is wrong?
+
+*** dupe? why can't even run codemap on xv6-riscv? already go in 100% CPU 
+
+*** why highlighting on goken/src/lib9/utf/utf.h takes forever?
+codemap -verbose, add codemap -debug to better diagnose?
+add appropriate Logs in codemap or semgrep-libs ?
+
+*** why super slow on libmach/linux.c?
+
+*** SEMI resume mk pdf, add basic intro at least
+
+*** LATER switch to 5.2.1 and use domains to render in parallel using many cpus!
+and share parsing cache
+
+*** LATER release on OPAM, but first need release many semgrep libs
+or add option to compile codemap without tree-sitter and all of semgrep libs
+maybe semgrep-light-libs
+
+
 ** Last 5
 
 *** add arch_code colors for README.md, pad.org, .gitignore?
