@@ -38,8 +38,10 @@ module M = Model
 (*s: [[dialog_search_def]] *)
 let dialog_search_def model = 
   let idx = (fun () -> 
-    let model : Model.model = Async.async_get model in
-    model.big_grep_idx 
+    (* claude: do not block if the model is not yet computed *)
+    match Async.async_get_opt model with
+    | Some (model : Model.model) -> model.big_grep_idx 
+    | None -> Big_grep.empty_index ()
   )
   in
   let entry = 

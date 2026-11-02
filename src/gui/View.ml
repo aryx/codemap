@@ -214,8 +214,11 @@ let mk_gui ~screen_size ~legend test_mode w =
         ) |> ignore;
 
         fc#add_item "_Go to example" ~key:K._E ~callback:(fun () -> 
-          let model = Async.async_get w.model in
-          match w.current_entity, model.db with
+          (* claude: async_get_opt to not block if model not ready *)
+          let db_opt = 
+            Async.async_get_opt w.model |> Option.map (fun (m : Model.model) -> m.db) 
+            |> Option.join in
+          match w.current_entity, db_opt with
           | Some e, Some db ->
               (match e.Db.e_good_examples_of_use with
               | [] -> failwith "no good examples of use for this entity"
@@ -331,8 +334,11 @@ let mk_gui ~screen_size ~legend test_mode w =
     hbox#pack ~padding:10 (G.mk (GButton.toolbar) (fun tb ->
 
       let idx = (fun () -> 
-        let model : Model.model = Async.async_get w.model in
-        model.big_grep_idx 
+        (* claude: do not block the GUI (forever) if the model is
+         * not yet computed; just return no completion results *)
+        match Async.async_get_opt w.model with
+        | Some (model : Model.model) -> model.big_grep_idx 
+        | None -> Big_grep.empty_index ()
       )
       in
 

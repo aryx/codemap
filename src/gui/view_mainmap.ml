@@ -213,7 +213,10 @@ let button_action w ev =
           then !Ctl._go_dirs_or_file w [file]
           else begin
 
-          let model = Async.async_get w.model in
+          (* claude: do not block the GUI if model not yet computed *)
+          match Async.async_get_opt w.model with
+          | None -> Logs.warn (fun m -> m "model not yet computed, retry later")
+          | Some model ->
 
           (* similar to View_overlays.motion.refresher *)
           let line_opt = 

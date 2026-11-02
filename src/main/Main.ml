@@ -302,6 +302,72 @@ let build_model root dbfile_opt graphfile_opt =
 [@@profiling]
 (*e: function [[build_model]] *)
 
+(* claude: summary statistics on the model, displayed with -v *)
+let log_model_stats (model : Model.model) : unit =
+  let idx = model.big_grep_idx in
+  Logs.info (fun m -> m 
+    "model stats: %d completion entries (index of %d bytes), %d entities"
+    (Hashtbl.length idx.pos_to_entity) (String.length idx.big_string)
+    (Hashtbl.length model.hentities));
+  Logs.info (fun m -> m "model stats: database = %s"
+    (match model.db with
+    | None -> "none"
+    | Some db -> spf "%d entities" (Array.length db.Database_code.entities)));
+  Logs.info (fun m -> m "model stats: graph = %s"
+    (match model.g with
+    | None -> "none"
+    | Some g -> spf "%d nodes, %d use edges, %d files with entities"
+        (Graph_code.nb_nodes g) (Graph_code.nb_use_edges g)
+        (Hashtbl.length model.hentities_of_file)))
+
+(* claude: fork a child to compute [job ()] and set [async] with the result
+ * when it is ready. The parent is notified via a GTK IO watch on a pipe, so
+ * this must be called before GtkThread.main runs. If the job fails,
+ * the model stays unset (the search box then just shows no results).
+ *)
+let build_model_in_background (job : unit -> Model.model)
+    (async : Model.model Async.t) : unit =
+  flush_all ();
+  let t0 = Unix.gettimeofday () in
+  Logs.info (fun m -> m "building model in background");
+  let input, output = Unix.pipe ~cloexec:true () in
+  match Unix.fork () with
+  | 0 ->
+      Unix.close input;
+      let chan = Unix.out_channel_of_descr output in
+      let res =
+        try Ok (job ())
+        with exn -> Error (Printexc.to_string exn)
+      in
+      (try
+        Marshal.to_channel chan (res : (Model.model, string) result) [];
+        close_out chan
+      with _ -> ());
+      (* skip at_exit handlers inherited from the parent (GTK, etc.) *)
+      Unix._exit 0
+  | pid ->
+      Unix.close output;
+      let chan = GMain.Io.channel_of_descr input in
+      GMain.Io.add_watch ~cond:[`IN; `HUP; `ERR] ~callback:(fun _conds ->
+        let ic = Unix.in_channel_of_descr input in
+        (match (Marshal.from_channel ic : (Model.model, string) result) with
+        | Ok model ->
+            Logs.info (fun m -> m "model built in background in %.2fs"
+              (Unix.gettimeofday () -. t0));
+            log_model_stats model;
+            Async.async_set model async
+        | Error s ->
+            Logs.err (fun m -> m "could not build model: %s" s)
+        | exception exn ->
+            Logs.err (fun m -> m "could not read model: %s"
+              (Printexc.to_string exn))
+        );
+        close_in_noerr ic;
+        (try Unix.waitpid [] pid |> ignore with Unix.Unix_error _ -> ());
+        (* remove the watch *)
+        false
+      ) chan |> ignore
+
 (* could also to parse all json files and filter the one which do not parse *)
 let layers_in_dir dir =
   Common2.readdir_to_file_list dir |> List_.filter_map (fun file ->
@@ -399,7 +465,19 @@ let main_action xs =
     Async.async_set res async_model;
   ) ()
   |> ignore;
-*) 
+*)
+  (* claude: the thread above was disabled, which left async_model unset
+   * forever, so the first Async.async_get (e.g., when typing in the
+   * search box) blocked the GUI forever (and even Ctrl-C, because the
+   * main thread was stuck in Condition.wait). Instead of a thread, we
+   * build the model in a forked child and get the result back from the
+   * GTK main loop via an IO watch on a pipe, so no OCaml thread is
+   * involved (hence no 100% CPU issue) and the GUI is never blocked.
+   *)
+  build_model_in_background
+    (fun () -> build_model root db_file graph_file)
+    async_model;
+
   let w = { Model.
     dw;
     dw_stack = ref [dw];
@@ -622,6 +700,8 @@ let options () = ([
 
     "-verbose", Arg.Unit (fun () -> logs_level := Some Logs.Info),
     " ";
+    "-v", Arg.Unit (fun () -> logs_level := Some Logs.Info),
+    " shortcut for -verbose";
     "-debug", Arg.Unit (fun () -> logs_level := Some Logs.Debug),
     " ";
     "-quiet", Arg.Unit (fun () -> logs_level := None),
