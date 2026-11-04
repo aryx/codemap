@@ -1,10 +1,48 @@
-#-*- org -*-
+* Big plan 
+
+** TODO changes.txt
+#CLAUDE: release on opam! 
+# live search osemgrep with -lsp for precise info types/names and layers!
+# js backend and website interface! all client-side rendering; even read codebase.js!
+#  and use it for principia and xix exploration! on principia-softwarica.org :)
+
+** Later
 
 * Docs
 
 https://jimmyhmiller.com/learn-codebase-visualizer
 
 * Last
+
+** Last 7
+
+*** "not yet computed" blocked with file filtering, fix that!
+
+*** REVIVE! see interest on "makepad scope" on twitter
+https://x.com/rikarends/status/2098710248164868534
+
+*** add link to makepad.dev and twitter demo 
+https://x.com/rikarends/status/2098710248164868534
+
+*** codemap: fix exn bug when last line does not end with \n
+and do not render anything anymore
+
+*** codemap: search with filenames hangs when tried on c-- codebase
+"model not computed" and then hang
+
+*** codemap: fix .nw lexer to parse aug99/ files with codemap
+pb with lexer and $
+
+*** release on OPAM, even more important in AI era to focus on understanding code globally
+
+*** resume codegraph integration
+
+*** osemgrep integration with nice color scheme
+
+*** mix efuns and codemap together?
+=> codemap would be the culmination of pfff! it would be
+codegraph+efuns+osemgrep => codemap
+
 
 ** Last 6
 
