@@ -40,6 +40,8 @@ make build-docker # Build Docker image (OCaml 4.14.2 default, also supports 5.2.
 
 **External dependencies:** Relies heavily on semgrep libraries for parsing (`parser_python.menhir`, `parser_cpp.menhir`, `parser_java.menhir`, `ast_generic`, etc.). See `Dockerfile` for the full dependency setup.
 
+**Submodules:** `semgrep-pfff-libs` and `semgrep-pfff-langs` (shared with codegraph, syncweb, efuns, osemgrep), and `caps` ([ocaml-caps](https://github.com/aryx/ocaml-caps), the `caps`/`caps.tcb` libraries providing `Cap`, `CapSys`, `CapUnix`, and `TCB`). Dune builds `caps` from the submodule rather than an opam-installed version, so the API matches what libs/langs expect. In the current caps API, `exec`/`readdir`/`network` are functions of the command/path/host (callers pass `caps`, not `caps#exec`), and there is no `Cap.readdir_UNSAFE`: thread the capability from `Cap.main` in `Main.ml` instead.
+
 ## Build System
 
 - **Dune** with `dune-project` at lang level 2.7 (intentionally, to avoid `.pp.ml` generation issues).
@@ -50,7 +52,7 @@ make build-docker # Build Docker image (OCaml 4.14.2 default, also supports 5.2.
 
 ## Testing
 
-- **Framework:** [Testo](https://github.com/semgrep/testo) with Alcotest assertions and the capability system (`Cap.main` from `TCB` library).
+- **Framework:** [Testo](https://github.com/semgrep/testo) with Alcotest assertions and the capability system (`Cap.main` from the `caps` library, see below).
 - **Test entry point:** `src/tests/Test.ml` — uses `Cap.main` and `Testo.interpret_argv`.
 - **Test modules:** `src/tests/Unit_highlight_*.ml` for per-language highlighting tests.
 - **Test fixtures:** `tests/<language>/` directories (e.g., `tests/haskell/simple.hs`).
@@ -58,7 +60,7 @@ make build-docker # Build Docker image (OCaml 4.14.2 default, also supports 5.2.
 
 ## Conventions
 
-- **Literate programming with syncweb:** This project uses [syncweb](https://github.com/aryx/syncweb) for literate programming. The canonical documentation is in `docs/Visual.nw` (Noweb format), and source files are synced from it.
+- **Literate programming with syncweb:** This project uses [syncweb](https://github.com/aryx/syncweb) for literate programming. The canonical documentation is in `docs/codemap.nw` (Noweb format), and source files are synced from it. Run `make sync` in `docs/` after changing synced sources (the list is `SRC_VIEWS` in `docs/Makefile`); it is interactive and asks `y/n` for each chunk that differs.
 - **DO NOT modify `(* s: ... *)`, `(* e: ... *)`, or `(* x: ... *)` comments** in source files. These are syncweb chunk markers that link source code to the Noweb documentation. Altering them will break `make sync` in `docs/`.
 - File filtering uses `.codemapignore` (similar to `.gitignore`).
 - The `bin/codemap` symlink points to the built binary in `_build/`.
