@@ -1,1 +1,6 @@
-_build/default/src/tests/Test.exe
+#!/bin/sh
+# claude: a script rather than a symlink to _build/default/src/tests/Test.exe
+# because dune scans the files at the root of the project and fails with
+# "File unavailable: test" when the symlink is dangling (e.g., in a fresh
+# checkout, after 'make clean', or while Test.exe is being relinked).
+exec "$(dirname "$0")/_build/default/src/tests/Test.exe" "$@"

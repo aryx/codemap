@@ -13,7 +13,7 @@ make              # Build the codemap binary (dune build)
 make all          # Build everything
 make test         # Build test exe then run ./test (Testo-based)
 make build-test   # Build test exe only (no run)
-./test            # Run tests directly (symlink to _build/default/src/tests/Test.exe)
+./test            # Run tests directly (script running _build/default/src/tests/Test.exe)
 ./test -s foo     # Run only tests matching "foo"
 make clean        # Clean build artifacts
 make install      # Install via dune
@@ -56,7 +56,7 @@ make build-docker # Build Docker image (OCaml 4.14.2 default, also supports 5.2.
 - **Test entry point:** `src/tests/Test.ml` — uses `Cap.main` and `Testo.interpret_argv`.
 - **Test modules:** `src/tests/Unit_highlight_*.ml` for per-language highlighting tests.
 - **Test fixtures:** `tests/<language>/` directories (e.g., `tests/haskell/simple.hs`).
-- **Symlink:** `./test` at project root points to the built test binary. Tests expect to run from the project root so fixture paths like `tests/haskell/simple.hs` resolve correctly.
+- **`./test`:** a small shell script at the project root that runs the built test binary (not a symlink: dune fails on a dangling symlink at the root, e.g. in a fresh checkout). Tests expect to run from the project root so fixture paths like `tests/haskell/simple.hs` resolve correctly.
 
 ## Conventions
 
