@@ -266,10 +266,9 @@ let treemap_generator ~filter_file =
 
 (*s: function [[build_model]] *)
 (* this is currently called in the background *)
-let build_model root dbfile_opt graphfile_opt =   
+let build_model (caps : < Cap.readdir; .. >) root dbfile_opt graphfile_opt =   
 
   let db_opt = dbfile_opt |> Option.map Database_code.load_database in
-  let caps = Cap.readdir_UNSAFE() in
   (* TODO: use List_files *)
   let files = 
     UFile.Legacy.files_of_dirs_or_files_no_vcs_nofilter caps [root] 
@@ -381,7 +380,7 @@ let layers_in_dir dir =
 (*****************************************************************************)
 
 (*s: function [[main_action]] *)
-let main_action xs =
+let main_action (caps : < Cap.readdir; .. >) xs =
   (* this used to be done by linking with gtkInit.cmo, but better like this *)
   let _locale = GtkMain.Main.init () in
 
@@ -460,7 +459,7 @@ let main_action xs =
      * This thread used to cause some Bus error on MacOS but now that
      * we use invoke and do the job in another process things seem better :)
      *)
-    let job () = build_model root db_file graph_file in
+    let job () = build_model caps root db_file graph_file in
     let res = Parallel.invoke job () () in
     Async.async_set res async_model;
   ) ()
@@ -475,7 +474,7 @@ let main_action xs =
    * involved (hence no 100% CPU issue) and the GUI is never blocked.
    *)
   build_model_in_background
-    (fun () -> build_model root db_file graph_file)
+    (fun () -> build_model caps root db_file graph_file)
     async_model;
 
   let w = { Model.
@@ -563,7 +562,7 @@ let test_treemap_dirs () =
  *)
 
 (*s: [[visual_commitid]]() action *)
-let test_visual_commitid id =
+let test_visual_commitid (caps : < Cap.readdir; .. >) id =
   let files = UCmd.cmd_to_list
     (spf "git show --pretty=\"format:\" --name-only %s"
         id) 
@@ -573,7 +572,7 @@ let test_visual_commitid id =
     |> List_.exclude String_.empty
   in
   UCommon.pr2_gen files;
-  main_action files
+  main_action caps files
 (*e: [[visual_commitid]]() action *)
 
 let width = 500
@@ -632,7 +631,7 @@ let test_cairo () =
 (*---------------------------------------------------------------------------*)
 (* the command line flags *)
 (*---------------------------------------------------------------------------*)
-let extra_actions () = [
+let extra_actions (caps : < Cap.readdir; .. >) = [
  (*s: actions *)
    "-test_loc", " ",
    Arg_.mk_action_n_arg (test_loc true);
@@ -641,7 +640,7 @@ let extra_actions () = [
    "-test_cairo", " ",
    Arg_.mk_action_0_arg (test_cairo);
    "-test_commitid", " <id>",
-   Arg_.mk_action_1_arg (test_visual_commitid);
+   Arg_.mk_action_1_arg (test_visual_commitid caps);
    "-test_treemap_dirs", " <id>",
    Arg_.mk_action_0_arg (test_treemap_dirs);
  (*e: actions *)
@@ -651,11 +650,11 @@ let extra_actions () = [
 (* The options *)
 (*****************************************************************************)
 
-let all_actions () = 
- extra_actions()@
+let all_actions caps = 
+ extra_actions caps @
  []
 
-let options () = ([ 
+let options caps = ([ 
   (*s: options *)
     "-screen_size", Arg.Set_int screen_size,
     " <int> (1 = small, 2 = big)";
@@ -715,7 +714,7 @@ let options () = ([
     " <str> execute an internal script";
   (*e: options *)
   ] @
-  Arg_.options_of_actions action (all_actions()) @
+  Arg_.options_of_actions action (all_actions caps) @
   Common2.cmdline_flags_devel () @
   [
   "-version",   Arg.Unit (fun () -> 
@@ -728,7 +727,7 @@ let options () = ([
 (*****************************************************************************)
 (* The main entry point *)
 (*****************************************************************************)
-let main () = 
+let main (caps : < Cap.readdir; .. >) = 
 
   let usage_msg = 
     spf "Usage: %s [options] <file or dir> \nDoc: %s\nOptions:"
@@ -736,7 +735,7 @@ let main () =
       "https://github.com/facebook/pfff/wiki/Codemap"
   in
   (* alt: use cmdliner and parse --debug, --info ... *)
-  let args = Arg_.parse_options (options()) usage_msg Sys.argv in
+  let args = Arg_.parse_options (options caps) usage_msg Sys.argv in
 
   Logs_.setup ~level:!logs_level ();
   Logs.info (fun m -> m "Starting logging");
@@ -748,8 +747,8 @@ let main () =
     (* --------------------------------------------------------- *)
     (* actions, useful to debug subpart *)
     (* --------------------------------------------------------- *)
-    | xs when List.mem !action (Arg_.action_list (all_actions())) -> 
-        Arg_.do_action !action xs (all_actions())
+    | xs when List.mem !action (Arg_.action_list (all_actions caps)) -> 
+        Arg_.do_action !action xs (all_actions caps)
 
     | _ when not (String_.empty !action) -> 
         failwith ("unrecognized action or wrong params: " ^ !action)
@@ -758,18 +757,19 @@ let main () =
     (* main entry *)
     (* --------------------------------------------------------- *)
     | (x::xs) -> 
-        main_action (x::xs)
+        main_action caps (x::xs)
 
     (* --------------------------------------------------------- *)
     (* empty entry *)
     (* --------------------------------------------------------- *)
-    | [] -> Arg.usage (options()) usage_msg; 
+    | [] -> Arg.usage (options caps) usage_msg; 
     );
   )
 
 (*****************************************************************************)
 let _ = 
+  Cap.main (fun caps ->
   UCommon.main_boilerplate (fun () ->
-    main ()
-  )
+    main caps
+  ))
 (*e: src/main/Main.ml *)

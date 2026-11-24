@@ -5,7 +5,7 @@
    alcotest
    testo
    commons
-   TCB
+   caps caps.tcb
 
    ; codemap libs
    viewer
