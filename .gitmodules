@@ -4,3 +4,6 @@
 [submodule "semgrep-pfff-libs"]
 	path = semgrep-pfff-libs
 	url = git@github.com:aryx/semgrep-pfff-libs.git
+[submodule "caps"]
+	path = caps
+	url = git@github.com:aryx/ocaml-caps.git
